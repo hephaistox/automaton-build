@@ -2,7 +2,7 @@
   "The local acceptance for the monorepo"
   (:require
    [automaton-build.adapters.mermaid :as mermaid]
-   [automaton-build.adapters.time :as time]
+   [automaton-core.adapters.time :as time]
    [automaton-build.app.local-acceptance :as app-la]
    [automaton-build.apps.code-publication :as apps-pub]
    [automaton-build.app-agnostic.code-stats :as code-stats]

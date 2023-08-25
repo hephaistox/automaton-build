@@ -1,7 +1,7 @@
 (ns automaton-build.adapters.frontend-compiler
   "Gather front end compilers toolings. Currently use shadow on npx "
   (:require
-   [automaton-build.adapters.commands :as cmds]
+   [automaton-core.adapters.commands :as cmds]
    [automaton-core.adapters.files :as files]
    [automaton-core.adapters.log :as log]
    [automaton-core.env-setup :as env-setup]))

@@ -1,7 +1,7 @@
 (ns automaton-build.app-agnostic.tasks-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [automaton-build.adapters.schema :as schema]
+   [automaton-core.adapters.schema :as schema]
    [automaton-build.tasks :as bt]
    [automaton-build.app-agnostic.tasks :as sut]))
 

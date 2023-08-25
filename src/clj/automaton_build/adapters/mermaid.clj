@@ -4,7 +4,7 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.commands :as cmds]
+   [automaton-core.adapters.commands :as cmds]
    [automaton-core.adapters.files :as files]
    [automaton-core.adapters.log :as log]))
 

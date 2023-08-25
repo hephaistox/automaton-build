@@ -1,7 +1,7 @@
 (ns automaton-build.monorepo.deps-edn
   "Manage the monorepo dependencies"
   (:require
-   [automaton-build.adapters.deep-merge :as deep-merge]
+   [automaton-core.adapters.deep-merge :as deep-merge]
    [automaton-core.adapters.deps-edn :as deps-edn]
    [automaton-core.adapters.log :as log]
 

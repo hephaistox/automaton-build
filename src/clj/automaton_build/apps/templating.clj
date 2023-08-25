@@ -9,7 +9,7 @@
    [clojure.string :as str]
 
    [automaton-build.adapters.build-config :as build-config]
-   [automaton-build.adapters.deep-merge :as deep-merge]
+   [automaton-core.adapters.deep-merge :as deep-merge]
    [automaton-core.adapters.edn-utils :as edn-utils]
    [automaton-core.adapters.files :as files]
    [automaton-core.adapters.log :as log]

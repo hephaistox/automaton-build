@@ -1,7 +1,7 @@
 (ns automaton-build.app.running
   "Function to run the code of one application"
   (:require
-   [automaton-build.adapters.commands :as cmds]
+   [automaton-core.adapters.commands :as cmds]
    [automaton-build.adapters.mermaid :as mermaid]
    [automaton-build.adapters.frontend-compiler :as frontend-compiler]
    [automaton-core.env-setup :as env-setup]))

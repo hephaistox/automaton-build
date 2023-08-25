@@ -1,10 +1,10 @@
 (ns automaton-build.adapters.container
   "Gather all commands to manage the containers.
-  Is a docker prxoxy"
+  Is a docker proxy"
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.commands :as cmds]
+   [automaton-core.adapters.commands :as cmds]
    [automaton-core.adapters.files :as files]
    [automaton-core.adapters.log :as log]))
 

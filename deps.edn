@@ -5,8 +5,7 @@
  :aliases {:repl {:extra-paths ["env/dev/src/clj"
                                 "env/dev/resources"]}}
 
- :deps {hephaistox/automaton-core {:sha "eeae5f3b65d5c9e90b89404ea7a36de2ebec3836"
-                                   :git/url "https://github.com/hephaistox/automaton-core"}
+ :deps {hephaistox/automaton-core {:local/root "automaton/automaton-core"}
         babashka/fs {:mvn/version "0.2.12"}
         babashka/process {:mvn/version "0.3.11"}
         ;; Log

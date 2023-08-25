@@ -2,7 +2,7 @@
   "Manage hosting on clever cloud
   Proxy to clever cli tool"
   (:require
-   [automaton-build.adapters.commands :as cmds]))
+   [automaton-core.adapters.commands :as cmds]))
 
 (defn hosting-installed?*
   "Check clever cloud is useable

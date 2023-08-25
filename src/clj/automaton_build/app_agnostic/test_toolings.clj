@@ -1,8 +1,8 @@
 (ns automaton-build.app-agnostic.test-toolings
   "Tooling for tests the current codebase: linters, patterns, execute tests, and so on"
   (:require
-   [automaton-build.adapters.commands :as cmds]
-   [automaton-build.adapters.code-files :as code-files]
+   [automaton-core.adapters.commands :as cmds]
+   [automaton-core.adapters.code-files :as code-files]
    [automaton-core.adapters.log :as log]
    [automaton-core.adapters.edn-utils :as edn-utils]))
 
