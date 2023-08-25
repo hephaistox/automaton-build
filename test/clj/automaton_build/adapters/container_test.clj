@@ -5,9 +5,9 @@
    [clojure.test :refer [deftest is testing]]
 
    [automaton-build.adapters.container :as sut]
-   [automaton-build.adapters.deps-edn :as deps-edn]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.adapters.deps-edn :as deps-edn]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.env-setup :as env-setup]))
 
 (def test-container-name
   "test-container")

@@ -4,9 +4,9 @@
    [clojure.test :refer [deftest is testing]]
 
    [automaton-build.adapters.cfg-mgt :as sut]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
+   [automaton-core.env-setup :as env-setup]))
 
 (deftest git-installed?*-test
   (testing "Is able to detect non working git"

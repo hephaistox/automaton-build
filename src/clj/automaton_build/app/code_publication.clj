@@ -1,9 +1,9 @@
 (ns automaton-build.app.code-publication
   (:require
-   [automaton-build.adapters.log :as log]
-   [automaton-build.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
+   [automaton-core.adapters.files :as files]
    [automaton-build.adapters.cfg-mgt :as cfg-mgt]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.env-setup :as env-setup]))
 
 (defn assembly-app-dir
   "Directory where the publication of the application occur"

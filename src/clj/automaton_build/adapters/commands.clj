@@ -6,11 +6,11 @@
 
    [babashka.process :as p]
 
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.schema :as schema]
-   [automaton-build.adapters.string :as string]
-   [automaton-build.adapters.edn-utils :as edn-utils]))
+   [automaton-core.adapters.string :as string]
+   [automaton-core.adapters.edn-utils :as edn-utils]))
 
 (def size-command
   "Size of the command line to be managed, measured on mcbook pro"

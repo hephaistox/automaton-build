@@ -3,7 +3,7 @@
    [clojure.string :as str]
    [clojure.test :refer [deftest is testing]]
 
-   [automaton-build.adapters.files :as files]
+   [automaton-core.adapters.files :as files]
    [automaton-build.adapters.templating :as sut]))
 
 (deftest replace-contract

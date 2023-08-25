@@ -1,7 +1,7 @@
 (ns automaton-build.app-agnostic.tasks
   "The tasks agnostic from applications"
   (:require
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.app-agnostic.tasks.clean :as clean-tasks]
    [automaton-build.app-agnostic.tasks.container :as container-tasks]
    [automaton-build.exit-codes :as exit-codes]))

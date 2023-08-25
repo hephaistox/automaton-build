@@ -1,7 +1,7 @@
 (ns automaton-build.monorepo.tasks.apps
   "Monorepo tasks related to apps"
   (:require
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.container.core :as container-core]
    [automaton-build.apps :as apps]))
 

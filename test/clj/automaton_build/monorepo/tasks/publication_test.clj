@@ -3,7 +3,7 @@
    [clojure.test :refer [deftest is testing]]
 
    [automaton-build.app.find-an-app-for-test :as bafaaft]
-   [automaton-build.adapters.files :as files]
+   [automaton-core.adapters.files :as files]
    [automaton-build.adapters.cfg-mgt :as cfg-mgt]
    [automaton-build.adapters.cfg-mgt-test :as cfg-mgt-test]
    [automaton-build.monorepo.tasks.publication :as sut]))

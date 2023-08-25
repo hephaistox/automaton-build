@@ -1,8 +1,8 @@
 (ns automaton-build.adapters.build-config
   "Manage `build-config.edn` file"
   (:require
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.files :as files]))
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.files :as files]))
 
 (def build-config-filename
   "build_config.edn")

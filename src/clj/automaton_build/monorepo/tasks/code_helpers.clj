@@ -2,7 +2,7 @@
   "Gather monorepo to call code helpers related tasks (like stats, tests, ...)"
   (:require
    [automaton-build.adapters.cicd :as cicd]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.outdated :as outdated]
    [automaton-build.app-agnostic.test-toolings :as tests]
    [automaton-build.apps :as apps]))

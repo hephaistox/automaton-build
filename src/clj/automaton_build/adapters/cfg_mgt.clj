@@ -5,8 +5,8 @@
    [clojure.string :as str]
 
    [automaton-build.adapters.commands :as cmds]
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.log :as log]))
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.log :as log]))
 
 (defn git-installed?*
   "Returns true if git is properly installed

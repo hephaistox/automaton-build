@@ -3,7 +3,7 @@
   (:require
    [clj-htmltopdf.core :refer [->pdf]]
    [clojure.string :as cs]
-   [automaton-build.adapters.files :as baf]))
+   [automaton-core.adapters.files :as baf]))
 
 (defn- img-src
   "full html img tag src, containing both a key and a value as a string"

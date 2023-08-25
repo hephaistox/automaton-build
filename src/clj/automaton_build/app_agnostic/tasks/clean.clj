@@ -2,8 +2,8 @@
   "Clean to repository"
   (:require
    [automaton-build.adapters.cfg-mgt :as cfg-mgt]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]))
 
 (defn clean-hard
   "Clean the repository to the state as it's after being cloned from git server"

@@ -1,4 +1,4 @@
-(ns automaton-build.utils.uuid-gen
+(ns automaton-core.utils.uuid-gen
   "Generate uuid, is a proxy to `http://danlentz.github.io/clj-uuid/`"
   (:require
    [clj-uuid :as uuid]))

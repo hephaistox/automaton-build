@@ -3,7 +3,7 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.app :as app]
    [automaton-build.apps :as apps]
    [automaton-build.container.core :as container-core]))

@@ -157,8 +157,8 @@
   (testing "Spaces are caught"
     (is (= ["  [  ff   :as   tt ]  " "ff" "tt" nil]
            (sut/search-line sut/alias-pattern "  [  ff   :as   tt ]  ")))
-    (is (= ["   [automaton-build.adapters.log :as log]" "automaton-build.adapters.log" "log" nil]
-           (sut/search-line sut/alias-pattern "   [automaton-build.adapters.log :as log]")))))
+    (is (= ["   [automaton-core.adapters.log :as log]" "automaton-core.adapters.log" "log" nil]
+           (sut/search-line sut/alias-pattern "   [automaton-core.adapters.log :as log]")))))
 
 (deftest namespace-report-test
   (testing "Hey"

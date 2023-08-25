@@ -4,9 +4,9 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.log :as log]
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.files :as files]))
+   [automaton-core.adapters.log :as log]
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.files :as files]))
 
 (defn get-keys
   "Return a vector of the keys, transformed in string surrounded by `prefix` and `suffix`

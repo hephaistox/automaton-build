@@ -8,7 +8,7 @@
    [automaton-build.app-agnostic.code-stats :as code-stats]
    [automaton-build.apps :as apps]
    [automaton-build.graph :as graph]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.env-setup :as env-setup]))
 
 (defn la
   "Creates a local acceptance test environment for all applictions and in that feature branch

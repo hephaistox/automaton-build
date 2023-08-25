@@ -3,8 +3,8 @@
    [clojure.test :refer [deftest is testing]]
 
    [automaton-build.adapters.build-config :as build-config]
-   [automaton-build.adapters.deps-edn :as deps-edn]
-   [automaton-build.adapters.files :as files]
+   [automaton-core.adapters.deps-edn :as deps-edn]
+   [automaton-core.adapters.files :as files]
    [automaton-build.app.find-an-app-for-test :as bafaaft]
    [automaton-build.app :as sut]))
 

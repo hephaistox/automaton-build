@@ -3,8 +3,8 @@
   (:require
    [automaton-build.adapters.html :as bah]
    [automaton-build.adapters.pdf :as bap]
-   [automaton-build.adapters.files :as baf]
-   [automaton-build.adapters.log :as bal]))
+   [automaton-core.adapters.files :as baf]
+   [automaton-core.adapters.log :as bal]))
 
 (defn blog-md->pdf
   "Creates pdf file from md document with pdf document meta data and hephaistox footer/header on every page.

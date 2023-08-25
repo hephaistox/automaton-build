@@ -7,7 +7,7 @@
    [automaton-build.monorepo.local-test :as monorepo-lt]
    [automaton-build.monorepo.prod-release :as monorepo-release]
    [automaton-build.monorepo.local-acceptance :as monorepo-la]
-   [automaton-build.adapters.log :as log]))
+   [automaton-core.adapters.log :as log]))
 
 (defn new-feature-branch
   "Task to create a new feature branch"

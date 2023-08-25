@@ -4,8 +4,8 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.markdown :as markdown]))
 
 (defn count-lines

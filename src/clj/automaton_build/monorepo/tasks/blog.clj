@@ -1,10 +1,10 @@
 (ns automaton-build.monorepo.tasks.blog
   (:require
    [clojure.string :as cs]
-   [automaton-build.adapters.edn-utils :as baeu]
+   [automaton-core.adapters.edn-utils :as baeu]
    [automaton-build.blog :as bb]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.env-setup :as env-setup]))
 
 (defn documents-folder
   "Directory with customer materials"

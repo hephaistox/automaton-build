@@ -2,8 +2,8 @@
   (:require
    [clojure.test :refer [deftest is testing]]
 
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.markdown :as sut]))
 
 (deftest create-md-test

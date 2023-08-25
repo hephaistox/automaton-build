@@ -1,8 +1,8 @@
 (ns automaton-build.monorepo.tasks.clean
   "Clean monorepo temporary files"
   (:require
-   [automaton-build.adapters.files :as files]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.env-setup :as env-setup]))
 
 (def env-setup env-setup/env-setup)
 

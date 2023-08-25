@@ -2,11 +2,11 @@
   "Manage the monorepo dependencies"
   (:require
    [automaton-build.adapters.deep-merge :as deep-merge]
-   [automaton-build.adapters.deps-edn :as deps-edn]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.deps-edn :as deps-edn]
+   [automaton-core.adapters.log :as log]
 
    [automaton-build.apps :as apps]
-   [automaton-build.adapters.files :as files]))
+   [automaton-core.adapters.files :as files]))
 
 (defn build-everything-deps
   "Build the monorepo `deps.edn` file.

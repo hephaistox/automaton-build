@@ -2,10 +2,10 @@
   "Manage the clever cloud container"
   (:require
    [automaton-build.adapters.container :as adapter-container]
-   [automaton-build.adapters.deps-edn :as deps-edn]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
-   [automaton-build.env-setup :as env-setup]
+   [automaton-core.adapters.deps-edn :as deps-edn]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
+   [automaton-core.env-setup :as env-setup]
    [automaton-build.app.code-publication :as app-code-pub]))
 
 (def image-name

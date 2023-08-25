@@ -4,7 +4,7 @@
    [automaton-build.adapters.commands :as cmds]
    [automaton-build.adapters.mermaid :as mermaid]
    [automaton-build.adapters.frontend-compiler :as frontend-compiler]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.env-setup :as env-setup]))
 
 (defn run-prepl
   "Execute the repl for the application which name is the first parameter

@@ -2,9 +2,9 @@
   "Gather front end compilers toolings. Currently use shadow on npx "
   (:require
    [automaton-build.adapters.commands :as cmds]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
+   [automaton-core.env-setup :as env-setup]))
 
 (defn npx-installed?*
   "Check if npx is installed

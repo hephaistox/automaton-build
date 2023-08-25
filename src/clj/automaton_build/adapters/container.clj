@@ -5,8 +5,8 @@
    [clojure.string :as str]
 
    [automaton-build.adapters.commands :as cmds]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]))
 
 (defn container-installed?*
   "Check if docker is properly installed

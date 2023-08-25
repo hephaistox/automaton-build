@@ -3,7 +3,7 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.files :as files]))
+   [automaton-core.adapters.files :as files]))
 
 (defn create-md
   "Build the markdown file

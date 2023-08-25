@@ -3,8 +3,8 @@
    [clojure.test :refer [deftest is testing]]
 
    [automaton-build.adapters.build-config :as sut]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.edn-utils :as edn-utils]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.edn-utils :as edn-utils]))
 
 (deftest search-for-build-config-test
   (testing "Are projects found"

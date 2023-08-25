@@ -1,6 +1,6 @@
 (ns automaton-build.monorepo.prod-release
   (:require
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.app.test :as app-test]))
 
 (defn prelease

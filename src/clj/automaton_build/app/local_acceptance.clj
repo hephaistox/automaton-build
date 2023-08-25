@@ -1,8 +1,8 @@
 (ns automaton-build.app.local-acceptance
   (:require
    [automaton-build.adapters.cfg-mgt :as cfg-mgt]
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.log :as log]
    [automaton-build.app.doc :as app-doc]
    [automaton-build.app.code-publication :as app-pub]
    [automaton-build.container.clever-cloud :as cc-container]

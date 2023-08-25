@@ -1,7 +1,7 @@
 (ns automaton-build.app-agnostic.tasks.container
   "Tasks to manage application containers"
   (:require
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
 
    [automaton-build.adapters.container :as container]))
 

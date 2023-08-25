@@ -7,7 +7,7 @@
    [clojure.set :as set]
 
    [automaton-build.app :as app]
-   [automaton-build.adapters.string :as bas]))
+   [automaton-core.adapters.string :as bas]))
 
 ;; *********************
 ;; Build apps

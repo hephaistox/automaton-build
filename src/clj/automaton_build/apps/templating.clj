@@ -10,11 +10,11 @@
 
    [automaton-build.adapters.build-config :as build-config]
    [automaton-build.adapters.deep-merge :as deep-merge]
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.templating :as templating]
-   [automaton-build.env-setup :as env-setup]
+   [automaton-core.env-setup :as env-setup]
    [automaton-build.app :as app]
    [automaton-build.apps :as apps]])
 

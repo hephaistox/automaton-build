@@ -1,11 +1,11 @@
 (ns automaton-build.adapters.html
   "Manipulate html"
   (:require
-   [automaton-build.adapters.files :as files]
+   [automaton-core.adapters.files :as files]
 
    [hiccup2.core :as h.page]
    [markdown.core :refer [md-to-html]]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.env-setup :as env-setup]))
 
 (defn- hephaistox-logo
   "Hephaistox logo clj-pdf element created for header"

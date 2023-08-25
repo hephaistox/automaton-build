@@ -3,10 +3,10 @@
   build.app and all subsequent namespaces are here to build one application"
   (:require
    [automaton-build.adapters.code-files :as code-files]
-   [automaton-build.adapters.deps-edn :as deps-edn]
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.deps-edn :as deps-edn]
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.schema :as schema]
    [automaton-build.adapters.shadow-cljs :as shadow-cljs]))
 

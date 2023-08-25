@@ -4,9 +4,9 @@
   (:require
    [codox.main :as codox]
 
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
+   [automaton-core.env-setup :as env-setup]))
 
 (defn doc-subdir
   "The directory of the documentation

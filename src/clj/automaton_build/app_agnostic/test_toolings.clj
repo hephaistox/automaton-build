@@ -3,8 +3,8 @@
   (:require
    [automaton-build.adapters.commands :as cmds]
    [automaton-build.adapters.code-files :as code-files]
-   [automaton-build.adapters.log :as log]
-   [automaton-build.adapters.edn-utils :as edn-utils]))
+   [automaton-core.adapters.log :as log]
+   [automaton-core.adapters.edn-utils :as edn-utils]))
 
 (defn unit-test
   "Run unit test"

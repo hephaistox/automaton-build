@@ -1,6 +1,6 @@
 (ns automaton-build.container.core
   (:require
-   [automaton-build.env-setup :as env-setup]))
+   [automaton-core.env-setup :as env-setup]))
 
 (defn container-image-container-names
   "List of container names

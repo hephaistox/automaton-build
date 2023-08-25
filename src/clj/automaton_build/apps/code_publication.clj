@@ -1,7 +1,7 @@
 (ns automaton-build.apps.code-publication
   (:require
    [automaton-build.app :as app]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.app.code-publication :as app-code-pub]))
 
 (defn push-a-lib

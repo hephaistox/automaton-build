@@ -3,10 +3,10 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.log :as log]
    [automaton-build.adapters.schema :as schema]
-   [automaton-build.adapters.edn-utils :as edn-utils]))
+   [automaton-core.adapters.edn-utils :as edn-utils]))
 
 (def files-repo-schema
   "Schema for files-repo"

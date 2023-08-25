@@ -1,7 +1,7 @@
 (ns automaton-build.app.local-test
   "Local testing"
   (:require
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.log :as log]
    [automaton-build.app.test :as app-test]))
 
 (defn ltest

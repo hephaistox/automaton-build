@@ -3,11 +3,11 @@
   (:require
    [clojure.string :as str]
 
-   [automaton-build.adapters.bb-edn :as bb-edn]
+   [automaton-core.adapters.bb-edn :as bb-edn]
    [automaton-build.adapters.build-config :as build-config]
    [automaton-build.adapters.cicd :as cicd]
-   [automaton-build.adapters.edn-utils :as edn-utils]
-   [automaton-build.adapters.log :as log]
+   [automaton-core.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.log :as log]
    [automaton-build.apps :as apps]
    [automaton-build.cli-params :as cli-params]
    [automaton-build.exit-codes :as exit-codes]
@@ -36,8 +36,14 @@
   Params:
   * `tasks` to publish in `bb.edn`, is a map"
   [tasks]
-  (bb-edn/update-bb-edn ""
-                        (tasks/create-bb-tasks tasks)))
+  (let [tasks (tasks/create-bb-tasks tasks)
+        update-fn (fn [bb-edn]
+                    (assoc bb-edn
+                           :tasks (merge (select-keys (:tasks bb-edn)
+                                                      [:init :requires])
+                                         (tasks/create-bb-tasks tasks))))]
+    (bb-edn/update-bb-edn ""
+                          update-fn)))
 
 (defn create-apps
   "Create the apps list from the list of `build-config-filenames`

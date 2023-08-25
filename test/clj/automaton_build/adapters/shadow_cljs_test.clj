@@ -4,7 +4,7 @@
    [clojure.java.io :as io]
 
    [automaton-build.adapters.shadow-cljs :as sut]
-   [automaton-build.adapters.files :as files]))
+   [automaton-core.adapters.files :as files]))
 
 (def shadow-cljs-dir
   (files/extract-path (str (io/file (io/resource "touch")))))

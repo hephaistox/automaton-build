@@ -1,7 +1,7 @@
 (ns automaton-build.adapters.shadow-cljs
   (:require
-   [automaton-build.adapters.files :as files]
-   [automaton-build.adapters.edn-utils :as edn-utils]))
+   [automaton-core.adapters.files :as files]
+   [automaton-core.adapters.edn-utils :as edn-utils]))
 
 (def shadow-cljs-edn
   "shadow-cljs.edn")

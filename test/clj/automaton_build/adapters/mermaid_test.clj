@@ -2,7 +2,7 @@
   (:require
    [clojure.test :refer [deftest is testing]]
 
-   [automaton-build.adapters.edn-utils :as edn-utils]
+   [automaton-core.adapters.edn-utils :as edn-utils]
    [automaton-build.adapters.mermaid :as sut]))
 
 (deftest need-to-update?
