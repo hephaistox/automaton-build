@@ -1,0 +1,26 @@
+{:paths ["src/clj"
+         "src/cljc"
+         "test/clj"
+         "test/resources"]
+ :aliases {:repl {:extra-paths ["env/dev/src/clj"
+                                "env/dev/resources"]}}
+
+ :deps {babashka/fs {:mvn/version "0.2.12"}
+        babashka/process {:mvn/version "0.3.11"}
+        ;; Log
+        org.apache.logging.log4j/log4j-api {:mvn/version "2.19.0"}
+        org.clojure/tools.logging {:mvn/version "1.2.4"}
+        org.apache.logging.log4j/log4j-core {:mvn/version "2.19.0"}
+        org.slf4j/slf4j-nop {:mvn/version "2.0.4"}
+
+        codox/codox #:mvn{:version "0.10.8"},
+        metosin/malli #:mvn{:version "0.9.2"}
+        com.github.liquidz/antq {:mvn/version "2.2.962"}
+        danlentz/clj-uuid #:mvn{:version "0.1.9"}
+        zprint/zprint {:mvn/version "1.2.7"}
+        clj-htmltopdf/clj-htmltopdf #:mvn{:version "0.2.1"}
+        hiccup/hiccup #:mvn{:version "2.0.0-RC1"}
+        markdown-clj/markdown-clj #:mvn{:version "1.11.4"}}
+ :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/log4j2-factory"
+            "-Dlog4j.configurationFile=log4j2-build.xml"]
+ :ns-default automaton-build.monorepo.core}

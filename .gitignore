@@ -1,0 +1,46 @@
+# Temporary files
+**/out/
+**/target/
+**/**/resources/public/js/compiled/
+**/**/resources/public/css
+docs/codox
+
+# nrepl port
+**/**/.nrepl-port
+
+# Caches
+**/.DS_Store
+**/.cpcache/
+**/.cache
+**/*.class
+**/*.main.css
+
+# Log files
+**/*.log
+
+# Leiningen
+/.lein-*
+
+# Node.js dependencies
+**/node_modules/
+
+# shadow-cljs cache, port files
+**/.shadow-cljs/
+
+# Kondo
+# The .clj-kondo/config.edn is where we setup kondo.
+# It is part of CICD, It is important to keep that file.
+**/.clj-kondo/.cache
+
+# Private credentials
+**/.clever.json
+
+#intellij
+.idea/
+**.iml
+**/**.iml
+
+#tmp-directory
+tmp
+repos
+containers
