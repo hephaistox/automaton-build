@@ -1,3 +1,4 @@
+;; This file is used only to test the shadow-cljs namespace
 {:nrepl {:port 8777}
  :jvm-opts ["-Xmx1G"
             "-Dclojure.tools.logging.factory=clojure.tools.logging.impl/log4j2-factory"]

@@ -7,15 +7,6 @@
 (def build-config-filename
   "build_config.edn")
 
-(defn one-or-multiple-apps
-  "Checks if the build_config informs about other apps. If so it returns them else returns the provided edn file."
-  [app-edn-file]
-  (if-let [edn-map (edn-utils/read-edn app-edn-file)]
-    (if (:multiple? edn-map)
-      (:apps edn-map)
-      app-edn-file)
-    app-edn-file))
-
 (defn search-for-build-config
   "Scan the directory to find build-config files, starting in the current directory
   Useful to discover applications
@@ -25,13 +16,8 @@
   * none
   Returns the list of directories with `build_config.edn` in it"
   []
-  (->> (let [subdir (conj (files/list-subdir "")
-                          "")]
-         (for [path subdir]
-           (let [bb-config-filename (files/create-file-path path
-                                                            build-config-filename)]
-             (when (files/is-existing-file? bb-config-filename)
-               (one-or-multiple-apps bb-config-filename)))))
+  (->> (files/search-files ""
+                           (str "**" build-config-filename))
        flatten
        (filter (comp not nil?))))
 

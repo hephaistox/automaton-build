@@ -7,7 +7,7 @@
    [automaton-core.adapters.files :as files]))
 
 (def shadow-cljs-dir
-  (files/extract-path (str (io/file (io/resource "touch")))))
+  (files/extract-path (str (io/file (io/resource "test-shadow/shadow-cljs.touch")))))
 
 (deftest load-shadow-cljs-test
   (testing "Test a map is loaded"
