@@ -1,50 +1,22 @@
 (ns automaton-build.graph-test
   (:require
    [clojure.test :refer [deftest is testing]]
-
+   [automaton-build.data-structure.graph.graph-stub :as graph-stub]
    [automaton-build.graph :as sut]))
 
-(def graph-data
-  {'a {:edges {'b {}
-               'c {}}
-       :foo4 :bar4}
-   'b {:edges {'d {}}
-       :foo3 :bar3}
-   'c {:edges {'external1 {}}
-       :foo2 :bar2}
-   'd {:foo :bar}})
-
-(deftest remove-graph-layer-test
-  (testing "Build one graph layer"
-    (is (= [{'c {:edges {'external1 {}}, :foo2 :bar2}
-             'd {:foo :bar}}
-
-            {'a {:edges {'b {}}
-                 :foo4 :bar4}
-             'b {:edges {}
-                 :foo3 :bar3}}]
-           (sut/remove-graph-layer graph-data)))))
-
-(def result
-  (atom []))
-
-(deftest topologically-ordered-doseq
+(deftest topologically-ordered-test-copy
   (testing "Check doseq is ordered in the right order"
-    (is (do
-          (reset! result [])
-          (sut/topologically-ordered-doseq graph-data
-                                           (fn [edge]
-                                             (swap! result
-                                                    #(conj % (first edge)))))
-          (= @result
-             ['c 'd 'b 'a]))))
+    (is (= ['a 'b 'c 'd]
+           (sut/topologically-ordered graph-stub/nodes-fn
+                                      graph-stub/edges-fn
+                                      graph-stub/dst-in-edge
+                                      graph-stub/remove-nodes
+                                      graph-stub/graph-data))))
   (testing "Work with graph with useless dependencies"
-    (is (do
-          (reset! result [])
-          (sut/topologically-ordered-doseq (assoc graph-data
-                                                  'e {:foo5 :bar5})
-                                           (fn [edge]
-                                             (swap! result
-                                                    #(conj % (first edge)))))
-          (= @result
-             ['c 'd 'e 'b 'a])))))
+    (is (= ['a 'e 'b 'c 'd]
+           (sut/topologically-ordered
+            graph-stub/nodes-fn
+            graph-stub/edges-fn
+            graph-stub/dst-in-edge
+            graph-stub/remove-nodes
+            (assoc graph-stub/graph-data 'e {:foo5 :bar5}))))))

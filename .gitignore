@@ -13,7 +13,7 @@ docs/codox
 **/.cpcache/
 **/.cache
 **/*.class
-**/*.main.css
+**/*.styles.css
 
 # Log files
 **/*.log
@@ -43,4 +43,3 @@ docs/codox
 #tmp-directory
 tmp
 repos
-containers

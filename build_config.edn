@@ -1,7 +1,18 @@
-{:monorepo {:app-dir "automaton/automaton-build"}
- :publication {:repo-address "git@github.com:hephaistox/automaton-build.git"
-               :as-lib hephaistox/automaton-build
-               :branch "main"}
- :app-name "automaton-build"
- :build? true
- :cust-app? false}
+{:app-name "automaton-build"
+ :task-shared {:gha {}
+               :publication {:as-lib org.clojars.hephaistox/automaton-build
+                             :deploy-to :clojars
+                             :license {}
+                             :major-version "0.0.%d"
+                             :repo
+                             "git@github.com:hephaistox/automaton-build.git"}
+               :repl-aliases [:common-test :env-development-repl :build]
+               :storage-datomic {}}
+ :tasks {:clean {:dirs [".cpcache/"
+                        ".clj-kondo/.cache/"
+                        "tmp/"
+                        "target/"
+                        "node_modules/"
+                        ".shadow-cljs/builds/"]}
+         :reports {:forbiddenwords-words #{"automaton-core" "automaton-web"
+                                           "landing" "tap>"}}}}

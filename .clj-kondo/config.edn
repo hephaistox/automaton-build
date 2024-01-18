@@ -1,0 +1,7 @@
+{:lint-as {me.raynes.conch/programs clojure.core/declare
+           me.raynes.conch/let-programs clojure.core/let
+           day8.re-frame.tracing/fn-traced clojure.core/fn
+           outpace.config/defconfig clojure.core/def
+           spade.core/defclass clojure.core/defn
+           mount.core/defstate clojure.core/def
+           spade.core/defglobal clojure.core/def}}

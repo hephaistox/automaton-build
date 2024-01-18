@@ -1,51 +1,58 @@
 (ns automaton-build.graph
-  "Basic graph management for building app"
+  "Naive implementation of graph
+
+  As a user you'll need to define the following functions to define how to manipulate your graph:
+
+  ```
+(defn edges-fn
+  [graph])
+
+(defn nodes-fn
+  [graph])
+
+(defn src-in-edge
+  [edge])
+
+(defn dst-in-edge
+  [edge])
+
+(defn remove-nodes
+  [graph nodes-to-remove])
+  ```"
   (:require
-   [clojure.set :as set]))
+   [automaton-build.data-structure.graph.graph-impl :as graph-impl]
+   [automaton-build.log :as build-log]))
 
-(defn remove-graph-layer
-  "Remove all edges in the `graph` with no successor
-  * The first value is the list of edges without successors
-  * The second is the graph updated with that successors removes both in term of edges and nodes
-
-  This function could be applied again on the updated graph.
-  If there are no cycle in the graph, it will end up to an empty graph.
-
-  This is useful to build topoligical order"
-  [graph]
-  (let [edges (into #{} (keys graph))
-        edges-with-no-successor (into {} (filter (fn [edge]
-                                                   (empty? (set/intersection (into #{} (keys (:edges (second edge))))
-                                                                             edges)))
-                                                 graph))
-        nodes-with-no-successor (keys edges-with-no-successor)
-        graph-with-no-successor-removed (apply dissoc graph
-                                               nodes-with-no-successor)
-        graph-with-edges-updated (map (fn [[edge {:keys [edges]
-                                                  :as data}]]
-                                        [edge (assoc data
-                                                     :edges (apply dissoc edges
-                                                                   nodes-with-no-successor))])
-                                      graph-with-no-successor-removed)]
-    [edges-with-no-successor (into {}
-                                   graph-with-edges-updated)]))
-
-(defn topologically-ordered-doseq
+(defn topologically-ordered
   "Apply with side effects the `update-fn` on the `graph` while respecting the topological order
+  Returns the nodes (i.e. in the sens of `nodes-fn`), ordered in such a way that if A requires B so, B is earlier in the sequence
+
   Params:
-  * `graph` the graph to explore
-  * `body-fn` a function applied to an edge (so a pair of node and a map with `:app-name` and `:edges` the map of dependencies )"
-  [graph body-fn]
-  (loop [graph graph
-         nb-nodes (count graph)]
-    (let [[edges-with-no-successor updated-graph] (remove-graph-layer graph)]
-      (doseq [edge-with-no-successor edges-with-no-successor]
-        (body-fn edge-with-no-successor))
-
-      (when (zero? nb-nodes)
-        (throw (ex-info "Cycle found"
-                        {:graph graph
-                         :edges-with-no-successor edges-with-no-successor})))
-
-      (when-not (empty? updated-graph)
-        (recur updated-graph (dec nb-nodes))))))
+  * `nodes-fn` function taking one graph as a parameter, returns the list of nodes
+  * `edges-fn` function taking one graph as a parameter,  return the list of edges
+  * `dest-in-edge` function taking an edge as a parameter (as returned by edges-fn), return the destination of the oriented edge
+  * `remove-nodes` function taking a graph as a first parameter and a collection of nodes to remove as a second parameter, returns the updated collection
+  * `graph` the graph to explore"
+  [nodes-fn edges-fn dest-in-edge remove-nodes graph]
+  (loop [graph-to-process graph
+         topologically-sorted-nodes []
+         nb-nodes (->> graph-to-process
+                       nodes-fn
+                       count)]
+    (let [[nodes-with-no-successor updated-graph] (graph-impl/remove-graph-layer
+                                                   nodes-fn
+                                                   edges-fn
+                                                   dest-in-edge
+                                                   remove-nodes
+                                                   graph-to-process)
+          topologically-sorted-graph
+          (apply conj topologically-sorted-nodes nodes-with-no-successor)]
+      (cond
+        (or (empty? nodes-with-no-successor) (neg? nb-nodes))
+        (do (build-log/error "Cycle found in the graph")
+            (build-log/debug-data {:graph graph-to-process
+                                   :edges-with-no-successor
+                                   nodes-with-no-successor}))
+        (empty? updated-graph) topologically-sorted-graph
+        :else
+        (recur updated-graph topologically-sorted-graph (dec nb-nodes))))))

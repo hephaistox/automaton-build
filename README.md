@@ -1,8 +1,55 @@
-# Monorepo tools
-This subproject contains code factorized for CI/CD, it is meant for:
-* Development using `everything` project,
-* To manage all `bb` tasks of all customer projects,
-* Manage `bb` tasks of automaton projects
-* Manage all complimentary tasks, like templating, docker image creation and so on.
-* Clojure root directory is where all clojure code should be stored. So `everything` project can gather all of it
-* Root directory is different as some commands should be executed from there.
+# automaton-build
+
+Project used by all other Hephaistox projects to build, publish, update them
+
+It has many use-cases:
+
+* cust-app projects
+* automaton projects
+* automaton-build itself
+* the monorepo
+
+## Project design decisions
+
+automaton-build has the following objectives:
+* being usable for all kind of projects
+   * Description:
+      * shadow-cljs is not necessary or meaningful for all projects
+      * even if there are shadow-cljs, there may be no target build in that project (like automaton-web, automaton-core, ...)
+   * Rationale: 
+      * most of that features are the same for all projects, our one source of truth apply to it
+   * Consequences: 
+      * Each project has full control on what's the list of tasks, their name, comments, 
+      * We can simply reuse tasks
+* project flexibility
+  * Description:
+     * Even if all projects could comply to the standard tasks, it is flexible to add its own, or change the existing ones
+  * Rationale:
+     * even if most of the time all projects are identical, we may have some specificites due to certain technologies, 
+     * or some specificies for some customers,
+  * Consequences :
+      * `build_config.edn` is different for each app, and contains main differentiators
+      * the code of each task could be wrapped or rewritten
+* bb.edn are as simple as possible, so update, copy of them is quite simple
+  * Description:
+    * to have only the description of the tasks to use
+  * Rationale:
+    * as few code there is in bb.edn, as it is easy to copy paste a new version in it,
+  * Consequences:
+    * nearly all code is stored in automaton_build
+
+## How to use the project
+
+* Adding tasks in a project consists in is
+   * task selection 
+     * reuse a task in a project is simple, just pick a function with `opts` parameter in tasks directories
+     * and add that entry in the `bb.edn` file
+   * parameters updating in `build_config.edn`
+
+## Creates a new tasks
+* First prepare all the building blocks in the appropriate namespaces
+* Then, a task should be created in the `tasks` directory, in an existing namespace or a new one, the grouping should be done logically so that the tasks are easy to find, 
+* By default, tasks are added without the `:clj` options, meaning that everything is run in babashka, you'll need to change it to `:clj` to execute it in clojure mode if
+   * the dependencies are not compatible with babashka
+   * so the function should be changed to a namespace with a `_clj` suffix, so that the babashka functions are not polluted with the dependency
+* Consider to add this task in `la` for testing

@@ -1,0 +1,3 @@
+{:dev {:clj-nrepl-port 8010
+       :portal-port 8351}
+ :env :development}
