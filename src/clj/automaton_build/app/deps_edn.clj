@@ -69,7 +69,7 @@
                                                      [:extra-paths :paths])
                                         vals
                                         (apply concat)))
-                                 selected-aliases)]
+                          selected-aliases)]
     (->> paths-in-aliases
          (concat paths)
          sort
