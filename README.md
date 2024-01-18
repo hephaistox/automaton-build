@@ -10,8 +10,7 @@ It has many use-cases:
 * the monorepo
 
 ## Project design decisions
-
-automaton-build has the following objectives:
+`automaton-build` has the following objectives:
 * being usable for all kind of projects
    * Description:
       * shadow-cljs is not necessary or meaningful for all projects
@@ -39,7 +38,6 @@ automaton-build has the following objectives:
     * nearly all code is stored in automaton_build
 
 ## How to use the project
-
 * Adding tasks in a project consists in is
    * task selection 
      * reuse a task in a project is simple, just pick a function with `opts` parameter in tasks directories
