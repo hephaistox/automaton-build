@@ -1,5 +1,6 @@
 (ns automaton-build.app.bb-edn
   "Adapter for `bb.edn`"
+  (:refer-clojure :exclude [slurp spit])
   (:require
    [automaton-build.app.deps-edn :as build-deps-edn]
    [automaton-build.log :as build-log]

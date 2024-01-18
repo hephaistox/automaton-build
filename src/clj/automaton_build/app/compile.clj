@@ -1,4 +1,5 @@
 (ns automaton-build.app.compile
+  (:refer-clojure :exclude [compile])
   (:require
    [automaton-build.app :as build-app]
    [automaton-build.app.deps-edn :as build-deps-edn]
