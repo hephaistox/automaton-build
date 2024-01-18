@@ -1,5 +1,5 @@
 (ns automaton-build.os.pdf
-  "Manipulate pdf"
+  "Manipulate pdfs file"
   (:require
    [automaton-build.os.files :as build-files]
    [automaton-build.web.uri :as build-uri]
