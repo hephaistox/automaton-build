@@ -1,5 +1,6 @@
 (ns automaton-build.app.deps-edn
   "Proxy for `deps.edn` file"
+  (:refer-clojure :exclude [slurp spit])
   (:require
    [automaton-build.os.files :as build-files]
    [automaton-build.utils.map :as build-utils-map]
