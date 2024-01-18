@@ -68,7 +68,11 @@
 (defn- tailwind-compile-css
   [css-files compiled-dir]
   (let [tailwind-command ["npx" "tailwindcss"]
-        input-files (apply vector "-i" css-files)
+        input-files (->> css-files
+                         (map #(vector "-i" %))
+                         (apply vector)
+                         flatten
+                         vec)
         output-files ["-o" compiled-dir]
         tailwindcss (-> tailwind-command
                         (concat input-files output-files)
