@@ -43,7 +43,7 @@
   * `container-image-name` the name of the image to build
   * `target-container-dir` is where the Dockerfile should be"
   [container-image-name target-container-dir]
-  (build-log/debug-format "Build `%s` docker image" container-image-name)
+  (build-log/debug-format "Build `%s` docker image in `%s`" container-image-name target-container-dir)
   (when (build-cmds/execute-and-trace ["docker"
                                        "build"
                                        "--platform"
