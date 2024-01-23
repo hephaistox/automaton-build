@@ -58,7 +58,8 @@
                            'automaton-build.tasks.registry.conditions/not-cicd?
                            :la-test {:skip? true}
                            :shared [:gha :account]
-                           :task-cli-opts-kws [:tag]}
+                           :task-cli-opts-kws [:tag]
+                           :pf :clj}
    'gha-lconnect {:doc "Connect to a local container running this code"
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
