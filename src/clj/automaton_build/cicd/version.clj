@@ -65,13 +65,6 @@
            older-minor-version :minor-version
            older-major-version :major-version}
           (read-version-file app-dir)
-          _ (prn "major-version " major-version)
-          _ (prn "remove: " (-> major-version
-                remove-optional-qualifier
-                ))
-          _ (prn "final: " (-> major-version
-                              remove-optional-qualifier
-                              (format -1)))
           minor-version
           (if-not (= older-major-version
                      (-> major-version
@@ -93,10 +86,10 @@
                               minor-version)
       (if
         (confirm-version? force? app-name (current-version app-dir) new-version)
-        (save-version-file app-dir
-                           {:major-version major-version-only
-                            :version new-version
-                            :minor-version new-minor-version})
-        (build-log/warn "Version couldn't be updated without user consent"))
-      new-version)
+        (do (save-version-file app-dir
+                               {:major-version major-version-only
+                                :version new-version
+                                :minor-version new-minor-version})
+            new-version)
+        (build-log/warn "Version couldn't be updated without user consent")))
     (build-log/warn "Major version is missing")))
