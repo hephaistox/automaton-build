@@ -28,5 +28,5 @@
      (build-files/copy-files-or-dir [target-dir]
                                     (build-files/create-dir-path clever-repo-dir
                                                                  "target"))
-     #_(build-clever-cloud/deploy clever-repo-dir)))
+     (build-clever-cloud/deploy clever-repo-dir)))
   ([repo-uri target-jar] (publish-app repo-uri target-jar ".")))

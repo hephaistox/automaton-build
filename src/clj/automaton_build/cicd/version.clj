@@ -65,6 +65,13 @@
            older-minor-version :minor-version
            older-major-version :major-version}
           (read-version-file app-dir)
+          _ (prn "major-version " major-version)
+          _ (prn "remove: " (-> major-version
+                remove-optional-qualifier
+                ))
+          _ (prn "final: " (-> major-version
+                              remove-optional-qualifier
+                              (format -1)))
           minor-version
           (if-not (= older-major-version
                      (-> major-version
