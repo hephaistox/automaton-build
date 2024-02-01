@@ -1,11 +1,11 @@
 (ns automaton-build.tasks.launcher.launch-on-clj-entry-point
   (:require
+   [automaton-build.os.files :as build-files]
    [automaton-build.tasks.launcher.cli-task-agnostic-opts
     :as
     build-cli-task-agnostic-opts]
    [automaton-build.utils.namespace :as build-namespace]
-   [clojure.edn :as edn]
-   [automaton-build.os.files :as build-files]))
+   [clojure.edn :as edn]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn entry-point
@@ -25,4 +25,7 @@
                                                      edn/read-string)
         {:keys [task-name]} task-map]
     (build-cli-task-agnostic-opts/common-opts! cli-args task-name)
-    (build-namespace/symbol-to-fn-call (:task-fn task-map) task-map app-data)))
+    (let [exit-code (build-namespace/symbol-to-fn-call (:task-fn task-map)
+                                                       task-map
+                                                       app-data)]
+      (System/exit exit-code))))

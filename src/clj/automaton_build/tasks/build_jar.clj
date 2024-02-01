@@ -1,6 +1,7 @@
 (ns automaton-build.tasks.build-jar
   (:require
    [automaton-build.app.compile :as build-app-compile]
+   [automaton-build.configuration :as build-conf]
    [automaton-build.os.exit-codes :as build-exit-codes]
    [automaton-build.os.files :as build-files]))
 
@@ -17,11 +18,12 @@
                 env]}
         publication
         {:keys [deploy-alias main-css custom-css compiled-styles-css]} frontend
-        jar-path (->> (format target-jar-filename (name :production) app-name)
+        target-env (build-conf/read-param [:env])
+        jar-path (->> (format target-jar-filename (name target-env) app-name)
                       (build-files/create-file-path app-dir)
                       build-files/absolutize)
-        exclude-aliases (get-in env [:production :exclude-aliases])]
-    (if (build-app-compile/compile :production
+        exclude-aliases (get-in env [target-env :exclude-aliases])]
+    (if (build-app-compile/compile target-env
                                    app-dir
                                    deploy-to
                                    deps-edn

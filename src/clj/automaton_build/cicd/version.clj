@@ -16,7 +16,8 @@
    [automaton-build.log :as build-log]
    [automaton-build.os.cli-input :as build-cli-input]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files :as build-files]
+   [clojure.string :as str]))
 
 (def version-file "version.edn")
 
@@ -32,21 +33,43 @@
   (build-edn-utils/spit-edn
    (build-files/create-file-path app-dir version-file)
    content
-   ";;Last generated version, note a failed push consume a number"))
+   "Last generated version, note a failed push consume a number"))
+
+(defn current-version [app-dir] (:version (read-version-file app-dir)))
+
+(defn confirm-version?
+  "It's safety measure before changing version of the project to be sure user is concious of change."
+  ([force? project-name old-version new-version]
+   (build-cli-input/yes-question
+    (format
+     "Your change will affect the version of the project `%s`, old version `%s` replaced with `%s` one are you sure you want to continue? y/n"
+     project-name
+     old-version
+     new-version)
+    force?)))
+
+(defn remove-optional-qualifier
+  "Removes optionak qualifier. (Semantic versioning: <major>.<minor>.<non-breaking>[-optional-qualifier])
+   So e.g. `0.0.20-SNAPSHOT` -> `0.0.20`"
+  [version]
+  (first (str/split version #"-")))
 
 (defn update-version
   "Build the string of the version to be pushed (the next one)
   Params:
   * `app-dir` directory of the version to count
   * `major-version`"
-  [app-dir major-version]
+  [app-dir app-name major-version force?]
   (if major-version
     (let [{_version :version
            older-minor-version :minor-version
            older-major-version :major-version}
           (read-version-file app-dir)
           minor-version
-          (if-not (= older-major-version (format major-version -1))
+          (if-not (= older-major-version
+                     (-> major-version
+                         remove-optional-qualifier
+                         (format -1)))
             (do (build-log/info "A new major version is detected")
                 (build-log/trace-format "Older major version is `%s`"
                                         older-major-version)
@@ -61,22 +84,12 @@
                               major-version
                               older-minor-version
                               minor-version)
-      (save-version-file app-dir
-                         {:major-version major-version-only
-                          :version new-version
-                          :minor-version new-minor-version})
+      (if
+        (confirm-version? force? app-name (current-version app-dir) new-version)
+        (save-version-file app-dir
+                           {:major-version major-version-only
+                            :version new-version
+                            :minor-version new-minor-version})
+        (build-log/warn "Version couldn't be updated without user consent"))
       new-version)
     (build-log/warn "Major version is missing")))
-
-
-(defn current-version [app-dir] (:version (read-version-file app-dir)))
-
-(defn confirm-version?
-  "It's safety measure before changing version of the project to be sure user is concious of change."
-  ([force?] (confirm-version? force? ""))
-  ([force? project-name]
-   (build-cli-input/yes-question
-    (format
-     "Your change will affect the main branch of the project `%s`, are you sure you want to continue? y/n"
-     project-name)
-    force?)))

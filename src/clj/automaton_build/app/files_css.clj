@@ -16,13 +16,10 @@
 (defn- write-css-file
   "Saves css content to a file"
   [path content]
-  (let
-    [css-content
-     (apply
-      str
-      ["/* This file is automatically updated by `automaton-build.app.files-css` */"
-       content])]
-    (build-files/spit-file path css-content)))
+  (build-files/spit-file
+   path
+   content
+   "/* This file is automatically updated by `automaton-build.app.files-css` */"))
 
 (defn write-main-css-file
   "Create main css file for monorepo"

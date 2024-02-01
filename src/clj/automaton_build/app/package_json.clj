@@ -5,6 +5,12 @@
 
 (def package-json "package.json")
 
+(defn package-json-path
+  [& app-dir]
+  (-> (apply build-files/create-dir-path app-dir)
+      (build-files/create-file-path package-json)
+      build-files/absolutize))
+
 (defn compare-package-json-deps
   "Returns the one with higher version"
   [deps1 deps2]
@@ -36,14 +42,11 @@
   Params:
   * `dir` the directory of the application"
   [dir]
-  (let [package-filepath (build-files/create-file-path dir package-json)]
+  (let [package-filepath (package-json-path dir)]
     (when (build-files/is-existing-file? package-filepath)
       (build-json/read-file package-filepath))))
 
 (defn write-package-json
-  "Saves package-json content to a json file in `target-dir` with `content`.
-   Returns `content` back."
+  "Saves package-json content to a json file in `target-dir` with `content`."
   [target-dir content]
-  (build-json/write-file (build-files/create-file-path target-dir package-json)
-                         content)
-  content)
+  (build-json/write-file (package-json-path target-dir) content))

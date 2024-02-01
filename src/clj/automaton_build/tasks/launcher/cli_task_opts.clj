@@ -16,6 +16,10 @@
   {:force {:spec [["-f" "--force" "Force execution on local machine"]]}
    :tag {:spec [["-t" "--tag TAG-MESSAGE" "Tag for the publication"]]
          :mandatory? true}
+   :environment {:spec [["-e"
+                         "--environment ENV-NAME"
+                         "Environment name for the publication"]]
+                 :mandatory? true}
    :message {:spec
              [["-m" "--message COMMIT-MESSAGE" "Mandatory: Commit message"]]
              :mandatory? true}})

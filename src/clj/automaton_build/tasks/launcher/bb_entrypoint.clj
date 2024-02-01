@@ -23,7 +23,6 @@
   * system exit are retrieved here so it is clearer and make the code more robust, as it is able to manage nil everywhere.
   * `app-dir` is hard coded here, the one of the current app, all following functions are based on this value, so it is possible to reuse them to build composite app
   * `bb.edn` file has been emptied to keep everything in the registry so no extrawork is needed to synchronize both
-  * the application is built here, to load file onces, to have a clear log.
   * Non tasks related initialization are done here,
   * All tasks can return an exit-code, if nil value is returned it will be turned into `ok` code, otherwise, the task return will be interpreted as an exit code
 
@@ -34,10 +33,11 @@
     (prefer-method pp/simple-dispatch
                    clojure.lang.IPersistentMap
                    clojure.lang.IDeref)
-    (build-portal/client-connect)
+    ;; No automaton code should happen before common-opts, as it is initializing logs
     (if (build-cli-task-agnostic-opts/common-opts! cli-args task-name)
       build-exit-codes/ok
       (let [app-dir ""]
+        (build-portal/client-connect)
         (if (nil? task-name)
           (do
             (build-log/fatal
@@ -47,10 +47,11 @@
                 (build-tasks-execute/task-execute app-dir task-name cli-args)]
             (cond
               (zero? exit-code)
-              (do (build-log/info "Task finished successfully.") exit-code)
-              (int? exit-code)
-              (do (build-log/info-format "Task finished with code %s" exit-code)
-                  exit-code)
+              (do (build-log/debug "Task finished successfully.") exit-code)
+              (int? exit-code) (do (build-log/debug-format
+                                    "Task finished with code %s"
+                                    exit-code)
+                                   exit-code)
               :else
               (do
                 (build-log/warn-format
@@ -69,7 +70,9 @@
   "Utilitary function for text below"
   [& args]
   (-main (concat (vec args) (if detailed-log ["-l" "trace" "-d"] []))))
+
 (comment
+  (call-main "apps")
   (call-main "be-repl")
   (call-main "error")
   (call-main "is-cicd") ;; 1

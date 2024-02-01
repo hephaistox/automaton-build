@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.launcher.print-exception
   (:require
-   [automaton-build.tasks.launcher.print-or-spit :as build-print-or-spit]
+   [automaton-build.cicd.server :as build-cicd-server]
    [automaton-build.os.terminal-msg :as build-terminal-msg]
-   [automaton-build.cicd.server :as build-cicd-server]))
+   [automaton-build.tasks.launcher.print-or-spit :as build-print-or-spit]))
 
 (defn print-exception
   "Print an exception in the context of the launcher

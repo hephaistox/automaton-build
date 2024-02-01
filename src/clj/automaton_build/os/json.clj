@@ -1,10 +1,10 @@
 (ns automaton-build.os.json
   "Everything about json manipulation"
   (:require
-   [automaton-build.os.files :as build-files]
    [automaton-build.log :as build-log]
-   [clojure.data.json :as json]
-   [clojure.java.io :as io]))
+   [automaton-build.os.files :as build-files]
+   [automaton-build.utils.comparators :as build-utils-comparators]
+   [clojure.data.json :as json]))
 
 (defn read-file
   [filepath]
@@ -15,12 +15,15 @@
          nil)))
 
 (defn write-file
-  [target-path content]
-  (try (with-open [w (io/writer target-path)]
-         (json/write content w :indent true :escape-slash false))
+  [filename content]
+  (try (build-files/spit-file
+        filename
+        (json/write-str content :indent true :escape-slash false)
+        nil
+        (partial build-utils-comparators/compare-file-change read-file))
        (catch Exception e
          (build-log/error-exception e)
-         (build-log/error-data {:target-path target-path
+         (build-log/error-data {:target-path filename
                                 :content content
                                 :e e}
                                "Writing json file has failed")

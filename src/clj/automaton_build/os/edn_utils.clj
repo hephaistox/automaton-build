@@ -18,10 +18,10 @@
          nil)))
 
 (defn read-edn
-  "Read the `.edn` file,
-  Design decision:
-  * It is the caller responsability to write this action in a file
+  "Read the `.edn` file.
 
+  Design decision:
+  * For now it is the caller responsability to write this action in a log (To be refactored)
   Params:
   * `edn-filename` name of the edn file to load"
   [edn-filename]
@@ -35,6 +35,8 @@
                                               :file-name edn-filename}))
          nil)))
 
+(defn compare-edn [filename content _header] (= (read-edn filename) content))
+
 (defn spit-edn
   "Spit the `content` in the edn file called `deps-edn-filename`.
   If any, the header is added at the top of the file
@@ -42,35 +44,24 @@
   * `edn-filename` Filename
   * `content` What is spitted
   * `header` the header that is added to the content, followed by the timestamp - is automatically preceded with ;;
-  Return the content of the file"
+  Return the content if spit is successful, false if there is no change and nil if there is an error."
   ([edn-filename content header]
-   (try
-     (when (nil? edn-filename)
-       (throw (Exception. "Impossible to save the file due to empty filename")))
-     (let [content (doall content)
-           previous-content (some-> edn-filename
-                                    build-files/is-existing-file?
-                                    read-edn)]
-       (cond
-         (and (some? previous-content)
-              (= (hash previous-content) (hash content)))
-         (build-log/debug-format
-          "Spit of file `%s` skipped, as it is already up to date:"
-          edn-filename)
-         (some? content) (do (build-log/debug-format
-                              "Spit of file `%s` is updating with new content."
-                              edn-filename)
-                             (build-files/spit-file edn-filename content header)
-                             (build-code-formatter/format-file edn-filename))
-         :else (build-log/debug "Content is empty"))
-       content)
-     (catch Exception e
-       (build-log/error-data {:deps-edn-filename edn-filename
-                              :exception e
-                              :content content}
-                             (format "Impossible to update the `%s` file."
-                                     edn-filename))
-       nil)))
+   (try (when (nil? edn-filename)
+          (throw (ex-info "Impossible to save the file due to empty filename"
+                          {:edn-filename edn-filename})))
+        (let [spit-res (build-files/spit-file edn-filename
+                                              content
+                                              (when header (str ";; " header))
+                                              compare-edn)]
+          (build-code-formatter/format-file edn-filename)
+          spit-res)
+        (catch Exception e
+          (build-log/error-data {:deps-edn-filename edn-filename
+                                 :exception e
+                                 :content content}
+                                (format "Impossible to update the `%s` file."
+                                        edn-filename))
+          nil)))
   ([edn-filename content] (spit-edn edn-filename content nil)))
 
 (defn create-tmp-edn

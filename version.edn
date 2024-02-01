@@ -1,4 +1,4 @@
-;;Last generated version, note a failed push consume a number
-{:major-version "0.0.-1"
- :minor-version 103
- :version "0.0.103"}
+;; Last generated version, note a failed push consume a number
+{:major-version "0.0.-1-la"
+ :minor-version 104
+ :version "0.0.104-la"}

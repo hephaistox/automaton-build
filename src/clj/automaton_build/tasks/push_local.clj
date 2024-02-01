@@ -10,11 +10,13 @@
   [_task-map
    {:keys [app-dir publication message force?]
     :as _app-data}]
-  (let [{:keys [repo branch]} publication]
+  (let [{:keys [repo]} publication
+        current-branch (build-cfg-mgt/current-branch app-dir)]
     (build-log/debug-format "Push local `%s` " message)
     (if (true? (build-cfg-mgt/push-local-dir-to-repo {:source-dir app-dir
                                                       :repo-address repo
-                                                      :base-branch-name branch
+                                                      :base-branch-name
+                                                      current-branch
                                                       :commit-msg message
                                                       :force? force?}))
       build-exit-codes/ok

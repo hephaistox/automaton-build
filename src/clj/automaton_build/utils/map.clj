@@ -1,7 +1,7 @@
 (ns automaton-build.utils.map
   "Gather utility functions for maps"
   (:require
-   [automaton-build.utils.comparators :as build-comparators]
+   [automaton-build.utils.comparators :as build-utils-comparators]
    [clojure.walk :as walk]))
 
 (defn update-k-v
@@ -33,7 +33,7 @@
                      ks
                      (partial into
                               (sorted-map-by
-                               build-comparators/comparator-kw-symbol)))
+                               build-utils-comparators/comparator-kw-symbol)))
           (recur rkss)))))
 
 (defn deep-merge

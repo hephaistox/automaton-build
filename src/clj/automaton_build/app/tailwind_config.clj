@@ -39,10 +39,7 @@
   * `content`"
   [dir tailwind-config]
   (let
-    [tailwind-config
-     (apply
-      str
-      ["/* This file is automatically updated by `automaton-build.app.tailwind-config` */"
-       tailwind-config])
-     package-filepath (build-files/create-file-path dir tailwind-config-js)]
-    (js-config/write-js-config package-filepath tailwind-config)))
+    [package-filepath (build-files/create-file-path dir tailwind-config-js)
+     header
+     "/* This file is automatically updated by `automaton-build.app.tailwind-config` */"]
+    (js-config/write-js-config package-filepath tailwind-config header)))

@@ -10,6 +10,7 @@
     :hidden? true}
    'blog {:doc "Generate the blog files"
           :mandatory-config? true
+          :la-test {:skip? true}
           :pf :clj
           :build-configs [[:html-dir {:default "tmp/html/"}
                            :string]
@@ -48,6 +49,10 @@
    'error {:doc "Run intentionaly an error."
            :la-test {:expected-exit-code 131}
            :hidden? true}
+   'error-clj {:doc "Run intentionaly an error on clj."
+               :la-test {:expected-exit-code 131}
+               :pf :clj
+               :hidden? true}
    'format-code {:doc "Format the whole documentation"
                  :build-configs [[:include-files {:default #{"build_config.edn"
                                                              "deps.edn"
@@ -62,8 +67,7 @@
    'gha-lconnect {:doc "Connect to a local container running this code"
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
-                  :la-test {:skip? true
-                            :process-opts {:in "exit\n"}}}
+                  :la-test {:skip? true}}
    'is-cicd {:doc "Tested if runned on cicd"
              :la-test {:cmd ["bb" "heph-task" "is-cicd" "-f"]}
              :hidden? true
@@ -87,8 +91,10 @@
    {:doc
     "Compile local modifications for development environment and watch the modifications"
     :mandatory-config? true
+    :la-test {:skip? true}
     :shared [:publication]}
    'lfe-test {:doc "Local frontend test"
+              :la-test {:skip? true}
               :mandatory-config? true}
    'lint {:doc "Apply linter on project source code."}
    'mermaid {:doc "Build all mermaid files"

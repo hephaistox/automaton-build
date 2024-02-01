@@ -66,11 +66,6 @@
     (print-message "D"
                    (format "Log is initialized with level `%s`" min-level*))))
 
-(comment
-  (set-min-level! :trace)
-  ;;
-)
-
 (defn set-details?
   "If true, the console will limit to the size"
   [b]
