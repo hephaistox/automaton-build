@@ -276,3 +276,98 @@
            (sut/search-in-parents (sut/absolutize "src/clj") "bb.edn"))))
   (testing "Non existing file return nil"
     (is (nil? (sut/search-in-parents "" "non-existing-file")))))
+
+
+(deftest spit-file-test
+  (let [tmp-file (sut/create-temp-file "spit-file-test.txt")]
+    (testing "Creates edn file"
+      (sut/spit-file tmp-file {10 20})
+      (is (= "{10 20}" (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file "{15 25}")
+      (is (= "{15 25}" (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file {5 5} ";;Header")
+      (is (= ";;Header\n{5 5}" (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file "a imię jego czterdzieści i cztery")
+      (is (= "a imię jego czterdzieści i cztery" (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file "this is\nmy new text\nanditsamazing")
+      (is (= "this is\nmy new text\nanditsamazing" (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file 44)
+      (is (= "44" (sut/read-file tmp-file)))
+      (sut/spit-file
+       tmp-file
+       [1 2 3 4 5 6 "text" "something" "anthony don't know who mickiewicz is"])
+      (is
+       (=
+        "[1 2 3 4 5 6 \"text\" \"something\" \"anthony don't know who mickiewicz is\"]"
+        (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file
+                     {:a 1
+                      :b "costam"
+                      :c 50
+                      :d [1 2 3 4]})
+      (is (= "{:a 1, :b \"costam\", :c 50, :d [1 2 3 4]}"
+             (sut/read-file tmp-file))))
+    (testing "Creating file without header argument does not create header"
+      (sut/spit-file tmp-file "a")
+      (is (= "a" (sut/read-file tmp-file)))
+      (sut/spit-file tmp-file
+                     {:a 1
+                      :b "costam"
+                      :c 50
+                      :d [1 2 3 4 5]
+                      :f ["costam" 2 "blabla"]})
+      (is
+       (=
+        "{:a 1, :b \"costam\", :c 50, :d [1 2 3 4 5], :f [\"costam\" 2 \"blabla\"]}"
+        (sut/read-file tmp-file))))
+    (testing "No change in content returns false"
+      (sut/spit-file tmp-file {:a 2})
+      (is (false? (sut/spit-file tmp-file {:a 2})))
+      (sut/spit-file tmp-file
+                     {:a 2
+                      :b "costam"})
+      (is (false? (sut/spit-file tmp-file
+                                 {:a 2
+                                  :b "costam"})))
+      (sut/spit-file tmp-file
+                     {:a 2
+                      :b "costam"
+                      :h nil
+                      :e {:d :f
+                          :g "whatever forever    "}})
+      (is (false? (sut/spit-file tmp-file
+                                 {:a 2
+                                  :b "costam"
+                                  :h nil
+                                  :e {:d :f
+                                      :g "whatever forever    "}}))))
+    (testing "No change in content and change in header returns false"
+      (sut/spit-file tmp-file {:a 2})
+      (is (false? (sut/spit-file tmp-file {:a 2} "New header here hello")))
+      (sut/spit-file tmp-file
+                     {:a 2
+                      :b "costam"})
+      (is (false? (sut/spit-file tmp-file
+                                 {:a 2
+                                  :b "costam"}
+                                 "New header here hello")))
+      (sut/spit-file tmp-file
+                     {:a 2
+                      :b "costam"
+                      :h nil
+                      :e {:d :f
+                          :g "whatever forever    "}})
+      (is (false? (sut/spit-file tmp-file
+                                 {:a 2
+                                  :b "costam"
+                                  :h nil
+                                  :e {:d :f
+                                      :g "whatever forever    "}}
+                                 "New header here hello"))))
+    (testing "When data is incomplete returns nil"
+      (is (nil? (sut/spit-file nil {:a 2})))
+      (is (nil? (sut/spit-file nil {:a 2} nil)))
+      (is (nil? (sut/spit-file tmp-file nil)))
+      (is (nil? (sut/spit-file tmp-file nil nil)))
+      (is (nil? (sut/spit-file nil nil)))
+      (is (nil? (sut/spit-file nil nil nil))))))

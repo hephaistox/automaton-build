@@ -6,6 +6,7 @@
   Is a proxy to babashka.fs tools"
   (:require
    [automaton-build.log :as build-log]
+   [automaton-build.utils.comparators :as build-utils-comparators]
    [babashka.fs :as fs]
    [clojure.string :as str]))
 
@@ -366,23 +367,61 @@
                                                 :filepath filepath}))))))
 
 (defn spit-file
-  "Spit the file, the directory where to store the file is created if necessary
+  "Spit the file and return the content. Return false if the file didn't change, return nil if there is an error during spit.
+  Params:
   * `filename` is the name of the file to write, could be absolute or relative
   * `content` is the content to store there
-  * `header`(optional) header that should be added to file (e.g. 'File automatically modified, do not edit')"
+  * `header`(optional) header that should be added to file (e.g. 'File automatically modified, do not edit')
+  * `compare-fn` (optional - default: compare-changes) function to compare changes when file exists in the target `filename`. Expects to return boolean to tell if `content` and target `filename` content is the same. Accepts three arguments, `filename`, `content`, `header`. The simplest implementation to skip comparing would be (fn [_filename _content _header] false).
+  * `writer` (optional - default: spit) function to spit the file"
+  ([filename content header compare-fn writer]
+   (try (build-log/trace-format "Writing file `%s`" filename)
+        (let [filename (absolutize filename)]
+          (when (nil? filename)
+            (throw (ex-info "Impossible to save the file due to empty filename"
+                            {:filename filename})))
+          (let [content-with-header (if (str/blank? (str header))
+                                      content
+                                      (str (with-out-str (println header))
+                                           content))]
+            (cond
+              (and (is-existing-file? filename)
+                   (compare-fn filename content header))
+              (do (build-log/debug-format
+                   "Spit of file `%s` skipped, as it is already up to date:"
+                   filename)
+                  false)
+              (some? content)
+              (do (build-log/debug-format
+                   "Spit of file `%s` is updating with new content."
+                   filename)
+                  (create-parent-dirs filename)
+                  (writer filename content-with-header)
+                  content)
+              :else (throw (ex-info "Content of a file is empty"
+                                    {:filename filename
+                                     :content content})))))
+        (catch Exception e
+          (build-log/error-data {:filename filename
+                                 :exception e
+                                 :content content}
+                                (format "Impossible to update the `%s` file."
+                                        filename))
+          nil)))
+  ([filename content header compare-fn]
+   (spit-file filename content header compare-fn spit))
   ([filename content header]
-   (build-log/trace-format "Writing file `%s`" filename)
-   (let [content-with-header (if (str/blank? header)
-                               content
-                               (str (with-out-str (println header)) content))]
-     (try (create-parent-dirs filename)
-          (spit filename content-with-header)
-          content-with-header
-          (catch Exception e
-            (throw (ex-info "Impossible to write the file"
-                            {:target-filename filename
-                             :exception e}))))))
-  ([filename content] (spit-file filename content nil)))
+   (spit-file filename
+              content
+              header
+              (partial build-utils-comparators/compare-file-change read-file)
+              spit))
+  ([filename content]
+   (spit-file filename
+              content
+              nil
+              (partial build-utils-comparators/compare-file-change read-file)
+              spit)))
 
 (defn create-temp-dir
   "Creates a temporary directory managed by the system

@@ -12,25 +12,36 @@
   [deps1 deps2]
   (if (pos? (compare (:mvn/version deps1) (:mvn/version deps2))) deps1 deps2))
 
-(defn get-deps-filename
+(defn deps-path
   "Get the deps-file of the application
   Params:
   * `app-dir` is where the application is stored"
-  [app-dir]
-  (build-files/create-file-path app-dir deps-edn))
+  [& app-dir]
+  (-> (apply build-files/create-dir-path app-dir)
+      (build-files/create-file-path deps-edn)
+      build-files/absolutize))
 
-#_{:clj-kondo/ignore [:redefined-var]}
 (defn slurp
   "Load the deps.edn file of the app, passed as a parameter,
   Params:
   * `app-dir` the directory of the app, where `deps.edn` is stored
   Returns nil if the file does not exists or is malformed"
-  [app-dir]
-  (some-> app-dir
-          build-files/absolutize
-          get-deps-filename
+  [& app-dir]
+  (some-> (apply deps-path app-dir)
           build-files/is-existing-file?
           build-edn-utils/read-edn))
+
+(defn spit
+  "Spit `content` in the filename path
+  Params:
+  * `app-dir`
+  * `content`"
+  ([app-dir content header]
+   (build-edn-utils/spit-edn (-> app-dir
+                                 deps-path)
+                             content
+                             header))
+  ([app-dir content] (spit app-dir content nil)))
 
 (defn is-hephaistox-deps
   "For a deps entry, return true if the dependency is from hephaistox monorepo
@@ -101,20 +112,6 @@
     (update :extra-deps (partial build-utils-map/replace-keys deps-to-replace))
     (contains? alias-map :deps)
     (update :deps (partial build-utils-map/replace-keys deps-to-replace))))
-
-#_{:clj-kondo/ignore [:redefined-var]}
-(defn spit
-  "Spit `content` in the filename path
-  Params:
-  * `app-dir`
-  * `content`"
-  ([app-dir content header]
-   (build-edn-utils/spit-edn (-> app-dir
-                                 build-files/absolutize
-                                 get-deps-filename)
-                             content
-                             header))
-  ([app-dir content] (spit app-dir content nil)))
 
 (defn update-test-alias-with-paths
   [test-paths aliases]

@@ -25,7 +25,7 @@
                                   (->> matches
                                        (matches-to-output-lines
                                         match-to-output-line))
-                                  (str ";;" report-title))
+                                  report-title)
         matches)))
 
 (defn assert-empty

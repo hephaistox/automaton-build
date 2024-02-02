@@ -29,15 +29,6 @@
       [:map {:closed true}
        [:template-dir {:optional true}
         :string]]]
-     [:env
-      [:map {:closed true
-             :default {}}
-       [:production
-        [:map {:default {}
-               :closed true}
-         [:exclude-aliases {:default #{:env-development-repl
-                                       :env-development-test :common-test}}
-          [:set :keyword]]]]]]
      [:mermaid-dir {:default "docs/code/"}
       :string]
      [:repl-aliases [:vector :keyword]]
@@ -66,16 +57,35 @@
           :string]]]
        [:target-jar-filename {:default "target/%s/%s.jar"}
         :string]
-       [:major-version :string]
        [:repo :string]
-       [:branch {:default "main"}
-        :string]
        [:jar-main {:optional true}
         :string]
        [:deploy-to {:optional true}
         :keyword]
-       [:clever-uri {:optional true}
-        :string]
+       [:env {:optional true}
+        [:map
+         [:production
+          [:map
+           [:clever-uri {:optional true}
+            :string]
+           [:exclude-aliases {:default #{:env-development-repl
+                                         :env-development-test :common-test}}
+            [:set :keyword]]
+           [:major-version {:default "0.0.%d"}
+            :string]
+           [:push-branch {:default "main"}
+            :string]]]
+         [:la
+          [:map
+           [:clever-uri {:optional true}
+            :string]
+           [:exclude-aliases {:default #{:env-development-repl
+                                         :env-development-test :common-test}}
+            [:set :keyword]]
+           [:major-version {:default "0.0.%d-la"}
+            :string]
+           [:push-branch {:default "la"}
+            :string]]]]]
        [:frontend {:optional true}
         [:map {:closed true}
          [:run-aliases {:optional true}

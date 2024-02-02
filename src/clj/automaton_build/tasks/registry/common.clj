@@ -1,4 +1,4 @@
-#_{:heph-ignore {:forbidden-words ["tap>"]}}
+#_{:heph-ignore {:forbidden-words ["tap>" "automaton-core" "automaton-web"]}}
 (ns automaton-build.tasks.registry.common "Data for the common task registry")
 
 (defn tasks
@@ -10,6 +10,7 @@
     :hidden? true}
    'blog {:doc "Generate the blog files"
           :mandatory-config? true
+          :la-test {:skip? true}
           :pf :clj
           :build-configs [[:html-dir {:default "tmp/html/"}
                            :string]
@@ -48,6 +49,10 @@
    'error {:doc "Run intentionaly an error."
            :la-test {:expected-exit-code 131}
            :hidden? true}
+   'error-clj {:doc "Run intentionaly an error on clj."
+               :la-test {:expected-exit-code 131}
+               :pf :clj
+               :hidden? true}
    'format-code {:doc "Format the whole documentation"
                  :build-configs [[:include-files {:default #{"build_config.edn"
                                                              "deps.edn"
@@ -62,8 +67,7 @@
    'gha-lconnect {:doc "Connect to a local container running this code"
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
-                  :la-test {:skip? true
-                            :process-opts {:in "exit\n"}}}
+                  :la-test {:skip? true}}
    'is-cicd {:doc "Tested if runned on cicd"
              :la-test {:cmd ["bb" "heph-task" "is-cicd" "-f"]}
              :hidden? true
@@ -87,8 +91,10 @@
    {:doc
     "Compile local modifications for development environment and watch the modifications"
     :mandatory-config? true
+    :la-test {:skip? true}
     :shared [:publication]}
    'lfe-test {:doc "Local frontend test"
+              :la-test {:skip? true}
               :mandatory-config? true}
    'lint {:doc "Apply linter on project source code."}
    'mermaid {:doc "Build all mermaid files"
@@ -107,11 +113,12 @@
     "Publish project to CC, same as above, but instead of clojars the uberjar is pushed to clever-cloud repo."
     :pf :clj
     :shared [:publication]
+    :task-cli-opts-kws [:environment]
     :la-test {:skip? true}}
    'push-local {:doc "Push this repo"
                 :la-test {:skip? true}
                 :shared [:publication]
-                :task-cli-opts-kws [:force :message :tag]
+                :task-cli-opts-kws [:force :message :tag :environment]
                 :pf :clj}
    'reports
    {:doc "Creates the reports of code analysis"
@@ -152,10 +159,15 @@
    'update-deps
    {:doc
     "Update the dependencies, cider-nrepl and refactor are to be updated manually"
-    :build-configs [[:exclude-libs {:default #{"cider/cider-nrepl"
-                                               "com.taoensso/encore"
-                                               "refactor-nrepl/refactor-nrepl"
-                                               "com.github.liquidz/antq"}}
+    :build-configs [[:exclude-libs
+                     {:default #{"cider/cider-nrepl"
+                                 "org.clojars.hephaistox/automaton-build@*-*"
+                                 "org.clojars.hephaistox/automaton-core@*-*"
+                                 "org.clojars.hephaistox/automaton-web@*-*"
+                                 "org.clojars.hephaistox/automaton-web-dev@*-*"
+                                 "com.taoensso/encore"
+                                 "refactor-nrepl/refactor-nrepl"
+                                 "com.github.liquidz/antq"}}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}

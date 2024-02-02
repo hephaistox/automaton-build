@@ -56,7 +56,7 @@
   Will execute tasks from the registry passed
 
   Design decision:
-  * the mechanism to decide which tasks are considered in the `bb.edn` should not be reproduced here, relying on the bb.edn tasks name seems enough
+  * the mechanism to decide which tasks are considered in the `bb.edn` should not be reproduced here, relying on the bb.edn tasks name is enough
 
   Params:
   * `task-registry`

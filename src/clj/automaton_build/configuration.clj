@@ -1,6 +1,6 @@
 (ns automaton-build.configuration
   "Configuration parameters, stored in configuration file.
-   This namespace is the entry point to call conf "
+   This namespace is the entry point to call conf"
   (:require
    [automaton-build.configuration.environment :as build-conf-env]
    [automaton-build.configuration.files :as build-conf-files]
@@ -20,7 +20,7 @@
 
 (defn stop-conf [] (build-log/debug "Stop configuration"))
 
-(def conf-state (start-conf))
+(def conf-state (memoize start-conf))
 
 (defn read-param
   ([key-path default-value]
@@ -31,9 +31,10 @@
         key-path
         default-value)
        default-value)
-     (let [value
-           (or (build-conf-prot/read-conf-param (first conf-state) key-path)
-               (build-conf-prot/read-conf-param (second conf-state) key-path))]
+     (let [value (or (build-conf-prot/read-conf-param (first (conf-state))
+                                                      key-path)
+                     (build-conf-prot/read-conf-param (second (conf-state))
+                                                      key-path))]
        (if (nil? value)
          (do (build-log/trace-format
               "Read key-path %s returned nil, defaulted to `%s`"

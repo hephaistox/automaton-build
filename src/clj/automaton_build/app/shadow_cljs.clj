@@ -66,7 +66,7 @@
   (build-edn-utils/spit-edn
    (get-shadow-filename dir)
    content
-   ";;This file is automatically updated by `automaton-build.app.shadow-cljs`"))
+   "This file is automatically updated by `automaton-build.app.shadow-cljs`"))
 
 (defn load-shadow-cljs
   "Read the shadow-cljs of an app

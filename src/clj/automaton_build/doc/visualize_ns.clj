@@ -12,7 +12,9 @@
   (build-log/info "Graph of ns - deps link")
   (build-log/trace-format "Graph stored in `%s`" deps-filename)
   (build-files/create-parent-dirs deps-filename)
-  (try (vizns/-main "single" "-o" deps-filename "-f" "svg")
+  (try (vizns/-main "single"
+                    "-o" (build-files/absolutize deps-filename)
+                    "-f" "svg")
        true
        (catch Exception e
          (build-log/error "Unexpected error during execution of vizns")

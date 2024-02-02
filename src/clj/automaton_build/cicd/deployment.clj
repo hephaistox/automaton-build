@@ -1,8 +1,8 @@
 (ns automaton-build.cicd.deployment
   (:require
+   [automaton-build.cicd.clever-cloud :as build-clever-cloud]
    [automaton-build.cicd.deployment.jar :as build-deploy-jar]
    [automaton-build.configuration :as build-conf]
-   [automaton-build.cicd.clever-cloud :as build-clever-cloud]
    [automaton-build.os.files :as build-files]))
 
 (defn publish-library
@@ -18,15 +18,16 @@
 
 (defn publish-app
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
-  ([repo-uri app-dir]
-   (let [clever-dir (build-files/absolutize
-                     (build-files/create-dir-path app-dir ".clever"))
-         target-dir (build-files/absolutize
-                     (build-files/create-dir-path app-dir "target"))
-         clever-repo-dir
+  ([repo-uri target-dir clever-dir]
+   (let [clever-repo-dir
          (build-clever-cloud/clone-repo clever-dir repo-uri "repo")]
      (build-files/copy-files-or-dir [target-dir]
                                     (build-files/create-dir-path clever-repo-dir
                                                                  "target"))
      (build-clever-cloud/deploy clever-repo-dir)))
-  ([repo-uri] (publish-app repo-uri ".")))
+  ([repo-uri target-dir]
+   (publish-app repo-uri
+                target-dir
+                (->> ".clever"
+                     (build-files/create-dir-path ".")
+                     build-files/absolutize))))

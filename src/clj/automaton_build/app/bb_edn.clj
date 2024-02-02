@@ -45,7 +45,7 @@
                                   build-files/absolutize
                                   bb-edn-filename-fullpath)
                               bb-edn
-                              ";;The file is updated automatically")
+                              "The file is updated automatically")
     (build-log/error
      "Can't proceed with update of `bb.edn` as `:bb-deps` in `deps.edn` is empty")))
 

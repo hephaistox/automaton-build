@@ -2,6 +2,7 @@
   "The application concept gather all description and setup of the application"
   (:require
    [automaton-build.app-data :as build-app-data]
+   [automaton-build.utils.seq :as build-utils-seq]
    [automaton-build.app.build-config :as build-build-config]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
    [automaton-build.code-helpers.update-deps-clj :as build-update-deps-clj]
@@ -59,3 +60,16 @@
       (do (apply build-update-deps-clj/do-update exclude-libs dirs-to-update)
           true)
       false)))
+
+(defn update-app-dep
+  "Update specific dependency `dep` with `val` in all deps files in `app-dir`.
+   Returns map with directory and result of update (true meaning successful)."
+  ([app-dir lib val excluded-dirs]
+   (let [dirs-to-update
+         (->> app-dir
+              build-app-data/project-root-dirs
+              (filter #(not (build-utils-seq/contains? excluded-dirs %))))]
+     (into (sorted-map)
+           (doseq [dir dirs-to-update]
+             [dir (build-update-deps-clj/update-single-dep dir lib val)]))))
+  ([app-dir lib val] (update-app-dep app-dir lib val [])))

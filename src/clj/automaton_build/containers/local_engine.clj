@@ -43,7 +43,9 @@
   * `container-image-name` the name of the image to build
   * `target-container-dir` is where the Dockerfile should be"
   [container-image-name target-container-dir]
-  (build-log/debug-format "Build `%s` docker image" container-image-name)
+  (build-log/debug-format "Build `%s` docker image in `%s`"
+                          container-image-name
+                          target-container-dir)
   (when (build-cmds/execute-and-trace ["docker"
                                        "build"
                                        "--platform"
@@ -61,7 +63,7 @@
   * `container-image-name` the name of the image to build
   * `container-local-root` is the local directory where the `/usr/app` in the container will be connected"
   [container-image-name container-local-root]
-  (build-cmds/execute-and-trace
+  (build-cmds/execute-and-trace-return-exit-codes
    ["docker"
     "run"
     "--platform"

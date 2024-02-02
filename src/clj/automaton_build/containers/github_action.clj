@@ -2,6 +2,7 @@
   "Manage the github action containers"
   (:require
    [automaton-build.app.deps-edn :as build-deps-edn]
+   [automaton-build.app.package-json :as build-package-json]
    [automaton-build.containers :as build-containers]
    [automaton-build.containers.local-engine :as build-local-engine]
    [automaton-build.log :as build-log]
@@ -13,8 +14,8 @@
     (container-name [_] (format "gha-%s:" app-name))
     (build [this publish?]
       (let [app-files-to-copy-in-cc-container
-            (map (partial build-files/create-file-path app-dir)
-                 [build-deps-edn/deps-edn "package.json"])
+            [(build-deps-edn/deps-path app-dir)
+             (build-package-json/package-json-path app-dir)]
             image-name (build-containers/container-tagged-name this)]
         (build-log/debug-format
          "Create github-action container image `%s` for cust-app `%s`"

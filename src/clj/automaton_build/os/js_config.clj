@@ -21,8 +21,8 @@
     (build-files/read-file filepath)))
 
 (defn write-js-config
-  [filepath content]
-  (try (build-files/spit-file filepath content)
+  [filepath content header]
+  (try (build-files/spit-file filepath content header)
        (catch Exception e
          (build-log/error-exception (ex-info "Writing js config file has failed"
                                              {:path filepath

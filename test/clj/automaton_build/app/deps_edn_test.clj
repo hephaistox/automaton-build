@@ -7,8 +7,7 @@
 (def tmp-dir (build-files/create-temp-dir))
 
 (deftest get-deps-filename-test
-  (testing "Get deps is working"
-    (is (string? (sut/get-deps-filename tmp-dir)))))
+  (testing "Get deps is working" (is (string? (sut/deps-path tmp-dir)))))
 
 (deftest extract-paths-test
   (testing "Extract paths from a deps.edn file"
