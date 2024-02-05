@@ -109,5 +109,8 @@
   (call-main "non-existing-fn")
   (call-main "lint" "-g") ;; 128
   (call-main "gha" "-f" "-d")
+  (call-main "apps-push-local" "-e" "la" "-M" "hello")
+
+
   ;;
 )

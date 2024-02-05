@@ -235,6 +235,17 @@
                                  (:msg tag))
         (commit-and-push tmp-dir commit-message (current-branch tmp-dir))))))
 
+(defn pull-changes
+  [srcb destb dir]
+  (build-cmds/execute-with-exit-code
+   ["git" "fetch" "origin" (str srcb ":" srcb) {:dir dir}]
+   ["git" "merge" srcb destb {:dir dir}]))
+
+(defn git-changes?
+  [dir]
+  (str/blank? (first (build-cmds/execute-get-string
+                      ["git" "status" "-s" {:dir dir}]))))
+
 (defn changed?
   "Returns true if there is a difference between state on `base-branch` and `target-branch` with `source-dir` in `repo-address`"
   [source-dir repo-address base-branch target-branch]
@@ -248,10 +259,7 @@
              (filter (fn [file] (not (str/ends-with? file ".git"))))
              build-files/delete-files)
         (build-files/copy-files-or-dir [source-dir] tmp-dir)
-        (let [res (first (build-cmds/execute-get-string
-                          ["git" "status" "-s" {:dir tmp-dir}]))]
-          (build-log/debug "Affected files" res)
-          (not (str/blank? res)))))))
+        (not (git-changes? tmp-dir))))))
 
 (defn- validate-branch-name
   "Validate the name of the branch between `base-branch` and `other-branch` branches are forbid except if `force?` is ok
