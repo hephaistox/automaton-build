@@ -201,9 +201,9 @@
   (doseq [file file-list]
     (when (fs/exists? file)
       (if (fs/directory? file)
-        (do (build-log/debug "Directory " (absolutize file) " is deleted")
+        (do (build-log/trace "Directory " (absolutize file) " is deleted")
             (fs/delete-tree file))
-        (do (build-log/debug "File " (absolutize file) " is deleted")
+        (do (build-log/trace "File " (absolutize file) " is deleted")
             (fs/delete-if-exists file))))))
 
 (defn modified-since
