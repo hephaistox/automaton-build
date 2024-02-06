@@ -394,12 +394,12 @@
             (cond
               (and (is-existing-file? filename)
                    (compare-fn filename content header))
-              (do (build-log/debug-format
+              (do (build-log/trace-format
                    "Spit of file `%s` skipped, as it is already up to date:"
                    filename)
                   false)
               (some? content)
-              (do (build-log/debug-format
+              (do (build-log/trace-format
                    "Spit of file `%s` is updating with new content."
                    filename)
                   (create-parent-dirs filename)
