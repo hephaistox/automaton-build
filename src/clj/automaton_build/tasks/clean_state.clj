@@ -4,7 +4,7 @@
    [automaton-build.log :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
-(defn clean-state? [app-dir] (build-cfg-mgt/git-changes? app-dir))
+(defn clean-state? [app-dir] (not (build-cfg-mgt/git-changes? app-dir)))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
