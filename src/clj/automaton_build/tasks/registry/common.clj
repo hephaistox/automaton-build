@@ -63,6 +63,7 @@
                                                              "shadow-cljs.edn"}}
                                   [:set :string]]]}
    'generate-code-stats {:doc "Update code statistics"
+                         :la-test {:skip? true}
                          :build-configs [[:stats-outputfilename
                                           {:default "docs/code/stats.md"}
                                           :string]]}
@@ -82,6 +83,8 @@
              :task-cli-opts-kws [:force]}
    'la {:doc "Local acceptance test"
         :la-test {:skip? true}}
+   'la-empty {:doc "Local acceptance test with no cli args"
+              :la-test {:skip? true}}
    'lbe-repl
    {:doc
     "Connect to repl - this command is to be used by workflow, a version apart from build_app is directly set in `bb.edn`."
@@ -194,6 +197,7 @@
                     :pf :clj}
    'visualize-ns {:doc "Visualize the namespaces in graph"
                   :hidden? true
+                  :la-test {:skip? true}
                   :build-configs [[:output-file {:default
                                                  "docs/code/deps-ns.svg"}
                                    :string]]
@@ -211,22 +215,6 @@
            :step 3
            :wk-tasks
            ['reports 'format-code 'lint 'lbe-test 'lfe-manual 'commit]}
-   'wf-6 {:doc
-          "Push the local version - create gha docker image - push to the repo"
-          :group :wf
-          :step 6
-          :wk-tasks ['clean
-                     'lint
-                     'lbe-test
-                     'lfe-test
-                     'reports
-                     'blog
-                     'mermaid
-                     #_'visualize-deps
-                     'visualize-ns
-                     'format-code
-                     'gha-container-publish
-                     'push-local-dir-to-repo]}
    'gha {:doc "Github action tests - launched is automatically by github"
          :group :gha
          :la-test {:cmd ["bb" "heph-task" "gha" "-f"]}

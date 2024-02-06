@@ -133,7 +133,7 @@
     (when (git-installed?)
       (let [commit-res
             (build-cmds/execute-with-exit-code
-             ["git" "add" "." {:dir dir}]
+             ["git" "add" "-A" {:dir dir}]
              ["git" "commit" "-m" msg {:dir dir}]
              ["git" "push" "--set-upstream" "origin" branch-name {:dir dir}])]
         commit-res))))

@@ -312,6 +312,13 @@
                        {:dir dir}
                        e)))))))
 
+(defn overwrite-dirs
+  "Creates a directory, if directory extists removes it first."
+  [dir]
+  (let [dir (absolutize dir)]
+    (when (is-existing-dir? dir) (delete-files [dir]))
+    (create-dirs dir)))
+
 (defn search-files
   "Search files.
   * `root` is where the root directory of the search-files
