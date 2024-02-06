@@ -12,4 +12,4 @@ jobs:
           # this is to fix GIT not liking owner of the checkout dir, See https://github.com/actions/runner/issues/2033
           chown -R $(id -u):$(id -g) $PWD
       - name: Base image
-        uses: docker://hephaistox/gha-automaton-build:0.0.108-la
+        uses: docker://hephaistox/gha-automaton-build:0.0.103

@@ -168,7 +168,7 @@
       (fs/create-dirs target-dir)
       (doseq [file files]
         (if (fs/exists? file)
-          (do (build-log/debug "Copy from " file " to " target-dir)
+          (do (build-log/trace "Copy from " file " to " target-dir)
               (if (fs/directory? file)
                 (do (build-log/trace-format "Copy directory `%s` to `%s`"
                                             (absolutize file)
