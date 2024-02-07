@@ -14,8 +14,8 @@
         app-source-paths (->> paths
                               (filter #(re-find #"src" %))
                               (filter #(not (re-find #"development" %))))]
-    (build-log/info "Launch clj compilation")
-    (try (build-log/debug-format "Jar is built `%s`" target-jar-path)
+    (build-log/debug "Launch clj compilation")
+    (try (build-log/trace-format "Jar is built `%s`" target-jar-path)
          (build-compiler-jar/compile-jar class-dir
                                          target-jar-path
                                          project-dir
@@ -37,10 +37,10 @@
   (let [app-paths (->> paths
                        (build-app/append-app-dir project-dir)
                        (map build-files/absolutize))]
-    (build-log/info "Launch clj compilation")
-    (build-log/debug-format "Copy files from `%s` to `%s`" app-paths class-dir)
+    (build-log/debug "Launch clj compilation")
+    (build-log/trace-format "Copy files from `%s` to `%s`" app-paths class-dir)
     (try (when (build-files/copy-files-or-dir app-paths class-dir)
-           (build-log/debug-format "Jar is built `%s`" target-jar-path)
+           (build-log/trace-format "Jar is built `%s`" target-jar-path)
            (build-compiler-jar/compile-uber-jar class-dir
                                                 target-jar-path
                                                 jar-main

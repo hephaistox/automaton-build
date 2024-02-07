@@ -12,30 +12,17 @@
    [automaton-build.code-helpers.analyze.namespace-has-one-alias
     :as
     build-analyze-namespace]
-   [automaton-build.code-helpers.code-stats :as build-code-stats]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
    [automaton-build.file-repo.clj-code :as build-clj-code]
    [automaton-build.log :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.os.files :as build-files]))
 
 (defn- alias-report
   [{:keys [alias-outputfilename]} code-repo]
   (let [matches (build-analyze-alias/alias-matches code-repo)]
     (-> (build-analyze-alias/save-report matches alias-outputfilename)
         (build-analyze-alias/assert-empty alias-outputfilename))))
-
-(defn- code-stats-report
-  [{:keys [stats-outputfilename]
-    :as app-data}]
-  (build-log/info "Code statistics report")
-  (let [clj-code-files (remove #(build-files/match-extension? % ".edn")
-                               (build-app-data/project-paths-files app-data))
-        test-files (filter #(str/includes? % "test") clj-code-files)]
-    (->> (build-code-stats/clj-line-numbers clj-code-files test-files)
-         (build-code-stats/stats-to-md stats-outputfilename)))
-  nil)
 
 (defn- comments-report
   [{:keys [comments-outputfilename]} code-repo]
@@ -88,8 +75,7 @@
              (css-report app-data code-repo)
              (alias-report app-data code-repo)
              (namespace-report app-data code-repo)
-             (forbidden-words-report app-data code-repo)
-             (code-stats-report app-data)]]
+             (forbidden-words-report app-data code-repo)]]
     (if-not (every? nil? res)
       (do (build-log/error "Reports have failed") build-exit-codes/catch-all)
       build-exit-codes/ok)))

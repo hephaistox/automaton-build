@@ -56,7 +56,7 @@
   * `branch-name` is the name of the branch to download
   Return true if succesfull"
   ([target-dir repo-dir-name repo-address branch-name]
-   (build-log/debug-format "Clone in repo `%s`, branch `%s` in `%s` "
+   (build-log/trace-format "Clone in repo `%s`, branch `%s` in `%s` "
                            repo-address
                            branch-name
                            target-dir)
@@ -116,7 +116,7 @@
                      first
                      str/split-lines
                      first)]
-      (build-log/debug-format
+      (build-log/trace-format
        "Retrieve the current branch in directory `%s`, found = `%s`"
        dir
        result)
@@ -128,16 +128,23 @@
   * `dir` directory where the repository is stored
   * `msg` message for the commit
   * `branch-name` branch name"
-  [dir msg branch-name]
-  (let [msg (or msg "commit")]
-    (when (git-installed?)
-      (let [commit-res
-            (build-cmds/execute-with-exit-code
-             ["git" "add" "." {:dir dir}]
-             ["git" "commit" "-m" msg {:dir dir}]
-             ["git" "push" "--set-upstream" "origin" branch-name {:dir dir}])]
-        commit-res))))
+  ([dir msg branch-name force?]
+   (let [msg (or msg "commit")]
+     (when (git-installed?)
+       (let [commit-res (build-cmds/execute-with-exit-code
+                         ["git" "add" "-A" {:dir dir}]
+                         ["git" "commit" "-m" msg {:dir dir}]
+                         ["git"
+                          "push"
+                          "--set-upstream"
+                          "origin"
+                          branch-name
+                          (when force? "--force")
+                          {:dir dir}])]
+         commit-res))))
+  ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
 
+#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn current-commit-sha
   "Returns the current commit sha in the directory `dir`
   It will look at the currently selected branch
@@ -156,43 +163,44 @@
   * `branch-name` branch name
   * `version` version to use in the tag
   * `tag-msg` is the message of the tag"
-  [dir msg branch-name version tag-msg]
-  (build-log/info-format "Commit and push in progress in dir `%s`" dir)
-  (let [msg (or msg "commit")]
-    (when (git-installed?)
-      (let [commit-res (build-cmds/execute-with-exit-code
-                        ["git" "add" "." {:dir dir}]
-                        ["git" "commit" "-m" msg {:dir dir}]
-                        ["git" "tag" "-f" "-a" version "-m" tag-msg {:dir dir}]
-                        ["git"
-                         "push"
-                         "--tags"
-                         "--set-upstream"
-                         "origin"
-                         branch-name
-                         {:dir dir}])
-            [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
-        (build-log/info-format "branch `%s`" (current-branch dir))
-        (build-log/info-format "commit `%s`" (current-commit-sha dir))
-        (case cmd-failing
-          nil (do (build-log/info-format
-                   "Succesfully pushed version `%s` version"
-                   version)
-                  true)
-          1 (do (build-log/info-format "Nothing to commit, skip the push")
-                false)
-          2 (do (build-log/error-format "Tag has failed - %s" message) false)
-          3
-          (do
-            (build-log/error-format
-             "Push has failed - %s, you could try to remove the remote tag if this is the issue, and retry:\n`git push -d origin %s`"
-             message
-             version)
-            false)
-          :else (do (build-log/error
-                     "Unexpected error during commit-and-push : "
-                     (into [] commit-res))
-                    false))))))
+  ([dir msg branch-name version tag-msg]
+   (commit-and-push-and-tag dir msg branch-name version tag-msg false))
+  ([dir msg branch-name version tag-msg force?]
+   (build-log/info-format "Commit and push in progress in dir `%s`" dir)
+   (let [msg (or msg "commit")]
+     (when (git-installed?)
+       (let [commit-res (build-cmds/execute-with-exit-code
+                         ["git" "add" "." {:dir dir}]
+                         ["git" "commit" "-m" msg {:dir dir}]
+                         ["git" "tag" "-f" "-a" version "-m" tag-msg {:dir dir}]
+                         ["git"
+                          "push"
+                          "--tags"
+                          "--set-upstream"
+                          "origin"
+                          branch-name
+                          (when force? "--force")
+                          {:dir dir}])
+             [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
+         (case cmd-failing
+           nil (do (build-log/info-format
+                    "Succesfully pushed version `%s` version"
+                    version)
+                   true)
+           1 (do (build-log/info-format "Nothing to commit, skip the push")
+                 false)
+           2 (do (build-log/error-format "Tag has failed - %s" message) false)
+           3
+           (do
+             (build-log/error-format
+              "Push has failed with message: %s. If needed you can drop the tag with: `git push -d origin %s`"
+              message
+              version)
+             false)
+           :else (do (build-log/error
+                      "Unexpected error during commit-and-push : "
+                      (into [] commit-res))
+                     false)))))))
 
 (defn- prepare-cloned-repo-on-branch
   "Clone the repo in diectory `tmp-dir`, the repo at `repo-address` is copied on branch `branch-name`, if it does not exist create a branch based on `base-branch-name`
@@ -212,28 +220,24 @@
       (when (clone-repo-branch tmp-dir repo-address base-branch-name)
         (create-and-switch-to-branch tmp-dir branch-name)))))
 
-(defn- squash-local-files-and-push
-  "Considering a cloned repo in `tmp-dir`, replace the current files with the ones in `source-dir`
-  Remind that monorepo is our the source of truth, so use it with caution
-  Params:
-  * `tmp-dir` where the cloned repo is stored, the branch should already be sync with remote repo and currently selected
-  * `source-dir` the files that will be copied from
-  * `commit-message` the message for the commit,
-  * `tag` (optional) map containg `id` with tag and optional `msg` with corresponding message
-  * `version`"
-  [tmp-dir source-dir commit-message tag]
-  (when (git-installed?)
-    (->> (build-files/search-files tmp-dir "*")
-         (filter (fn [file] (not (str/ends-with? file ".git"))))
-         build-files/delete-files)
-    (when (build-files/copy-files-or-dir [source-dir] tmp-dir)
-      (if tag
-        (commit-and-push-and-tag tmp-dir
-                                 commit-message
-                                 (current-branch tmp-dir)
-                                 (:id tag)
-                                 (:msg tag))
-        (commit-and-push tmp-dir commit-message (current-branch tmp-dir))))))
+(defn- replace-repo-git-dir
+  [new-git-dir repo-dir]
+  (let [dir-to-push-git-dir (build-files/create-dir-path repo-dir ".git")]
+    (build-files/delete-files dir-to-push-git-dir)
+    (build-files/copy-files-or-dir [new-git-dir] dir-to-push-git-dir)))
+
+(defn pull-changes
+  [branch dir]
+  (build-cmds/execute-with-exit-code
+   ["git" "fetch" "origin" (str branch ":" branch) {:dir dir}]
+   ["git" "pull" {:dir dir}]
+   ["git" "merge" branch (current-branch dir) {:dir dir}]))
+
+(defn git-changes?
+  [dir]
+  (let [res (build-cmds/execute-get-string ["git" "status" "-s" {:dir dir}])]
+    (build-log/trace-format "in directory `%s` git status result %s" dir res)
+    (not (str/blank? (first res)))))
 
 (defn changed?
   "Returns true if there is a difference between state on `base-branch` and `target-branch` with `source-dir` in `repo-address`"
@@ -244,28 +248,10 @@
                                            repo-address
                                            base-branch
                                            target-branch)
-        (->> (build-files/search-files tmp-dir "*")
-             (filter (fn [file] (not (str/ends-with? file ".git"))))
-             build-files/delete-files)
-        (build-files/copy-files-or-dir [source-dir] tmp-dir)
-        (let [res (first (build-cmds/execute-get-string
-                          ["git" "status" "-s" {:dir tmp-dir}]))]
-          (build-log/debug "Affected files" res)
-          (not (str/blank? res)))))))
-
-(defn- validate-branch-name
-  "Validate the name of the branch between `base-branch` and `other-branch` branches are forbid except if `force?` is ok
-  * `force?` boolean to force
-  * `base-branch`
-  * `other-name`
-  Returns true if the name is validated"
-  [force? base-branch other-branch]
-  (if (and (not force?) (= base-branch other-branch))
-    (do
-      (build-log/error
-       "Push to main or master is refused. If you want to confirm, use -f option")
-      false)
-    true))
+        (when (replace-repo-git-dir (build-files/create-dir-path source-dir
+                                                                 ".git")
+                                    tmp-dir)
+          (git-changes? tmp-dir))))))
 
 (defn remote-branches
   "Return the remote branches for a repo
@@ -283,8 +269,20 @@
      ["git" "remote" "add" "origin" repo-url {:dir tmp-dir}])
     (build-cmds/execute-get-string ["git" "branch" "-aqr" {:dir tmp-dir}])))
 
+(defn- target-branch-git-dir
+  "Returns '.git' directory from target-branch."
+  [repo-address base-branch-name target-branch]
+  (let [tmp-dir (build-files/create-temp-dir)]
+    (when (prepare-cloned-repo-on-branch tmp-dir
+                                         repo-address
+                                         base-branch-name
+                                         target-branch)
+      (build-files/create-dir-path tmp-dir ".git"))))
+
+
+
 (defn push-local-dir-to-repo
-  "Use that function to push the files in the `source-dir` to the repo
+  "Push files from `source-dir` to `target-branch` (defaults to current branch)
   Params:
   * `source-dir` local directory where the sources are stored, before being pushed to the remote repo
   * `repo-address` the address of the repo where to push
@@ -292,7 +290,7 @@
   * `commit-msg` message that will end in pushed commit
   * `version` string with tag version
   * `tag` (optional) map containg `id` with tag and optional `msg` with corresponding message
-  * `force?` (optional default false) if false, will refuse to push on master or main branches
+  * `force?` (optional default false) if true, will force the changes to be pushed as top commit
   * `target-branch` (optional default current-branch) where to push"
   ([{:keys [source-dir
             repo-address
@@ -303,24 +301,25 @@
             target-branch]
      :or {target-branch (current-branch ".")}}]
    (when (git-installed?)
-     (build-log/info "Pushing from local directory to repository")
-     (build-log/trace-map "Push local directories"
-                          :source-dir source-dir
-                          :repo-address repo-address
-                          :base-branch-name base-branch-name
-                          :branch-name target-branch
-                          :commit-msg commit-msg
-                          :tag tag
-                          :force? force?)
-     (when (validate-branch-name base-branch-name force? target-branch)
-       (let [tmp-dir (build-files/create-temp-dir)]
-         (when (prepare-cloned-repo-on-branch tmp-dir
-                                              repo-address
-                                              base-branch-name
-                                              target-branch)
-           (build-log/debug
-            "Pushing from local directory to repository - repo is ready")
-           (squash-local-files-and-push tmp-dir source-dir commit-msg tag)))))))
+     (build-log/debug "Pushing from `%s` to repository `%s`"
+                      source-dir
+                      repo-address)
+     (let [target-git-dir
+           (target-branch-git-dir repo-address base-branch-name target-branch)
+           dir-to-push (build-files/create-temp-dir)]
+       (build-files/copy-files-or-dir [source-dir] dir-to-push)
+       (replace-repo-git-dir target-git-dir dir-to-push)
+       (if tag
+         (commit-and-push-and-tag dir-to-push
+                                  commit-msg
+                                  (current-branch dir-to-push)
+                                  (:id tag)
+                                  (:msg tag)
+                                  force?)
+         (commit-and-push dir-to-push
+                          commit-msg
+                          (current-branch dir-to-push)
+                          force?))))))
 
 (defn find-git-repo
   "Search in the parent directories if

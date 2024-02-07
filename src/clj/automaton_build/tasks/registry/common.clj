@@ -24,6 +24,10 @@
    {:doc
     "Clean all files which are not under version control (it doesn't remove untracked file or staged files if there are eligible to `git add .`)"
     :la-test {:process-opts {:in "q"}}}
+   'commit {:doc "Commit and push, disallowed for production branch."
+            :hidden? true
+            :task-cli-opts-kws [:message-opt]
+            :la-test {:skip? true}}
    'build-jar {:doc "Compiles project to jar"
                :hidden?
                'automaton-build.tasks.registry.conditions/not-deploy-target?
@@ -58,6 +62,11 @@
                                                              "deps.edn"
                                                              "shadow-cljs.edn"}}
                                   [:set :string]]]}
+   'generate-code-stats {:doc "Update code statistics"
+                         :la-test {:skip? true}
+                         :build-configs [[:stats-outputfilename
+                                          {:default "docs/code/stats.md"}
+                                          :string]]}
    'gha-container-publish {:doc "Update the gha container to run that app"
                            :hidden?
                            'automaton-build.tasks.registry.conditions/not-cicd?
@@ -74,6 +83,8 @@
              :task-cli-opts-kws [:force]}
    'la {:doc "Local acceptance test"
         :la-test {:skip? true}}
+   'la-empty {:doc "Local acceptance test with no cli args"
+              :la-test {:skip? true}}
    'lbe-repl
    {:doc
     "Connect to repl - this command is to be used by workflow, a version apart from build_app is directly set in `bb.edn`."
@@ -96,6 +107,9 @@
    'lfe-test {:doc "Local frontend test"
               :la-test {:skip? true}
               :mandatory-config? true}
+   'lfe-manual {:doc "Asks user if tests are passing"
+                :task-cli-opts-kws [:force]
+                :la-test {:skip? true}}
    'lint {:doc "Apply linter on project source code."}
    'mermaid {:doc "Build all mermaid files"
              :shared [:mermaid-dir]}
@@ -120,6 +134,12 @@
                 :shared [:publication]
                 :task-cli-opts-kws [:force :message :tag :environment]
                 :pf :clj}
+   'pull-base-branch {:doc "Checks if you are up to date with base branch."
+                      :pf :clj
+                      :shared [:publication]
+                      :la-test {:skip? true}}
+   'clean-state {:doc "Checks if you are in a clean state in terms of changes."
+                 :la-test {:skip? true}}
    'reports
    {:doc "Creates the reports of code analysis"
     :build-configs
@@ -138,8 +158,6 @@
      [:css-outputfilename {:default "docs/code/css.edn"}
       :string]
      [:namespace-outputfilename {:default "docs/code/namespace.edn"}
-      :string]
-     [:stats-outputfilename {:default "docs/code/stats.md"}
       :string]]}
    'storage-install
    {:doc "Install a datomic local engine"
@@ -179,6 +197,7 @@
                     :pf :clj}
    'visualize-ns {:doc "Visualize the namespaces in graph"
                   :hidden? true
+                  :la-test {:skip? true}
                   :build-configs [[:output-file {:default
                                                  "docs/code/deps-ns.svg"}
                                    :string]]
@@ -190,27 +209,12 @@
    'wf-3 {:doc "Quick verifications and formatting for IDE usage"
           :group :wf
           :step 3
-          :wk-tasks ['reports 'format-code 'lint]}
-   'wf-3f {:doc "Full work verification workflow (this task is temporary)"
+          :wk-tasks ['reports 'format-code 'lint 'commit]}
+   'wf-3f {:doc "Full work verification workflow"
            :group :wf
            :step 3
-           :wk-tasks ['reports 'format-code 'lint 'lbe-test 'lfe-test]}
-   'wf-6 {:doc
-          "Push the local version - create gha docker image - push to the repo"
-          :group :wf
-          :step 6
-          :wk-tasks ['clean
-                     'lint
-                     'lbe-test
-                     'lfe-test
-                     'reports
-                     'blog
-                     'mermaid
-                     #_'visualize-deps
-                     'visualize-ns
-                     'format-code
-                     'gha-container-publish
-                     'push-local-dir-to-repo]}
+           :wk-tasks
+           ['reports 'format-code 'lint 'lbe-test 'lfe-manual 'commit]}
    'gha {:doc "Github action tests - launched is automatically by github"
          :group :gha
          :la-test {:cmd ["bb" "heph-task" "gha" "-f"]}

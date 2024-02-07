@@ -79,7 +79,7 @@
    custom-css
    compiled-styles-css
    license]
-  (build-log/info "Start compilation")
+  (build-log/debug "Start compilation")
   (let [paths (build-deps-edn/extract-paths deps-edn exclude-aliases)]
     (compile-frontend app-dir
                       deploy-alias
