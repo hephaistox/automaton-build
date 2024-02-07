@@ -32,7 +32,7 @@
      (case (first (build-cmds/first-cmd-failing commit-res))
        nil (do (build-log/info "Successfully published") true)
        1 (do (build-log/debug "No new files to publish, skip the push") true)
-       :else (do (build-log/error "Unexpected error during publishing : "
-                                  (into [] commit-res))
-                 false))))
+       (do (build-log/error "Unexpected error during publishing : "
+                            (into [] commit-res))
+           false))))
   ([dir] (deploy dir "Automatically pushed version")))
