@@ -61,18 +61,14 @@
                            branch-name
                            target-dir)
    (when (git-installed?)
-     (let [[exit-code message] (->> (build-cmds/execute-with-exit-code
-                                     ["git"
-                                      "clone"
-                                      repo-address
-                                      repo-dir-name
-                                      "--single-branch"
-                                      (when branch-name "-b")
-                                      (when branch-name branch-name)
-                                      "--depth"
-                                      "1"
-                                      {:dir target-dir}])
-                                    first)]
+     (let [[exit-code message]
+           (->> (build-cmds/execute-with-exit-code
+                 (vec
+                  (concat
+                   ["git" "clone" repo-address repo-dir-name "--single-branch"]
+                   (when branch-name ["-b" branch-name])
+                   ["--depth" "1" {:dir target-dir}])))
+                first)]
        (cond
          (zero? exit-code) true
          (re-find #"Could not find remote branch" message)
@@ -131,16 +127,13 @@
   ([dir msg branch-name force?]
    (let [msg (or msg "commit")]
      (when (git-installed?)
-       (let [commit-res (build-cmds/execute-with-exit-code
-                         ["git" "add" "-A" {:dir dir}]
-                         ["git" "commit" "-m" msg {:dir dir}]
-                         ["git"
-                          "push"
-                          "--set-upstream"
-                          "origin"
-                          branch-name
-                          (when force? "--force")
-                          {:dir dir}])]
+       (let [commit-res
+             (build-cmds/execute-with-exit-code
+              ["git" "add" "-A" {:dir dir}]
+              ["git" "commit" "-m" msg {:dir dir}]
+              (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
+                           (when force? ["--force"])
+                           [{:dir dir}])))]
          commit-res))))
   ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
 
