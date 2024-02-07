@@ -26,7 +26,6 @@
      {:source-dir
       "/Users/anthonycaumond/Dev/hephaistox/monorepo/clojure/automaton/automaton_core"
       :repo-address "git@github.com:hephaistox/automaton-foobar.git"
-      :base-branch-name "main"
       :commit-msg "Manual test"
       :target-branch "caumond/feature/core-is-autonomous_2"})
     (catch Exception e (println e)))

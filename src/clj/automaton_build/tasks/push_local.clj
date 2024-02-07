@@ -17,7 +17,6 @@
                             message)
     (if (true? (build-cfg-mgt/push-local-dir-to-repo {:source-dir app-dir
                                                       :repo-address repo
-                                                      :base-branch-name branch
                                                       :commit-msg message
                                                       :force? force?}))
       build-exit-codes/ok
