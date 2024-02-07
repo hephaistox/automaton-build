@@ -2,12 +2,13 @@
   "The application concept gather all description and setup of the application"
   (:require
    [automaton-build.app-data :as build-app-data]
-   [automaton-build.utils.seq :as build-utils-seq]
    [automaton-build.app.build-config :as build-build-config]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
    [automaton-build.code-helpers.update-deps-clj :as build-update-deps-clj]
+   [automaton-build.log :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files :as build-files]
+   [automaton-build.utils.seq :as build-utils-seq]))
 
 (defn find-apps-paths
   [dir]
@@ -69,6 +70,7 @@
          (->> app-dir
               build-app-data/project-root-dirs
               (filter #(not (build-utils-seq/contains? excluded-dirs %))))]
+     (build-log/trace-format "Update app dep in dir: `%s`" dirs-to-update)
      (into (sorted-map)
            (doseq [dir dirs-to-update]
              [dir (build-update-deps-clj/update-single-dep dir lib val)]))))

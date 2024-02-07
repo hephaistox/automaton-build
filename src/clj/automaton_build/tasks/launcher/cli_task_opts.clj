@@ -21,8 +21,10 @@
                          "Environment name for the publication"]]
                  :mandatory? true}
    :message {:spec
-             [["-m" "--message COMMIT-MESSAGE" "Mandatory: Commit message"]]
-             :mandatory? true}})
+             [["-M" "--message COMMIT-MESSAGE" "Mandatory: Commit message"]]
+             :mandatory? true}
+   :message-opt {:spec
+                 [["-m" "--message-opt COMMIT-MESSAGE" "Commit message"]]}})
 
 (defn- print-error-message
   [cli-opts msg]

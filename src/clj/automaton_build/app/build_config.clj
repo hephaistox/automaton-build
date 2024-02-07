@@ -71,8 +71,6 @@
            [:exclude-aliases {:default #{:env-development-repl
                                          :env-development-test :common-test}}
             [:set :keyword]]
-           [:major-version {:default "0.0.%d"}
-            :string]
            [:push-branch {:default "main"}
             :string]]]
          [:la
@@ -82,8 +80,6 @@
            [:exclude-aliases {:default #{:env-development-repl
                                          :env-development-test :common-test}}
             [:set :keyword]]
-           [:major-version {:default "0.0.%d-la"}
-            :string]
            [:push-branch {:default "la"}
             :string]]]]]
        [:frontend {:optional true}

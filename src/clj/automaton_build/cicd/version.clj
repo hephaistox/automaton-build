@@ -39,57 +39,60 @@
 
 (defn confirm-version?
   "It's safety measure before changing version of the project to be sure user is concious of change."
-  ([force? project-name old-version new-version]
-   (build-cli-input/yes-question
-    (format
-     "Your change will affect the version of the project `%s`, old version `%s` replaced with `%s` one are you sure you want to continue? y/n"
-     project-name
-     old-version
-     new-version)
-    force?)))
+  [project-name old-version new-version]
+  (build-cli-input/yes-question
+   (format
+    "Your change will affect the version of the project `%s`, old version `%s` replaced with `%s` one are you sure you want to continue? y/n"
+    project-name
+    old-version
+    new-version)))
 
-(defn remove-optional-qualifier
-  "Removes optionak qualifier. (Semantic versioning: <major>.<minor>.<non-breaking>[-optional-qualifier])
+(defn ask-version
+  "It's safety measure before changing version of the project to be sure user is concious of change."
+  [project-name current-version changes]
+  (build-cli-input/question-loop
+   (format
+    "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nTo see what changed see: `%s`\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking."
+    project-name
+    current-version
+    changes)
+   #{1 2 3}))
+
+(defn split-optional-qualifier
+  "Removes optional qualifier. (Semantic versioning: <major>.<minor>.<non-breaking>[-optional-qualifier])
    So e.g. `0.0.20-SNAPSHOT` -> `0.0.20`"
   [version]
-  (first (str/split version #"-")))
+  (str/split version #"-"))
+
+(defn add-optional-qualifier
+  [version qualifier]
+  (str/join "-" [version qualifier]))
+
+(defn- inc-str [num] (str (inc (read-string num))))
+
+(defn generate-new-version [])
 
 (defn update-version
   "Build the string of the version to be pushed (the next one)
   Params:
   * `app-dir` directory of the version to count
   * `major-version`"
-  [app-dir app-name major-version force?]
-  (if major-version
-    (let [{_version :version
-           older-minor-version :minor-version
-           older-major-version :major-version}
-          (read-version-file app-dir)
-          minor-version
-          (if-not (= older-major-version
-                     (-> major-version
-                         remove-optional-qualifier
-                         (format -1)))
-            (do (build-log/info "A new major version is detected")
-                (build-log/trace-format "Older major version is `%s`"
-                                        older-major-version)
-                (build-log/trace-format "Newer major version is `%s`"
-                                        (format major-version -1))
-                -1)
-            older-minor-version)
-          new-minor-version (inc (or minor-version -1))
-          major-version-only (format major-version -1)
-          new-version (format major-version new-minor-version)]
-      (build-log/trace-format "Major version: %s, old minor: %s, new minor %s"
-                              major-version
-                              older-minor-version
-                              minor-version)
-      (if
-        (confirm-version? force? app-name (current-version app-dir) new-version)
-        (do (save-version-file app-dir
-                               {:major-version major-version-only
-                                :version new-version
-                                :minor-version new-minor-version})
-            new-version)
-        (build-log/warn "Version couldn't be updated without user consent")))
-    (build-log/warn "Major version is missing")))
+  ([app-dir app-name changes] (update-version app-dir app-name changes nil))
+  ([app-dir app-name changes qualifier]
+   (let [current-version (current-version app-dir)
+         user-version (ask-version app-name current-version changes)
+         version-spitted (str/split current-version #"\.")
+         major-version (first version-spitted)
+         minor-version (second version-spitted)
+         [non-breaking _] (split-optional-qualifier (last version-spitted))
+         new-version (str/join
+                      "."
+                      (case user-version
+                        1 [(inc-str major-version) "0" "0"]
+                        2 [major-version (inc-str minor-version) "0"]
+                        3 [major-version minor-version (inc-str non-breaking)]))
+         new-version*
+         (if qualifier (str/join "-" [new-version qualifier]) new-version)]
+     (if (confirm-version? app-name current-version new-version*)
+       (do (save-version-file app-dir {:version new-version*}) new-version*)
+       (build-log/warn "Version couldn't be updated without user consent")))))

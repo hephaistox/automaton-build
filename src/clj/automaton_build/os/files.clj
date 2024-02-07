@@ -168,7 +168,7 @@
       (fs/create-dirs target-dir)
       (doseq [file files]
         (if (fs/exists? file)
-          (do (build-log/debug "Copy from " file " to " target-dir)
+          (do (build-log/trace "Copy from " file " to " target-dir)
               (if (fs/directory? file)
                 (do (build-log/trace-format "Copy directory `%s` to `%s`"
                                             (absolutize file)
@@ -201,9 +201,9 @@
   (doseq [file file-list]
     (when (fs/exists? file)
       (if (fs/directory? file)
-        (do (build-log/debug "Directory " (absolutize file) " is deleted")
+        (do (build-log/trace "Directory " (absolutize file) " is deleted")
             (fs/delete-tree file))
-        (do (build-log/debug "File " (absolutize file) " is deleted")
+        (do (build-log/trace "File " (absolutize file) " is deleted")
             (fs/delete-if-exists file))))))
 
 (defn modified-since
@@ -312,6 +312,13 @@
                        {:dir dir}
                        e)))))))
 
+(defn overwrite-dirs
+  "Creates a directory, if directory extists removes it first."
+  [dir]
+  (let [dir (absolutize dir)]
+    (when (is-existing-dir? dir) (delete-files [dir]))
+    (create-dirs dir)))
+
 (defn search-files
   "Search files.
   * `root` is where the root directory of the search-files
@@ -387,12 +394,12 @@
             (cond
               (and (is-existing-file? filename)
                    (compare-fn filename content header))
-              (do (build-log/debug-format
+              (do (build-log/trace-format
                    "Spit of file `%s` skipped, as it is already up to date:"
                    filename)
                   false)
               (some? content)
-              (do (build-log/debug-format
+              (do (build-log/trace-format
                    "Spit of file `%s` is updating with new content."
                    filename)
                   (create-parent-dirs filename)

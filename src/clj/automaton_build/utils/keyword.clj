@@ -3,7 +3,7 @@
   (:require
    [clojure.string :as str]))
 
-(defn- trim-colon
+(defn trim-colon
   "If string `s` starts with `:` char it is removed."
   [s]
   (if (= ":" (first s)) (rest s) s))
@@ -12,7 +12,6 @@
   "Change string to appropriate clojure keyword"
   [s]
   (-> (name s)
-      trim-colon
       str/lower-case
       (str/replace "_" "-")
       (str/replace "." "-")

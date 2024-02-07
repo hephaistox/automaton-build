@@ -38,7 +38,7 @@
   * `container-name` name of the container to update
   * `tag` tag to upsert"
   [filename container-name tag]
-  (build-log/info-format "Update file `%s`, with tag `%s`" filename tag)
+  (build-log/debug-format "Update file `%s`, with tag `%s`" filename tag)
   (if-let [file-content (build-files/read-file filename)]
     (let [searched-pattern (searched-pattern container-name)]
       (if (re-find searched-pattern file-content)

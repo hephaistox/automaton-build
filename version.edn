@@ -1,4 +1,2 @@
 ;; Last generated version, note a failed push consume a number
-{:major-version "0.0.-1-la"
- :minor-version 106
- :version "0.0.106-la"}
+{:version "0.2.1-la"}
