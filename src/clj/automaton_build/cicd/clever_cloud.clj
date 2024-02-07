@@ -35,4 +35,4 @@
        :else (do (build-log/error "Unexpected error during publishing : "
                                   (into [] commit-res))
                  false))))
-  ([dir] (deploy dir "New version automatically pushed")))
+  ([dir] (deploy dir "Automatically pushed version")))
