@@ -301,9 +301,9 @@
             target-branch]
      :or {target-branch (current-branch ".")}}]
    (when (git-installed?)
-     (build-log/debug "Pushing from `%s` to repository `%s`"
-                      source-dir
-                      repo-address)
+     (build-log/debug-format "Pushing from `%s` to repository `%s`"
+                             source-dir
+                             repo-address)
      (let [target-git-dir
            (target-branch-git-dir repo-address base-branch-name target-branch)
            dir-to-push (build-files/create-temp-dir)]
