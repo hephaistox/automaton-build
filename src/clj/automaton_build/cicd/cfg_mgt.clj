@@ -251,10 +251,11 @@
                           force?))))))
 
 (defn pull-changes
-  [srcb destb dir]
+  [branch dir]
   (build-cmds/execute-with-exit-code
-   ["git" "fetch" "origin" (str srcb ":" srcb) {:dir dir}]
-   ["git" "merge" srcb destb {:dir dir}]))
+   ["git" "fetch" "origin" (str branch ":" branch) {:dir dir}]
+   ["git" "pull" {:dir dir}]
+   ["git" "merge" branch (current-branch dir) {:dir dir}]))
 
 (defn git-changes?
   [dir]

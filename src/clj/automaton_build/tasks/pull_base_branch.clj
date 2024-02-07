@@ -13,15 +13,21 @@
   [app-dir base-branch]
   (let [current-branch (build-cfg-mgt/current-branch app-dir)]
     (when (current-branch-not-base current-branch base-branch)
-      (let [res (build-cfg-mgt/pull-changes base-branch current-branch app-dir)]
+      (let [res (build-cfg-mgt/pull-changes base-branch app-dir)]
+        (build-log/trace-format
+         "Merge of branch `%s` to branch `%s`, has resulted with: `%s`"
+         base-branch
+         current-branch
+         res)
         (and (zero? (ffirst res)) (zero? (first (second res))))))))
 
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   [_task-map {:keys [publication app-dir]}]
-  (build-log/info "Pull base branch started")
   (let [base-branch (get-in publication [:env :production :push-branch])]
     (if (pull-base-branch app-dir base-branch)
-      build-exit-codes/ok
-      build-exit-codes/catch-all)))
+      (do (build-log/debug "Current branch is up-to-date with base.")
+          build-exit-codes/ok)
+      (do (build-log/warn "Current branch is not up-to-date with base.")
+          build-exit-codes/catch-all))))

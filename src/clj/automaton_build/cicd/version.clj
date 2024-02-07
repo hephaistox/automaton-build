@@ -88,8 +88,8 @@
          new-version (str/join
                       "."
                       (case user-version
-                        1 [(inc-str major-version) minor-version non-breaking]
-                        2 [major-version (inc-str minor-version) non-breaking]
+                        1 [(inc-str major-version) "0" "0"]
+                        2 [major-version (inc-str minor-version) "0"]
                         3 [major-version minor-version (inc-str non-breaking)]))
          new-version*
          (if qualifier (str/join "-" [new-version qualifier]) new-version)]
