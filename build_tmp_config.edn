@@ -1,0 +1,89 @@
+;; This is the `build_config.edn` content completed with default values
+{:app-name "automaton-build"
+ :task-shared
+ {:account "hephaistox"
+  :gha {:repo-branch "main"
+        :repo-url "git@github.com:hephaistox/gha_image.git"
+        :workflows [".github/workflows/commit_validation.yml"]}
+  :mermaid-dir "docs/code/"
+  :publication
+  {:as-lib org.clojars.hephaistox/automaton-build
+   :class-dir "target/%s/class/"
+   :deploy-to :clojars
+   :env {:la {:exclude-aliases #{:common-test :env-development-repl
+                                 :env-development-test}
+              :push-branch "la"}
+         :production {:exclude-aliases #{:common-test :env-development-repl
+                                         :env-development-test}
+                      :push-branch "main"}}
+   :license {:name "CC BY-NC 4.0"
+             :url "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
+   :repo "git@github.com:hephaistox/automaton-build.git"
+   :target-jar-filename "target/%s/%s.jar"}
+  :repl-aliases [:common-test :env-development-repl :build]
+  :storage-datomic {:datomic-dir-pattern "datomic-pro-%s/"
+                    :datomic-root-dir "~/.datomic/"
+                    :datomic-transactor-bin-path "bin/transactor"
+                    :datomic-ver "1.0.7021"}}
+ :tasks
+ {:bg {}
+  :build-jar {:aliases [:run]
+              :class-dir "target/classes/"}
+  :clean {:dirs [".cpcache/"
+                 ".clj-kondo/.cache/"
+                 "tmp/"
+                 "target/"
+                 "node_modules/"
+                 ".shadow-cljs/builds/"]}
+  :clean-hard {}
+  :clean-state {}
+  :commit {}
+  :container-clear {}
+  :container-list {}
+  :error {}
+  :error-clj {}
+  :format-code {:include-files #{"build_config.edn" "deps.edn"
+                                 "shadow-cljs.edn"}}
+  :generate-code-stats {:stats-outputfilename "docs/code/stats.md"}
+  :gha {}
+  :gha-container-publish {}
+  :gha-lconnect {}
+  :is-cicd {}
+  :la {}
+  :la-empty {}
+  :lbe-repl {:repl-aliases [:common-test :env-development-repl]}
+  :lbe-test {:test-aliases [:env-development-test :common-test]}
+  :lfe-manual {}
+  :lint {}
+  :mermaid {}
+  :mermaid-watch {}
+  :publish-app {}
+  :publish-library {}
+  :pull-base-branch {}
+  :push-local {}
+  :reports {:alias-outputfilename "docs/code/alias.edn"
+            :comments-outputfilename "docs/code/comments.edn"
+            :css-outputfilename "docs/code/css.edn"
+            :forbiddenwords-outputfilename "docs/code/forbbiden-words.edn"
+            :forbiddenwords-words #{"automaton-core" "automaton-web" "landing"
+                                    "tap>"}
+            :namespace-outputfilename "docs/code/namespace.edn"
+            :shadow-report-app :app
+            :shadow-report-outputfilename "doc/codes/code-size.edn"}
+  :storage-install
+  {:datomic-url-pattern
+   "https://datomic-pro-downloads.s3.amazonaws.com/%1$s/datomic-pro-%1$s.zip"}
+  :storage-start {}
+  :tasks {}
+  :update-deps {:exclude-libs #{"cider/cider-nrepl" "com.github.liquidz/antq"
+                                "com.taoensso/encore"
+                                "org.clojars.hephaistox/automaton-build@*-*"
+                                "org.clojars.hephaistox/automaton-core@*-*"
+                                "org.clojars.hephaistox/automaton-web-dev@*-*"
+                                "org.clojars.hephaistox/automaton-web@*-*"
+                                "refactor-nrepl/refactor-nrepl"}}
+  :visualize-deps {:output-file "docs/code/deps.svg"}
+  :visualize-ns {:output-file "docs/code/deps-ns.svg"}
+  :wf-2 {}
+  :wf-3 {}
+  :wf-3f {}}}

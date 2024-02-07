@@ -1,0 +1,211 @@
+[:map {:closed true}
+ [:app-name :string]
+ [:task-shared
+  [:map {:closed true}
+   [:account {:default "hephaistox"}
+    :string]
+   [:gha
+    [:map {:closed true}
+     [:repo-branch {:default "main"}
+      :string]
+     [:repo-url {:default "git@github.com:hephaistox/gha_image.git"}
+      :string]
+     [:workflows {:default [".github/workflows/commit_validation.yml"]}
+      [:vector :string]]]]
+   [:monorepo {:optional true}
+    [:map {:closed true}
+     [:template-dir {:optional true}
+      :string]]]
+   [:mermaid-dir {:default "docs/code/"}
+    :string]
+   [:repl-aliases [:vector :keyword]]
+   [:storage-datomic {:optional true}
+    [:map
+     [:datomic-root-dir {:default "~/.datomic/"}
+      :string]
+     [:datomic-dir-pattern {:default "datomic-pro-%s/"}
+      :string]
+     [:datomic-transactor-bin-path {:default "bin/transactor"}
+      :string]
+     [:datomic-ver {:default "1.0.7021"}
+      :string]]]
+   [:publication {:optional true}
+    [:map {:closed true}
+     [:as-lib {:optional true}
+      :symbol]
+     [:class-dir {:default "target/%s/class/"}
+      :string]
+     [:license {:optional true}
+      [:map
+       [:name {:default "CC BY-NC 4.0"}
+        :string]
+       [:url {:default "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
+        :string]]]
+     [:target-jar-filename {:default "target/%s/%s.jar"}
+      :string]
+     [:repo :string]
+     [:jar-main {:optional true}
+      :string]
+     [:deploy-to {:optional true}
+      :keyword]
+     [:env {:optional true}
+      [:map
+       [:production
+        [:map
+         [:clever-uri {:optional true}
+          :string]
+         [:exclude-aliases {:default #{:common-test :env-development-test
+                                       :env-development-repl}}
+          [:set :keyword]]
+         [:push-branch {:default "main"}
+          :string]]]
+       [:la
+        [:map
+         [:clever-uri {:optional true}
+          :string]
+         [:exclude-aliases {:default #{:common-test :env-development-test
+                                       :env-development-repl}}
+          [:set :keyword]]
+         [:push-branch {:default "la"}
+          :string]]]]]
+     [:frontend {:optional true}
+      [:map {:closed true}
+       [:run-aliases {:optional true}
+        [:vector :keyword]]
+       [:deploy-alias {:optional true}
+        :keyword]
+       [:compiled-styles-css {:default
+                              "resources/public/css/compiled/styles.css"}
+        :string]
+       [:css {:optional true}
+        [:map {:closed true}
+         [:custom-css {:default "resources/css/custom.css"}
+          :string]
+         [:main-css {:default "resources/css/main.css"}
+          :string]
+         [:tailwind-config {:default ["tailwind.config.js"]}
+          [:vector :string]]]]]]]]]]
+ [:tasks
+  [:map {:closed true}
+   [:bg {:optional true}
+    [:map {:closed true}]]
+   [:build-jar {:optional true}
+    [:map {:closed true}
+     [:aliases {:default [:run]}
+      [:vector :keyword]]
+     [:class-dir {:default "target/classes/"}
+      :string]]]
+   [:clean {:optional true}
+    [:map {:closed true}
+     [:dirs [:vector :string]]]]
+   [:clean-hard {:optional true}
+    [:map {:closed true}]]
+   [:clean-state {:optional true}
+    [:map {:closed true}]]
+   [:commit {:optional true}
+    [:map {:closed true}]]
+   [:container-clear {:optional true}
+    [:map {:closed true}]]
+   [:container-list {:optional true}
+    [:map {:closed true}]]
+   [:error {:optional true}
+    [:map {:closed true}]]
+   [:error-clj {:optional true}
+    [:map {:closed true}]]
+   [:format-code {:optional true}
+    [:map {:closed true}
+     [:include-files {:default #{"build_config.edn" "deps.edn"
+                                 "shadow-cljs.edn"}}
+      [:set :string]]]]
+   [:generate-code-stats {:optional true}
+    [:map {:closed true}
+     [:stats-outputfilename {:default "docs/code/stats.md"}
+      :string]]]
+   [:gha {:optional true}
+    [:map {:closed true}]]
+   [:gha-container-publish {:optional true}
+    [:map {:closed true}]]
+   [:gha-lconnect {:optional true}
+    [:map {:closed true}]]
+   [:is-cicd {:optional true}
+    [:map {:closed true}]]
+   [:la {:optional true}
+    [:map {:closed true}]]
+   [:la-empty {:optional true}
+    [:map {:closed true}]]
+   [:lbe-repl {:optional true}
+    [:map {:closed true}
+     [:repl-aliases {:default [:common-test :env-development-repl]}
+      [:vector :keyword]]]]
+   [:lbe-test {:optional true}
+    [:map {:closed true}
+     [:test-aliases {:default [:env-development-test :common-test]}
+      [:vector :keyword]]]]
+   [:lfe-manual {:optional true}
+    [:map {:closed true}]]
+   [:lint {:optional true}
+    [:map {:closed true}]]
+   [:mermaid {:optional true}
+    [:map {:closed true}]]
+   [:mermaid-watch {:optional true}
+    [:map {:closed true}]]
+   [:publish-app {:optional true}
+    [:map {:closed true}]]
+   [:publish-library {:optional true}
+    [:map {:closed true}]]
+   [:pull-base-branch {:optional true}
+    [:map {:closed true}]]
+   [:push-local {:optional true}
+    [:map {:closed true}]]
+   [:reports {:optional true}
+    [:map {:closed true}
+     [:alias-outputfilename {:default "docs/code/alias.edn"}
+      :string]
+     [:comments-outputfilename {:default "docs/code/comments.edn"}
+      :string]
+     [:forbiddenwords-words {:default #{"tap>"}}
+      [:set :string]]
+     [:forbiddenwords-outputfilename {:default "docs/code/forbbiden-words.edn"}
+      :string]
+     [:shadow-report-outputfilename {:default "doc/codes/code-size.edn"}
+      :string]
+     [:shadow-report-app {:default :app}
+      :keyword]
+     [:css-outputfilename {:default "docs/code/css.edn"}
+      :string]
+     [:namespace-outputfilename {:default "docs/code/namespace.edn"}
+      :string]]]
+   [:storage-install {:optional true}
+    [:map {:closed true}
+     [:datomic-url-pattern
+      {:default
+       "https://datomic-pro-downloads.s3.amazonaws.com/%1$s/datomic-pro-%1$s.zip"}
+      :string]]]
+   [:storage-start {:optional true}
+    [:map {:closed true}]]
+   [:tasks {:optional true}
+    [:map {:closed true}]]
+   [:update-deps {:optional true}
+    [:map {:closed true}
+     [:exclude-libs {:default #{"org.clojars.hephaistox/automaton-core@*-*"
+                                "org.clojars.hephaistox/automaton-build@*-*"
+                                "refactor-nrepl/refactor-nrepl"
+                                "org.clojars.hephaistox/automaton-web-dev@*-*"
+                                "com.taoensso/encore" "cider/cider-nrepl"
+                                "org.clojars.hephaistox/automaton-web@*-*"
+                                "com.github.liquidz/antq"}}
+      [:set :string]]]]
+   [:visualize-deps {:optional true}
+    [:map {:closed true}
+     [:output-file {:default "docs/code/deps.svg"}
+      :string]]]
+   [:visualize-ns {:optional true}
+    [:map {:closed true}
+     [:output-file {:default "docs/code/deps-ns.svg"}
+      :string]]]
+   [:wf-2 {:optional true}
+    [:map {:closed true}]]
+   [:wf-3 {:optional true}
+    [:map {:closed true}]]
+   [:wf-3f {:optional true}
+    [:map {:closed true}]]]]]
