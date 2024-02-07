@@ -18,16 +18,17 @@
 
 (defn publish-app
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
-  ([repo-uri target-dir clever-dir]
+  ([repo-uri target-dir clever-dir version]
    (let [clever-repo-dir
          (build-clever-cloud/clone-repo clever-dir repo-uri "repo")]
      (build-files/copy-files-or-dir [target-dir]
                                     (build-files/create-dir-path clever-repo-dir
                                                                  "target"))
-     (build-clever-cloud/deploy clever-repo-dir)))
+     (build-clever-cloud/deploy clever-repo-dir version)))
   ([repo-uri target-dir]
    (publish-app repo-uri
                 target-dir
                 (->> ".clever"
                      (build-files/create-dir-path ".")
-                     build-files/absolutize))))
+                     build-files/absolutize)
+                "Automatically pushed version")))
