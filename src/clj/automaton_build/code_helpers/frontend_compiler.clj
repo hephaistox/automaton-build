@@ -78,10 +78,10 @@
     combined-tmp-file))
 
 (defn- tailwind-compile-css
-  [css-files compiled-dir]
+  [css-file compiled-dir]
   (let [tailwind-command ["npx" "tailwindcss"]
-        combined-css-file (apply tailwindcss-css-file css-files)
-        input-file ["-i" combined-css-file]
+        ;; combined-css-file (apply tailwindcss-css-file css-files)
+        input-file ["-i" css-file]
         output-file ["-o" compiled-dir]
         tailwindcss (-> tailwind-command
                         (concat input-file output-file)
@@ -95,8 +95,8 @@
       vec))
 
 (defn tailwind-compile-css-release
-  [css-files compiled-dir run-dir]
-  (-> (tailwind-compile-css css-files compiled-dir)
+  [css-file compiled-dir run-dir]
+  (-> (tailwind-compile-css css-file compiled-dir)
       (concat ["--minify" {:dir run-dir}])
       vec))
 
@@ -109,7 +109,7 @@
   (when (shadow-installed? dir)
     (-> (build-cmds/execute-with-exit-code
          (npm-install-cmd dir)
-         (tailwind-compile-css-release css-files output-css dir)
+         (tailwind-compile-css-release (first css-files) output-css dir)
          ["npx"
           "shadow-cljs"
           "release"

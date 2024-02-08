@@ -19,7 +19,8 @@
         publication
         {:keys [deploy-alias css compiled-styles-css]} frontend
         {:keys [main-css custom-css]} css
-        target-env (build-conf/read-param [:env])
+        target-env :production
+        #_(build-conf/read-param [:env])
         jar-path (->> (format target-jar-filename (name target-env) app-name)
                       (build-files/create-file-path app-dir)
                       build-files/absolutize)
