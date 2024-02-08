@@ -1,4 +1,4 @@
-(ns automaton-build.tasks.la-empty
+(ns automaton-build.tasks.la-without-opts
   (:require
    [automaton-build.la :as build-la]))
 

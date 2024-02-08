@@ -18,10 +18,9 @@
   ([msg options force?]
    (if force?
      nil
-     (let [answer (atom true)]
-       (while (not (some #(= @answer %) options))
-         (build-terminal-msg/println-msg msg)
-         (flush)
-         (reset! answer (user-input)))
-       @answer)))
+     (loop []
+       (build-terminal-msg/println-msg msg)
+       (flush)
+       (let [answer (user-input)]
+         (if (some #(= answer %) options) answer (recur))))))
   ([msg options] (question-loop msg options false)))

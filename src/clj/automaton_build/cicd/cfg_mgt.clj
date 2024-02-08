@@ -123,7 +123,8 @@
  Params:
   * `dir` directory where the repository is stored
   * `msg` message for the commit
-  * `branch-name` branch name"
+  * `branch-name` branch name
+  * `force?` optional for forcing a new commit to be a new point for the remote (even if there may be conflicts with previous)"
   ([dir msg branch-name force?]
    (let [msg (or msg "commit")]
      (when (git-installed?)
@@ -177,7 +178,7 @@
              [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
          (case cmd-failing
            nil (do (build-log/info-format
-                    "Succesfully pushed version `%s` version"
+                    "Successfully pushed version `%s` version"
                     version)
                    true)
            1 (do (build-log/info-format "Nothing to commit, skip the push")
@@ -203,7 +204,7 @@
   * `branch-name`"
   [tmp-dir repo-address branch-name]
   (if (clone-repo-branch tmp-dir repo-address branch-name)
-    (do (build-log/debug-format "Succesfully cloned branch %s" branch-name)
+    (do (build-log/debug-format "Successfully cloned branch %s" branch-name)
         true)
     (do
       (build-log/debug-format

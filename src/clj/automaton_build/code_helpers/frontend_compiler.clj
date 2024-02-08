@@ -4,8 +4,7 @@
    [automaton-build.log :as build-log]
    [automaton-build.os.commands :as build-cmds]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.os.files :as build-files]))
 
 (def shadow-cljs-edn "shadow-cljs.edn")
 
@@ -66,22 +65,10 @@
                                              :error-to-std? true}])
         build-cmds/first-cmd-failing)))
 
-(defn- tailwindcss-css-file
-  "Tailwind allows only for one input file, so we need to merge them first"
-  [& css-files]
-  (let [combined-tmp-file (build-files/create-temp-file "combined.css")
-        files-content (str/join "\n" (map #(slurp %) css-files))]
-    (build-files/spit-file combined-tmp-file
-                           files-content
-                           nil
-                           (fn [_ _ _] false))
-    combined-tmp-file))
-
 (defn- tailwind-compile-css
-  [css-files compiled-dir]
+  [css-file compiled-dir]
   (let [tailwind-command ["npx" "tailwindcss"]
-        combined-css-file (apply tailwindcss-css-file css-files)
-        input-file ["-i" combined-css-file]
+        input-file ["-i" css-file]
         output-file ["-o" compiled-dir]
         tailwindcss (-> tailwind-command
                         (concat input-file output-file)
@@ -89,23 +76,25 @@
     tailwindcss))
 
 (defn- tailwind-config-watch-command
-  [css-files compiled-dir]
-  (-> (tailwind-compile-css css-files compiled-dir)
+  [css-file compiled-dir]
+  (-> (tailwind-compile-css css-file compiled-dir)
       (concat ["--watch"])
       vec))
 
 (defn tailwind-compile-css-release
-  [css-files compiled-dir run-dir]
-  (-> (tailwind-compile-css css-files compiled-dir)
+  [css-file compiled-dir run-dir]
+  (-> (tailwind-compile-css css-file compiled-dir)
       (concat ["--minify" {:dir run-dir}])
       vec))
 
 (defn compile-release
-  "Compile the target given as a parameter, in dev mode
+  "Install npm, compile code and css for production.
+  Order of those actions is important
   Params:
   * `target-alias` the name of the alias in `shadow-cljs.edn` to compile
+  * `input-css-file` Tailwind allows only for one input file
   * `dir` the frontend root directory"
-  [target-alias css-files output-css dir]
+  [target-alias input-css-file output-css dir]
   (when (shadow-installed? dir)
     (-> (build-cmds/execute-with-exit-code
          (npm-install-cmd dir)
@@ -115,7 +104,7 @@
           target-alias
           {:dir dir
            :error-to-std? true}]
-         (tailwind-compile-css-release css-files output-css dir))
+         (tailwind-compile-css-release input-css-file output-css dir))
         build-cmds/first-cmd-failing)))
 
 (defn load-shadow-cljs
@@ -188,16 +177,15 @@
   "Watch modification on code on cljs part, from tests or app
    Params:
    * `dir` the frontend root directory"
-  [dir shadow-cljs-aliases css-files compiled-styles-css]
+  [dir shadow-cljs-aliases css-file compiled-styles-css]
   (let [npm-install (npm-install-cmd dir)
-        tailwindcss (tailwind-config-watch-command css-files
-                                                   compiled-styles-css)
+        tailwindcss (tailwind-config-watch-command css-file compiled-styles-css)
         shadow-cljs (shadow-cljs-watch-command shadow-cljs-aliases)]
     (build-cmds/execute-and-trace npm-install
-                                  (conj tailwindcss
+                                  (conj shadow-cljs
                                         {:dir dir
                                          :background? true})
-                                  (conj shadow-cljs
+                                  (conj tailwindcss
                                         {:dir dir
                                          :background? true}))))
 

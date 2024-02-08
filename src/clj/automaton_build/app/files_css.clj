@@ -1,11 +1,23 @@
 (ns automaton-build.app.files-css
   "Code for manipulation of css files"
   (:require
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files :as build-files]
+   [clojure.string :as str]))
 
 (def main-css "main.css")
 
 (def custom-css "custom.css")
+
+(defn combine-css-files
+  [& css-files]
+  (let [combined-tmp-file (build-files/create-temp-file "combined.css")
+        files-content (str/join "\n" (map #(slurp %) css-files))]
+    (build-files/spit-file combined-tmp-file
+                           files-content
+                           nil
+                           (fn [_ _ _] false))
+    combined-tmp-file))
+
 
 (defn- new-load-css-file
   "Returns string from reading app css file."
