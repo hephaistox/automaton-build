@@ -83,8 +83,9 @@
              :task-cli-opts-kws [:force]}
    'la {:doc "Local acceptance test"
         :la-test {:skip? true}}
-   'la-empty {:doc "Local acceptance test with no cli args"
-              :la-test {:skip? true}}
+   'la-without-opts {:doc
+                     "Local acceptance test without any opts passed to a task"
+                     :la-test {:skip? true}}
    'lbe-repl
    {:doc
     "Connect to repl - this command is to be used by workflow, a version apart from build_app is directly set in `bb.edn`."

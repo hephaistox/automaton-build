@@ -1,7 +1,8 @@
 (ns automaton-build.tasks.lfe-watch
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.app.files-css :as build-app-files-css]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
+   [automaton-build.log :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
@@ -17,12 +18,14 @@
           (build-log/warn
            "Skip the frontend watch as no setup is found in build_config.edn for key `[:publication :frontend]`")
           build-exit-codes/cannot-execute)
-        (let [{:keys [main-css custom-css compiled-styles-css run-aliases]}
-              frontend
+        (let [{:keys [css compiled-styles-css run-aliases]} frontend
+              {:keys [main-css custom-css]} css
+              combined-css-file (apply build-app-files-css/combine-css-files
+                                       [main-css custom-css])
               run-aliases-strs (mapv name run-aliases)]
           (if-not (build-frontend-compiler/fe-watch app-dir
                                                     run-aliases-strs
-                                                    [main-css custom-css]
+                                                    combined-css-file
                                                     compiled-styles-css)
             (do (build-log/fatal "Tests have failed")
                 build-exit-codes/catch-all)
@@ -31,6 +34,7 @@
 (comment
   (build-frontend-compiler/fe-watch ""
                                     ["app" "karma-test"]
-                                    ["resources/css/main.css"
-                                     "resources/css/customer.css"]
+                                    (apply build-app-files-css/combine-css-files
+                                           ["resources/css/main.css"
+                                            "resources/css/customer.css"])
                                     "target/foo.css"))

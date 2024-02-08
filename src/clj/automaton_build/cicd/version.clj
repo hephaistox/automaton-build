@@ -70,29 +70,15 @@
 
 (defn- inc-str [num] (str (inc (read-string num))))
 
-(defn generate-new-version [])
-
-(defn update-version
-  "Build the string of the version to be pushed (the next one)
-  Params:
-  * `app-dir` directory of the version to count
-  * `major-version`"
-  ([app-dir app-name changes] (update-version app-dir app-name changes nil))
-  ([app-dir app-name changes qualifier]
-   (let [current-version (current-version app-dir)
-         user-version (ask-version app-name current-version changes)
-         version-spitted (str/split current-version #"\.")
-         major-version (first version-spitted)
-         minor-version (second version-spitted)
-         [non-breaking _] (split-optional-qualifier (last version-spitted))
-         new-version (str/join
-                      "."
-                      (case user-version
-                        1 [(inc-str major-version) "0" "0"]
-                        2 [major-version (inc-str minor-version) "0"]
-                        3 [major-version minor-version (inc-str non-breaking)]))
-         new-version*
-         (if qualifier (str/join "-" [new-version qualifier]) new-version)]
-     (if (confirm-version? app-name current-version new-version*)
-       (do (save-version-file app-dir {:version new-version*}) new-version*)
-       (build-log/warn "Version couldn't be updated without user consent")))))
+(defn generate-new-version
+  [current-version app-name changes]
+  (let [user-version (ask-version app-name current-version changes)
+        version-spitted (str/split current-version #"\.")
+        major-version (first version-spitted)
+        minor-version (second version-spitted)
+        non-breaking (last version-spitted)]
+    (str/join "."
+              (case user-version
+                1 [(inc-str major-version) "0" "0"]
+                2 [major-version (inc-str minor-version) "0"]
+                3 [major-version minor-version (inc-str non-breaking)]))))

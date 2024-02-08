@@ -61,18 +61,14 @@
                            branch-name
                            target-dir)
    (when (git-installed?)
-     (let [[exit-code message] (->> (build-cmds/execute-with-exit-code
-                                     ["git"
-                                      "clone"
-                                      repo-address
-                                      repo-dir-name
-                                      "--single-branch"
-                                      "-b"
-                                      branch-name
-                                      "--depth"
-                                      "1"
-                                      {:dir target-dir}])
-                                    first)]
+     (let [[exit-code message]
+           (->> (build-cmds/execute-with-exit-code
+                 (vec
+                  (concat
+                   ["git" "clone" repo-address repo-dir-name "--single-branch"]
+                   (when branch-name ["-b" branch-name])
+                   ["--depth" "1" {:dir target-dir}])))
+                first)]
        (cond
          (zero? exit-code) true
          (re-find #"Could not find remote branch" message)
@@ -127,20 +123,18 @@
  Params:
   * `dir` directory where the repository is stored
   * `msg` message for the commit
-  * `branch-name` branch name"
+  * `branch-name` branch name
+  * `force?` optional for forcing a new commit to be a new point for the remote (even if there may be conflicts with previous)"
   ([dir msg branch-name force?]
    (let [msg (or msg "commit")]
      (when (git-installed?)
-       (let [commit-res (build-cmds/execute-with-exit-code
-                         ["git" "add" "-A" {:dir dir}]
-                         ["git" "commit" "-m" msg {:dir dir}]
-                         ["git"
-                          "push"
-                          "--set-upstream"
-                          "origin"
-                          branch-name
-                          (when force? "--force")
-                          {:dir dir}])]
+       (let [commit-res
+             (build-cmds/execute-with-exit-code
+              ["git" "add" "-A" {:dir dir}]
+              ["git" "commit" "-m" msg {:dir dir}]
+              (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
+                           (when force? ["--force"])
+                           [{:dir dir}])))]
          commit-res))))
   ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
 
@@ -184,7 +178,7 @@
              [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
          (case cmd-failing
            nil (do (build-log/info-format
-                    "Succesfully pushed version `%s` version"
+                    "Successfully pushed version `%s` version"
                     version)
                    true)
            1 (do (build-log/info-format "Nothing to commit, skip the push")
@@ -203,21 +197,20 @@
                      false)))))))
 
 (defn- prepare-cloned-repo-on-branch
-  "Clone the repo in diectory `tmp-dir`, the repo at `repo-address` is copied on branch `branch-name`, if it does not exist create a branch based on `base-branch-name`
+  "Clone the repo in diectory `tmp-dir`, the repo at `repo-address` is copied on branch `branch-name`
   Params:
   * `tmp-dir`
   * `repo-address`
-  * `base-branch-name`
   * `branch-name`"
-  [tmp-dir repo-address base-branch-name branch-name]
+  [tmp-dir repo-address branch-name]
   (if (clone-repo-branch tmp-dir repo-address branch-name)
-    (do (build-log/debug-format "Succesfully cloned branch %s" branch-name)
+    (do (build-log/debug-format "Successfully cloned branch %s" branch-name)
         true)
     (do
       (build-log/debug-format
        "Branch `%s` does not exist on the remote repo, it will be created locally"
        branch-name)
-      (when (clone-repo-branch tmp-dir repo-address base-branch-name)
+      (when (clone-repo-branch tmp-dir repo-address nil)
         (create-and-switch-to-branch tmp-dir branch-name)))))
 
 (defn- replace-repo-git-dir
@@ -233,6 +226,22 @@
    ["git" "pull" {:dir dir}]
    ["git" "merge" branch (current-branch dir) {:dir dir}]))
 
+(defn- target-branch-git-dir
+  "Returns '.git' directory from `target-branch`"
+  [repo-address target-branch]
+  (let [tmp-dir (build-files/create-temp-dir)]
+    (when (prepare-cloned-repo-on-branch tmp-dir repo-address target-branch)
+      (build-files/create-dir-path tmp-dir ".git"))))
+
+(defn- replace-branch-files
+  "Replaces files from target-branch with files from files-dir. Returns directory in which it resides"
+  [files-dir repo-address target-branch]
+  (let [target-git-dir (target-branch-git-dir repo-address target-branch)
+        dir-with-replaced-files (build-files/create-temp-dir)]
+    (build-files/copy-files-or-dir [files-dir] dir-with-replaced-files)
+    (replace-repo-git-dir target-git-dir dir-with-replaced-files)
+    dir-with-replaced-files))
+
 (defn git-changes?
   [dir]
   (let [res (build-cmds/execute-get-string ["git" "status" "-s" {:dir dir}])]
@@ -240,18 +249,12 @@
     (not (str/blank? (first res)))))
 
 (defn changed?
-  "Returns true if there is a difference between state on `base-branch` and `target-branch` with `source-dir` in `repo-address`"
-  [source-dir repo-address base-branch target-branch]
-  (let [tmp-dir (build-files/create-temp-dir)]
-    (when (git-installed?)
-      (when (prepare-cloned-repo-on-branch tmp-dir
-                                           repo-address
-                                           base-branch
-                                           target-branch)
-        (when (replace-repo-git-dir (build-files/create-dir-path source-dir
-                                                                 ".git")
-                                    tmp-dir)
-          (git-changes? tmp-dir))))))
+  "Returns true if there is a difference between state on `branch` and `source-dir`"
+  [source-dir repo-address branch]
+  (when (git-installed?)
+    (when-let [replaced-dir
+               (replace-branch-files source-dir repo-address branch)]
+      (git-changes? replaced-dir))))
 
 (defn remote-branches
   "Return the remote branches for a repo
@@ -269,46 +272,28 @@
      ["git" "remote" "add" "origin" repo-url {:dir tmp-dir}])
     (build-cmds/execute-get-string ["git" "branch" "-aqr" {:dir tmp-dir}])))
 
-(defn- target-branch-git-dir
-  "Returns '.git' directory from target-branch."
-  [repo-address base-branch-name target-branch]
-  (let [tmp-dir (build-files/create-temp-dir)]
-    (when (prepare-cloned-repo-on-branch tmp-dir
-                                         repo-address
-                                         base-branch-name
-                                         target-branch)
-      (build-files/create-dir-path tmp-dir ".git"))))
+
 
 
 
 (defn push-local-dir-to-repo
-  "Push files from `source-dir` to `target-branch` (defaults to current branch)
+  "Commit and push `target-branch` with files from `source-dir`.
   Params:
   * `source-dir` local directory where the sources are stored, before being pushed to the remote repo
-  * `repo-address` the address of the repo where to push
-  * `base-branch-name` if branch-name does not exist, it will be created based on `base-branch-name`
+  * `repo-address` the address of the repo
   * `commit-msg` message that will end in pushed commit
   * `version` string with tag version
   * `tag` (optional) map containg `id` with tag and optional `msg` with corresponding message
   * `force?` (optional default false) if true, will force the changes to be pushed as top commit
   * `target-branch` (optional default current-branch) where to push"
-  ([{:keys [source-dir
-            repo-address
-            base-branch-name
-            commit-msg
-            tag
-            force?
-            target-branch]
+  ([{:keys [source-dir repo-address commit-msg tag force? target-branch]
      :or {target-branch (current-branch ".")}}]
    (when (git-installed?)
-     (build-log/debug "Pushing from `%s` to repository `%s`"
-                      source-dir
-                      repo-address)
-     (let [target-git-dir
-           (target-branch-git-dir repo-address base-branch-name target-branch)
-           dir-to-push (build-files/create-temp-dir)]
-       (build-files/copy-files-or-dir [source-dir] dir-to-push)
-       (replace-repo-git-dir target-git-dir dir-to-push)
+     (build-log/debug-format "Pushing from `%s` to repository `%s`"
+                             source-dir
+                             repo-address)
+     (let [dir-to-push
+           (replace-branch-files source-dir repo-address target-branch)]
        (if tag
          (commit-and-push-and-tag dir-to-push
                                   commit-msg

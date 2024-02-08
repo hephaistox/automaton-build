@@ -66,49 +66,46 @@
         build-cmds/first-cmd-failing)))
 
 (defn- tailwind-compile-css
-  [css-files compiled-dir]
+  [css-file compiled-dir]
   (let [tailwind-command ["npx" "tailwindcss"]
-        input-files (->> css-files
-                         (map #(vector "-i" %))
-                         (apply vector)
-                         flatten
-                         vec)
-        output-files ["-o" compiled-dir]
+        input-file ["-i" css-file]
+        output-file ["-o" compiled-dir]
         tailwindcss (-> tailwind-command
-                        (concat input-files output-files)
+                        (concat input-file output-file)
                         vec)]
     tailwindcss))
 
 (defn- tailwind-config-watch-command
-  [css-files compiled-dir]
-  (-> (tailwind-compile-css css-files compiled-dir)
+  [css-file compiled-dir]
+  (-> (tailwind-compile-css css-file compiled-dir)
       (concat ["--watch"])
       vec))
 
 (defn tailwind-compile-css-release
-  [css-files compiled-dir run-dir]
-  (-> (tailwind-compile-css css-files compiled-dir)
+  [css-file compiled-dir run-dir]
+  (-> (tailwind-compile-css css-file compiled-dir)
       (concat ["--minify" {:dir run-dir}])
       vec))
 
 (defn compile-release
-  "Compile the target given as a parameter, in dev mode
+  "Install npm, compile code and css for production.
+  Order of those actions is important
   Params:
   * `target-alias` the name of the alias in `shadow-cljs.edn` to compile
+  * `input-css-file` Tailwind allows only for one input file
   * `dir` the frontend root directory"
-  [target-alias css-files output-css dir]
+  [target-alias input-css-file output-css dir]
   (when (shadow-installed? dir)
     (-> (build-cmds/execute-with-exit-code
          (npm-install-cmd dir)
-         (tailwind-compile-css-release css-files output-css dir)
          ["npx"
           "shadow-cljs"
           "release"
           target-alias
           {:dir dir
-           :error-to-std? true}])
+           :error-to-std? true}]
+         (tailwind-compile-css-release input-css-file output-css dir))
         build-cmds/first-cmd-failing)))
-
 
 (defn load-shadow-cljs
   "Read the shadow-cljs of an app
@@ -180,16 +177,15 @@
   "Watch modification on code on cljs part, from tests or app
    Params:
    * `dir` the frontend root directory"
-  [dir shadow-cljs-aliases css-files compiled-styles-css]
+  [dir shadow-cljs-aliases css-file compiled-styles-css]
   (let [npm-install (npm-install-cmd dir)
-        tailwindcss (tailwind-config-watch-command css-files
-                                                   compiled-styles-css)
+        tailwindcss (tailwind-config-watch-command css-file compiled-styles-css)
         shadow-cljs (shadow-cljs-watch-command shadow-cljs-aliases)]
     (build-cmds/execute-and-trace npm-install
-                                  (conj tailwindcss
+                                  (conj shadow-cljs
                                         {:dir dir
                                          :background? true})
-                                  (conj shadow-cljs
+                                  (conj tailwindcss
                                         {:dir dir
                                          :background? true}))))
 
