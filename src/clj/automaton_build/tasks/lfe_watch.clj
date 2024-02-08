@@ -17,8 +17,9 @@
           (build-log/warn
            "Skip the frontend watch as no setup is found in build_config.edn for key `[:publication :frontend]`")
           build-exit-codes/cannot-execute)
-        (let [{:keys [main-css custom-css compiled-styles-css run-aliases]}
+        (let [{:keys [css compiled-styles-css run-aliases]}
               frontend
+              {:keys [main-css custom-css]} css
               run-aliases-strs (mapv name run-aliases)]
           (if-not (build-frontend-compiler/fe-watch app-dir
                                                     run-aliases-strs

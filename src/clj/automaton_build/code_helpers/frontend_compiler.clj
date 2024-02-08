@@ -118,7 +118,6 @@
            :error-to-std? true}])
         build-cmds/first-cmd-failing)))
 
-
 (defn load-shadow-cljs
   "Read the shadow-cljs of an app
   Params:
