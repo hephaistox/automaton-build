@@ -36,7 +36,3 @@
                             (into [] commit-res))
            false))))
   ([dir] (deploy dir "Automatically pushed version")))
-
-(comment
- ;;
-)

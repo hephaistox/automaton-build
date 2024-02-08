@@ -4,7 +4,8 @@
    [automaton-build.log :as build-log]
    [automaton-build.os.commands :as build-cmds]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files :as build-files]
+   [clojure.string :as str]))
 
 (def shadow-cljs-edn "shadow-cljs.edn")
 
@@ -65,17 +66,25 @@
                                              :error-to-std? true}])
         build-cmds/first-cmd-failing)))
 
+(defn- tailwindcss-css-file
+  "Tailwind allows only for one input file, so we need to merge them first"
+  [& css-files]
+  (let [combined-tmp-file (build-files/create-temp-file "combined.css")
+        files-content (str/join "\n" (map #(slurp %) css-files))]
+    (build-files/spit-file combined-tmp-file
+                           files-content
+                           nil
+                           (fn [_ _ _] false))
+    combined-tmp-file))
+
 (defn- tailwind-compile-css
   [css-files compiled-dir]
   (let [tailwind-command ["npx" "tailwindcss"]
-        input-files (->> css-files
-                         (map #(vector "-i" %))
-                         (apply vector)
-                         flatten
-                         vec)
-        output-files ["-o" compiled-dir]
+        combined-css-file (apply tailwindcss-css-file css-files)
+        input-file ["-i" combined-css-file]
+        output-file ["-o" compiled-dir]
         tailwindcss (-> tailwind-command
-                        (concat input-files output-files)
+                        (concat input-file output-file)
                         vec)]
     tailwindcss))
 
