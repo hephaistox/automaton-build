@@ -1,22 +1,14 @@
 # automaton-build
-
-Project used by all other Hephaistox projects to build, publish, update them
-
-It has many use-cases:
-
-* cust-app projects
-* automaton projects
-* automaton-build itself
-* the monorepo
+The project used by all other Hephaistox projects to build, publish, and update them (e.g. cicd, babashka tasks, files, and version management)
 
 ## Project design decisions
 `automaton-build` has the following objectives:
-* being usable for all kind of projects
+* being usable for all kinds of projects
    * Description:
       * shadow-cljs is not necessary or meaningful for all projects
       * even if there are shadow-cljs, there may be no target build in that project (like automaton-web, automaton-core, ...)
    * Rationale: 
-      * most of that features are the same for all projects, our one source of truth apply to it
+      * most of those features are the same for all projects, our one source of truth apply to it
    * Consequences: 
       * Each project has full control on what's the list of tasks, their name, comments, 
       * We can simply reuse tasks
@@ -51,3 +43,6 @@ It has many use-cases:
    * the dependencies are not compatible with babashka
    * so the function should be changed to a namespace with a `_clj` suffix, so that the babashka functions are not polluted with the dependency
 * Consider to add this task in `la` for testing
+
+License information can be found in [LICENSE file](LICENSE.md)
+Copyright © 2020-2024 Anthony Caumond, Mateusz Mazurczak
