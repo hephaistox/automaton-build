@@ -16,7 +16,7 @@
    :extra-paths ["test/clj" "test/resources"]
    :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn"]}
   :env-development-repl
-  {:extra-deps {cider/cider-nrepl {:mvn/version "0.30.0"}
+  {:extra-deps {cider/cider-nrepl {:mvn/version "0.44.0"}
                 djblue/portal {:mvn/version "0.51.0"}
                 org.clojure/core.async {:mvn/version "1.6.681"}
                 refactor-nrepl/refactor-nrepl {:mvn/version "3.6.0"}}
@@ -25,19 +25,15 @@
                  "env/development/src/cljc"]
    :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
    :main-opts ["-m" "automaton-build.repl"]}
-  :env-development-test
-  {:jvm-opts
-   ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/log4j2-factory"
-    "-Dhephaistox-in-test=true"
-    "-Dlog4j.configurationFile=resources/log_config/appenders.properties,resources/log_config/logging-tests.properties"]
-   :main-opts ["-m"
-               "cognitect.test-runner"
-               "-r"
-               ".*-test.*"
-               "-d"
-               "test/clj"
-               "-d"
-               "test/cljc"]}}
+  :env-development-test {:jvm-opts ["-Dhephaistox-in-test=true"]
+                         :main-opts ["-m"
+                                     "cognitect.test-runner"
+                                     "-r"
+                                     ".*-test.*"
+                                     "-d"
+                                     "test/clj"
+                                     "-d"
+                                     "test/cljc"]}}
  :deps {babashka/fs {:mvn/version "0.5.20"}
         djblue/portal {:mvn/version "0.51.1"} ;; developer tooling lib
         babashka/process {:mvn/version "0.5.21"}
@@ -49,7 +45,8 @@
         io.dominic/vizns {:git/url "https://github.com/SevereOverfl0w/vizns"
                           :sha "52eae0364284ad191e71f6591ef927665b1f37bc"}
         io.github.clojure/tools.build {:mvn/version "0.9.6"}
-        slipset/deps-deploy {:mvn/version "0.2.2"}
+        slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
+                             :mvn/version "0.2.2"}
         markdown-clj/markdown-clj {:mvn/version "1.11.7"}
         metosin/malli {:mvn/version "0.13.0"}
         zprint/zprint {:mvn/version "1.2.8"}}
