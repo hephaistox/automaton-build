@@ -64,7 +64,7 @@
   []
   (build-terminal-msg/println-msg
    "What the version should be?\n Remember to follow <major>.<minor>.<non-breaking>[-optional-qualifier] pattern.")
-  (build-cli-input/user-input))
+  (build-cli-input/user-input-str))
 
 (defn split-optional-qualifier
   "Removes optional qualifier. (Semantic versioning: <major>.<minor>.<non-breaking>[-optional-qualifier])
