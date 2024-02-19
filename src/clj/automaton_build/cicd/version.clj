@@ -53,7 +53,7 @@
   [project-name current-version changes]
   (build-cli-input/question-loop
    (format
-    "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nTo see what changed see: `%s`\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n Add version manually."
+    "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nTo see what changed see: `%s`\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n4 Add version manually."
     project-name
     current-version
     changes)
@@ -63,7 +63,7 @@
   "It's safety measure before changing version of the project to be sure user is concious of change."
   []
   (build-terminal-msg/println-msg
-   "What the version should be?\n Remember to follow<major>.<minor>.<non-breaking>[-optional-qualifier] pattern.")
+   "What the version should be?\n Remember to follow <major>.<minor>.<non-breaking>[-optional-qualifier] pattern.")
   (build-cli-input/user-input))
 
 (defn split-optional-qualifier
@@ -90,4 +90,4 @@
                 1 [(inc-str major-version) "0" "0"]
                 2 [major-version (inc-str minor-version) "0"]
                 3 [major-version minor-version (inc-str non-breaking)]
-                4 (str (ask-exact-version))))))
+                4 [(str (ask-exact-version))]))))
