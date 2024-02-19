@@ -17,7 +17,8 @@
    [automaton-build.os.cli-input :as build-cli-input]
    [automaton-build.os.edn-utils :as build-edn-utils]
    [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [automaton-build.os.terminal-msg :as build-terminal-msg]))
 
 (def version-file "version.edn")
 
@@ -52,11 +53,19 @@
   [project-name current-version changes]
   (build-cli-input/question-loop
    (format
-    "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nTo see what changed see: `%s`\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking."
+    "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nTo see what changed see: `%s`\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n4 Add version manually."
     project-name
     current-version
     changes)
-   #{1 2 3}))
+   #{"1" "2" "3" "4"}))
+
+(defn ask-manual-version
+  "Asks user to input version manually"
+  []
+  (build-terminal-msg/println-msg
+   "What the version should be?\n Remember to follow <major>.<minor>.<non-breaking>[-optional-qualifier] pattern.")
+  (flush)
+  (build-cli-input/user-input-str))
 
 (defn split-optional-qualifier
   "Removes optional qualifier. (Semantic versioning: <major>.<minor>.<non-breaking>[-optional-qualifier])
@@ -79,6 +88,7 @@
         non-breaking (last version-spitted)]
     (str/join "."
               (case user-version
-                1 [(inc-str major-version) "0" "0"]
-                2 [major-version (inc-str minor-version) "0"]
-                3 [major-version minor-version (inc-str non-breaking)]))))
+                "1" [(inc-str major-version) "0" "0"]
+                "2" [major-version (inc-str minor-version) "0"]
+                "3" [major-version minor-version (inc-str non-breaking)]
+                "4" [(str (ask-manual-version))]))))

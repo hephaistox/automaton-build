@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>org.clojars.hephaistox</groupId>
   <artifactId>automaton-build</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <name>automaton-build</name>
   <dependencies>
     <dependency>
@@ -46,6 +46,12 @@
       <groupId>slipset</groupId>
       <artifactId>deps-deploy</artifactId>
       <version>0.2.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-nop</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>babashka</groupId>
