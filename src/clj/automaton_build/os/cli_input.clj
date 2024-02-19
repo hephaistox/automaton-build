@@ -4,10 +4,7 @@
 
 (defn user-input "Reads user input" [] (read))
 
-(defn user-input-str
-  "Reads user input, accepts everything and returns always a string"
-  []
-  (read-line))
+(defn user-input-str "Return string from user input" [] (read-line))
 
 (defn yes-question
   "Asks user a `msg` and expects yes input. Returns true or false based on the response."
