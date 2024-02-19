@@ -26,6 +26,6 @@
      (loop []
        (build-terminal-msg/println-msg msg)
        (flush)
-       (let [answer (user-input)]
+       (let [answer (user-input-str)]
          (if (some #(= answer %) options) answer (recur))))))
   ([msg options] (question-loop msg options false)))

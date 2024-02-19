@@ -57,13 +57,14 @@
     project-name
     current-version
     changes)
-   #{1 2 3 4}))
+   #{"1" "2" "3" "4"}))
 
 (defn ask-exact-version
   "It's safety measure before changing version of the project to be sure user is concious of change."
   []
   (build-terminal-msg/println-msg
    "What the version should be?\n Remember to follow <major>.<minor>.<non-breaking>[-optional-qualifier] pattern.")
+  (flush)
   (build-cli-input/user-input-str))
 
 (defn split-optional-qualifier
@@ -87,7 +88,7 @@
         non-breaking (last version-spitted)]
     (str/join "."
               (case user-version
-                1 [(inc-str major-version) "0" "0"]
-                2 [major-version (inc-str minor-version) "0"]
-                3 [major-version minor-version (inc-str non-breaking)]
-                4 [(str (ask-exact-version))]))))
+                "1" [(inc-str major-version) "0" "0"]
+                "2" [major-version (inc-str minor-version) "0"]
+                "3" [major-version minor-version (inc-str non-breaking)]
+                "4" [(str (ask-exact-version))]))))
