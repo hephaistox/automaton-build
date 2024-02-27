@@ -26,7 +26,7 @@
    * `tag` version
    * `account` docker organization name"
   [repo-url repo-branch workflows app-dir app-name tag account]
-  (let [container-dir (build-files/overwrite-dirs "tmp/gha-container")
+  (let [container-dir (build-files/create-temp-dir "gha-container")
         container (build-github-action/make-github-action app-name
                                                           container-dir
                                                           app-dir
