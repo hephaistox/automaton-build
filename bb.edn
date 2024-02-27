@@ -1,7 +1,7 @@
 {:deps {djblue/portal {:mvn/version "0.51.1"}
         io.github.clojure/tools.build {:mvn/version "0.9.6"}
-        metosin/malli {:mvn/version "0.13.0"}
-        org.clojure/tools.cli {:mvn/version "1.0.219"}}
+        metosin/malli {:mvn/version "0.14.0"}
+        org.clojure/tools.cli {:mvn/version "1.1.230"}}
  :paths ["src/clj" "test_la/clj"]
  :tasks
  {:requires
