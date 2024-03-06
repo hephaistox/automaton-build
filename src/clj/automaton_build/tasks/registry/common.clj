@@ -112,10 +112,8 @@
                 :task-cli-opts-kws [:force]
                 :la-test {:skip? true}}
    'lint {:doc "Apply linter on project source code."}
-   'mermaid {:doc "Build all mermaid files"
-             :shared [:mermaid-dir]}
+   'mermaid {:doc "Build all mermaid files"}
    'mermaid-watch {:doc "Watch mermaid files modifications"
-                   :shared [:mermaid-dir]
                    :la-test {:skip? true}}
    'publish-library
    {:doc
@@ -206,7 +204,7 @@
    'wf-2 {:doc "Start repls"
           :group :wf
           :step 2
-          :wk-tasks ['storage-start 'lbe-repl 'lfe-watch 'bg]}
+          :wk-tasks ['lbe-repl 'lfe-watch 'mermaid-watch]}
    'wf-3 {:doc "Quick verifications and formatting for IDE usage"
           :group :wf
           :step 3

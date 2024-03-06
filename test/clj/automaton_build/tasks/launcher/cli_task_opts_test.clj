@@ -20,7 +20,9 @@
   (testing "Mandatory option is required"
     (is (sut/mandatory-option-present? stub [:force])))
   (testing "Not mandatory option is not required"
-    (is (not (sut/mandatory-option-present? stub [:message])))))
+    (is (re-find #"mandatory and missing"
+                 (with-out-str (sut/mandatory-option-present? stub
+                                                              [:message]))))))
 
 (deftest cli-opts-test
   (testing "Boolean Force argument is found"

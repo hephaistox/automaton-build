@@ -5,8 +5,6 @@
 
 (deftest sort-submap-test
   (testing "Are keywords first, symbol then and each sorted alphabetically"
-    ; For a reason I can't understand this is not comparable, do you have
-    ; any idea why, look at cider it's weird
     (is (= (hash {:sk {:a 4
                        :z 2
                        'aa 3
