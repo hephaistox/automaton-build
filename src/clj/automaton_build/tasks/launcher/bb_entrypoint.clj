@@ -3,7 +3,6 @@
   (:require
    [automaton-build.log :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.repl.portal :as build-portal]
    [automaton-build.tasks.launcher.cli-task-agnostic-opts
     :as
     build-cli-task-agnostic-opts]
@@ -37,7 +36,6 @@
     (if (build-cli-task-agnostic-opts/common-opts! cli-args task-name)
       build-exit-codes/ok
       (let [app-dir ""]
-        (build-portal/client-connect)
         (if (nil? task-name)
           (do
             (build-log/fatal
@@ -66,7 +64,7 @@
   "If on, that switch turned on the detailed traces"
   false)
 
-(defn call-main
+(defn- call-main
   "Utilitary function for text below"
   [& args]
   (-main (concat (vec args) (if detailed-log ["-l" "trace" "-d"] []))))

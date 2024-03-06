@@ -16,15 +16,13 @@
    :extra-paths ["test/clj" "test/resources"]
    :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn"]}
   :env-development-repl
-  {:extra-deps {cider/cider-nrepl {:mvn/version "0.44.0"}
-                djblue/portal {:mvn/version "0.51.0"}
-                org.clojure/core.async {:mvn/version "1.6.681"}
-                refactor-nrepl/refactor-nrepl {:mvn/version "3.6.0"}}
+  {:extra-deps {djblue/portal {:mvn/version "0.51.0"}
+                org.clojure/core.async {:mvn/version "1.6.681"}}
    :extra-paths ["env/development/resources"
                  "env/development/src/clj"
                  "env/development/src/cljc"]
    :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
-   :main-opts ["-m" "automaton-build.repl"]}
+   :main-opts ["-m" "automaton-build.repl.entry-point"]}
   :env-development-test {:jvm-opts ["-Dhephaistox-in-test=true"]
                          :main-opts ["-m"
                                      "cognitect.test-runner"

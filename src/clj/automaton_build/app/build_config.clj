@@ -29,8 +29,6 @@
       [:map {:closed true}
        [:template-dir {:optional true}
         :string]]]
-     [:mermaid-dir {:default "docs/code/"}
-      :string]
      [:repl-aliases [:vector :keyword]]
      [:storage-datomic {:optional true}
       [:map

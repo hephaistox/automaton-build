@@ -16,7 +16,9 @@
     (build-log/info-format "Storage is getting started (datomic v%s)"
                            datomic-ver)
     (if (str/blank? datomic-ver)
-      (build-log/warn "Parameter datomic-ver is missing in build_config.edn")
+      (do (build-log/debug
+           "Parameter datomic-ver is missing, storage execution is skipped")
+          build-exit-codes/ok)
       (if-not (build-storage/run datomic-root-dir
                                  datomic-dir-pattern
                                  datomic-transactor-bin-path

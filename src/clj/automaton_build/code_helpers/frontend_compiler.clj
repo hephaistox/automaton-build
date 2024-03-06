@@ -1,53 +1,10 @@
 (ns automaton-build.code-helpers.frontend-compiler
-  "Front end compiler toolings. Currently use shadow on npx"
+  "Front end compiler toolings. Use shadow on npx."
   (:require
    [automaton-build.log :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]))
-
-(def shadow-cljs-edn "shadow-cljs.edn")
-
-(defn npm-install-cmd [dir] ["npm" "install" {:dir dir}])
-
-#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
-(defn npm-audit-fix-cmd [dir] ["npm" "audit" "fix" {:dir dir}])
-
-(defn npm-update [dir] ["npm" "update" {:dir dir}])
-
-(defn is-shadow-project?
-  [dir]
-  (-> (build-files/create-file-path dir shadow-cljs-edn)
-      build-files/is-existing-file?))
-
-(defn npx-installed?*
-  "Check if npx is installed
-  Params:
-  * `dir` where npx should be executed
-  * `npx-cmd` (Optional, default=npx) parameter to tell the npx command"
-  ([dir] (npx-installed?* dir "npx"))
-  ([dir npx-cmd]
-   (every? zero?
-           (mapv first
-                 (build-cmds/execute-with-exit-code
-                  [npx-cmd "-v" {:dir dir}])))))
-
-(def npx-installed? (memoize npx-installed?*))
-
-(defn shadow-installed?*
-  "Check if shadow-cljs is installed
-  Params:
-  * `dir` where to check if `shadow-cljs` is installed
-  * `shadow-cmd` (Optional, default=shadow-cljs) parameter to tell the shadow cljs command
-  * `npx-cmd` (Optional, default=npx) parameter to tell the npx command"
-  ([dir] (shadow-installed?* dir "shadow-cljs" "npx"))
-  ([dir shadow-cmd npx-cmd]
-   (when (npx-installed? dir)
-     (every? string?
-             (build-cmds/execute-get-string
-              [npx-cmd shadow-cmd "-info" {:dir dir}])))))
-
-(def shadow-installed? (memoize shadow-installed?*))
+   [automaton-build.code-helpers.compiler.shadow :as build-compiler-shadow]
+   [automaton-build.os.command :as build-cmd]))
 
 (defn compile-target
   "Compile the target given as a parameter, in dev mode
@@ -55,9 +12,9 @@
   * `target-alias` the name of the alias in `shadow-cljs.edn` to compile
   * `dir` the frontend root directory"
   [target-alias dir]
-  (when (shadow-installed? dir)
-    (-> (build-cmds/execute-with-exit-code (npm-install-cmd dir)
-                                           ["npx"
+  (when (build-compiler-shadow/shadow-installed? dir)
+    (build-compiler-shadow/npm-install dir)
+    (-> (build-cmds/execute-with-exit-code ["npx"
                                             "shadow-cljs"
                                             "compile"
                                             target-alias
@@ -65,64 +22,29 @@
                                              :error-to-std? true}])
         build-cmds/first-cmd-failing)))
 
-(defn- tailwind-compile-css
-  [css-file compiled-dir]
-  (let [tailwind-command ["npx" "tailwindcss"]
-        input-file ["-i" css-file]
-        output-file ["-o" compiled-dir]
-        tailwindcss (-> tailwind-command
-                        (concat input-file output-file)
-                        vec)]
-    tailwindcss))
-
-(defn- tailwind-config-watch-command
-  [css-file compiled-dir]
-  (-> (tailwind-compile-css css-file compiled-dir)
-      (concat ["--watch"])
-      vec))
-
-(defn tailwind-compile-css-release
-  [css-file compiled-dir run-dir]
-  (-> (tailwind-compile-css css-file compiled-dir)
-      (concat ["--minify" {:dir run-dir}])
-      vec))
-
 (defn compile-release
-  "Install npm, compile code and css for production.
+  "Install npm, compile code for production.
   Order of those actions is important
   Params:
   * `target-alias` the name of the alias in `shadow-cljs.edn` to compile
-  * `input-css-file` Tailwind allows only for one input file
   * `dir` the frontend root directory"
-  [target-alias input-css-file output-css dir]
-  (when (shadow-installed? dir)
-    (-> (build-cmds/execute-with-exit-code
-         (npm-install-cmd dir)
-         ["npx"
-          "shadow-cljs"
-          "release"
-          target-alias
-          {:dir dir
-           :error-to-std? true}]
-         (tailwind-compile-css-release input-css-file output-css dir))
+  [target-alias dir]
+  (when (build-compiler-shadow/shadow-installed? dir)
+    (build-compiler-shadow/npm-install dir)
+    (-> (build-cmds/execute-with-exit-code ["npx"
+                                            "shadow-cljs"
+                                            "release"
+                                            target-alias
+                                            {:dir dir
+                                             :error-to-std? true}])
         build-cmds/first-cmd-failing)))
-
-(defn load-shadow-cljs
-  "Read the shadow-cljs of an app
-  Params:
-  * `app-dir` the directory of the application
-  Returns the content as data structure"
-  [app-dir]
-  (let [shadow-filepath (build-files/create-file-path app-dir shadow-cljs-edn)]
-    (when (build-files/is-existing-file? shadow-filepath)
-      (build-edn-utils/read-edn shadow-filepath))))
 
 (defn builds
   "List shadow-cljs-build setup in the application
   Params:
   * `app-dir`"
   [app-dir]
-  (some-> (load-shadow-cljs app-dir)
+  (some-> (build-compiler-shadow/load-shadow-cljs app-dir)
           (get :builds)
           keys
           vec))
@@ -133,15 +55,19 @@
   Params:
   * `dir` the frontend root directory"
   [dir]
-  (if (and (is-shadow-project? dir) (shadow-installed? dir))
-    (apply build-cmds/execute-and-trace
-           (concat [(npm-install-cmd dir)]
-                   (mapv
-                    (fn [build]
-                      ["npx" "shadow-cljs" "compile" (str build) {:dir dir}])
-                    (builds dir))
-                   [["npx" "karma" "start" "--single-run" {:dir dir}]]))
-    true))
+  (build-compiler-shadow/npm-install dir)
+  (cond
+    (not (and (build-compiler-shadow/is-shadow-project? dir)
+              (build-compiler-shadow/shadow-installed? dir)))
+    (do (build-log/trace
+         "Frontend test is skipped as the project has no valid frontend")
+        true)
+    (not= :ok
+          (build-cmd/log-if-fail
+           (concat ["npx" "shadow-cljs" "compile"] (builds dir) [{:dir dir}])))
+    (do (build-log/error "Compilation failed") true)
+    :else (build-cmd/log-if-fail
+           ["npx" "karma" "start" "--single-run" {:dir dir}])))
 
 (defn create-size-optimization-report
   "Create a report on size-optimization
@@ -151,9 +77,9 @@
   [dir target-file]
   (build-log/debug "Generate the size optimization report in " target-file)
   (cond
-    (not (is-shadow-project? dir))
+    (not (build-compiler-shadow/is-shadow-project? dir))
     (build-log/debug "No frontend found, skip optimization report")
-    (nil? (-> (load-shadow-cljs dir)
+    (nil? (-> (build-compiler-shadow/load-shadow-cljs dir)
               (get-in [:build :app])))
     (build-log/debug "no app build target found, skip optimization report")
     :else (build-cmds/execute-and-trace ["npx"
@@ -177,16 +103,12 @@
   "Watch modification on code on cljs part, from tests or app
    Params:
    * `dir` the frontend root directory"
-  [dir shadow-cljs-aliases css-file compiled-styles-css]
-  (let [npm-install (npm-install-cmd dir)
-        tailwindcss (tailwind-config-watch-command css-file compiled-styles-css)
-        shadow-cljs (shadow-cljs-watch-command shadow-cljs-aliases)]
-    (build-cmds/execute-and-trace npm-install
-                                  (conj shadow-cljs
+  [dir shadow-cljs-aliases]
+  (build-compiler-shadow/npm-install dir)
+  (let [shadow-cljs (shadow-cljs-watch-command shadow-cljs-aliases)]
+    (build-cmds/execute-and-trace (conj shadow-cljs
                                         {:dir dir
-                                         :background? true})
-                                  (conj tailwindcss
-                                        {:dir dir
+                                         :error-to-std? true
                                          :background? true}))))
 
 (defn extract-paths
@@ -196,3 +118,8 @@
   Return a flat vector of all source paths"
   [shadow-cljs-content]
   (:source-paths shadow-cljs-content))
+
+(defn is-frontend-project?
+  "Check if the frontend is a shadow project"
+  [dir]
+  (build-compiler-shadow/is-shadow-project? dir))
