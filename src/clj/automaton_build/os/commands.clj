@@ -3,10 +3,14 @@
   Is a proxy for `babashka.process`"
   (:require
    [automaton-build.log :as build-log]
-   [automaton-build.os.command.str :as build-cmd-str]
    [babashka.process :as babashka-process]
    [clojure.java.io :as io]
    [clojure.string :as str]))
+
+(def default-opts
+  {:in :inherit
+   :out :inherit
+   :shutdown babashka-process/destroy-tree})
 
 (defn- log-a-stream
   "Connect to output and error stream and log them
@@ -47,30 +51,30 @@
   * `trace?` if true, the output and error streams are linked to log
   * `string?` if true, the output and error streams are returned as a string"
   [command trace? string?]
-  (try
-    (let [last-command-elt (last command)
-          [command opts] (if (map? last-command-elt)
-                           [(vec (butlast command))
-                            (merge build-cmd-str/default-opts last-command-elt)]
-                           [command build-cmd-str/default-opts])
-          {:keys [background? error-to-std?]} opts
-          updated-opts (-> opts
-                           (dissoc :background? :error-to-std?)
-                           (merge (when string?
-                                    {:out :string
-                                     :err :string}))
-                           (update :dir #(if (str/blank? %) "." %)))
-          _ (build-log/trace-format "Execute `%s` with options = `%s`"
-                                    (str/join " " command)
-                                    (pr-str updated-opts))
-          process (apply babashka-process/process updated-opts command)]
-      (when trace? (log-during-execution process error-to-std? background?))
-      (cond
-        background? [0 "background process"]
-        :else (let [{:keys [exit out err]} @process] [exit (str out err)])))
-    (catch Exception e
-      (build-log/error-exception e)
-      [-1 (str "Unexpected error during execution of this command" command)])))
+  (try (let [last-command-elt (last command)
+             [command opts] (if (map? last-command-elt)
+                              [(vec (butlast command))
+                               (merge default-opts last-command-elt)]
+                              [command default-opts])
+             {:keys [background? error-to-std?]} opts
+             updated-opts (-> opts
+                              (dissoc :background? :error-to-std?)
+                              (merge (when string?
+                                       {:out :string
+                                        :err :string}))
+                              (update :dir #(if (str/blank? %) "." %)))
+             _ (build-log/trace-format "Execute `%s` with options = `%s`"
+                                       (str/join " " command)
+                                       (pr-str updated-opts))
+             process (apply babashka-process/process updated-opts command)]
+         (when trace? (log-during-execution process error-to-std? background?))
+         (cond
+           background? [0 "background process"]
+           :else (let [{:keys [exit out err]} @process] [exit (str out err)])))
+       (catch Exception e
+         (build-log/error-exception e)
+         [-1
+          (str "Unexpected error during execution of this command" command)])))
 
 (defn execute-with-exit-code
   "Execute the commands, returns a vector with, for each command, a pair of exit code and message

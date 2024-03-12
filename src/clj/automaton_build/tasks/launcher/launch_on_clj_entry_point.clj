@@ -5,8 +5,7 @@
     :as
     build-cli-task-agnostic-opts]
    [automaton-build.utils.namespace :as build-namespace]
-   [clojure.edn :as edn]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [clojure.edn :as edn]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn entry-point
@@ -29,6 +28,4 @@
     (let [exit-code (build-namespace/symbol-to-fn-call (:task-fn task-map)
                                                        task-map
                                                        app-data)]
-      (if (nil? exit-code)
-        (System/exit build-exit-codes/catch-all)
-        (System/exit exit-code)))))
+      (System/exit exit-code))))

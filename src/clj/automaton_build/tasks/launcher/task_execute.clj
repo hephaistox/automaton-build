@@ -17,8 +17,6 @@
       (nil? app-data) (do (build-log/error-format "No data found for task `%s`"
                                                   task-name)
                           build-exit-codes/cannot-execute)
-      (some? task-map)
-      (or (build-pf-dispatcher/dispatch task-map app-data cli-opts)
-          build-exit-codes/catch-all)
+      (some? task-map) (build-pf-dispatcher/dispatch task-map app-data cli-opts)
       :else (do (build-log/error-format "The task `%s` is unknown" task-name)
                 build-exit-codes/invalid-argument))))

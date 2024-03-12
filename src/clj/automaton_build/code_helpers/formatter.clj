@@ -3,9 +3,9 @@
   Proxy to [zprint](https://github.com/kkinnear/zprint)"
   (:require
    [automaton-build.log :as build-log]
+   [automaton-build.os.commands :as build-cmds]
    [automaton-build.os.files :as build-files]
-   [automaton-build.cicd.server :as build-cicd-server]
-   [automaton-build.os.command :as build-cmd]))
+   [automaton-build.cicd.server :as build-cicd-server]))
 
 (def ^:private use-local-zprint-config-parameter #":search-config\?\s*true")
 
@@ -13,10 +13,7 @@
 
 (defn- is-formatter-setup
   "As described in the [zprint documentation](https://github.com/kkinnear/zprint/blob/main/doc/using/project.md#use-zprint-with-different-formatting-for-different-projects),
-
-  Returns true if zprint is ready to execute
-
-  Params:
+Params:
   * `none`"
   []
   (if (or (build-cicd-server/is-cicd?)
@@ -32,26 +29,24 @@
 
 (defn format-file
   "Format the `clj` or `edn` file
-  Format file is not blocking if the formatter is not setup, if the file does not exist
 
-  Returns nil if successfully updated
+  Returns nil if something is wrong, the exit code otherwise
   Params:
-  * `filename` to format"
+  * `filename` to format
+  * `header` (optional) is written at the top of the file"
   [filename]
   (cond
     (not (is-formatter-setup)) nil
-    (not (build-files/is-existing-file? filename))
-    (do (build-log/trace-format "Can't format file `%s` as it's not found"
-                                filename)
-        nil)
-    (= :ok (build-cmd/log-if-fail ["zprint" "-w" filename])) nil
-    :else (do (build-log/trace-format "Execution of zprint failed") true)))
+    (build-files/is-existing-file? filename)
+    (first (build-cmds/execute-and-trace-return-exit-codes
+            ["zprint" "-w" filename]))
+    :else (do (build-log/warn-format "Can't format file `%s` as it's not found"
+                                     filename)
+              nil)))
 
 (defn files-formatted
   "Formats all files to make sure they are compliant with our styling standards
-
-  Returns nil if all files have successfully updated
-  Is non blocking if the formatter is not setup (as formatting is not setup on CICD)
+  Returns true if all files have successfully updated
 
   Params:
   * `files` is a seq of file paths"
@@ -59,14 +54,4 @@
   (when (is-formatter-setup)
     (let [formattings (map format-file files)]
       (build-log/info "Files formatted")
-      (every? nil? formattings))))
-
-(defn format-clj
-  "Format all clj files in a dir
-  Returns true if successfully updated
-
-  Params:
-  * `dir` directory where to find"
-  [dir]
-  (= :ok
-     (build-cmd/log-if-fail ["fd" "-e" "clj" "-x" "zprint" "-w" {:dir dir}])))
+      (every? some? formattings))))

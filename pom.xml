@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>org.clojars.hephaistox</groupId>
   <artifactId>automaton-build</artifactId>
-  <version>1.1.0-2-la</version>
+  <version>1.2.0-3-la</version>
   <name>automaton-build</name>
   <dependencies>
     <dependency>
@@ -56,7 +56,7 @@
     <dependency>
       <groupId>babashka</groupId>
       <artifactId>process</artifactId>
-      <version>0.5.21</version>
+      <version>0.5.22</version>
     </dependency>
     <dependency>
       <groupId>dev.weavejester</groupId>
@@ -66,7 +66,7 @@
     <dependency>
       <groupId>com.github.liquidz</groupId>
       <artifactId>antq</artifactId>
-      <version>2.7.1133</version>
+      <version>2.8.1185</version>
     </dependency>
     <dependency>
       <groupId>codox</groupId>
@@ -76,7 +76,7 @@
     <dependency>
       <groupId>io.github.clojure</groupId>
       <artifactId>tools.build</artifactId>
-      <version>0.9.6</version>
+      <version>0.10.0</version>
     </dependency>
     <dependency>
       <groupId>babashka</groupId>

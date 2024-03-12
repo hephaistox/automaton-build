@@ -112,8 +112,10 @@
                 :task-cli-opts-kws [:force]
                 :la-test {:skip? true}}
    'lint {:doc "Apply linter on project source code."}
-   'mermaid {:doc "Build all mermaid files"}
+   'mermaid {:doc "Build all mermaid files"
+             :shared [:mermaid-dir]}
    'mermaid-watch {:doc "Watch mermaid files modifications"
+                   :shared [:mermaid-dir]
                    :la-test {:skip? true}}
    'publish-library
    {:doc
@@ -182,9 +184,10 @@
                                  "org.clojars.hephaistox/automaton-core@*-*"
                                  "org.clojars.hephaistox/automaton-web@*-*"
                                  "org.clojars.hephaistox/automaton-web-dev@*-*"
-                                 "com.taoensso/encore"
-                                 "refactor-nrepl/refactor-nrepl"
-                                 "com.github.liquidz/antq"}}
+                                 "com.taoensso/encore" "djblue/portal"
+                                 "refactor-nrepl/refactor-nrepl"}}
+                     [:set :string]]
+                    [:exclude-dirs {:default #{"tmp" "target"}}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}
@@ -204,7 +207,7 @@
    'wf-2 {:doc "Start repls"
           :group :wf
           :step 2
-          :wk-tasks ['lbe-repl 'lfe-watch 'mermaid-watch]}
+          :wk-tasks ['storage-start 'lbe-repl 'lfe-watch 'bg]}
    'wf-3 {:doc "Quick verifications and formatting for IDE usage"
           :group :wf
           :step 3

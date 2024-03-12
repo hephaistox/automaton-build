@@ -4,9 +4,11 @@
    [automaton-build.configuration :as build-conf]
    [automaton-build.log :as build-log]
    [automaton-build.os.files :as build-files]
-   [automaton-build.repl.portal.server :as build-repl-portal]
    [automaton-build.os.terminal-msg :as build-terminal-msg]
-   [nrepl.server :refer [default-handler start-server stop-server]]))
+   [automaton-build.repl.portal :as build-portal]
+   [cider.nrepl :as cider-nrepl]
+   [nrepl.server :refer [default-handler start-server stop-server]]
+   [refactor-nrepl.middleware]))
 
 (defonce nrepl-port-filename ".nrepl-port")
 
@@ -27,9 +29,10 @@
   []
   (:nrepl-port @repl))
 
-(defn- stop-repl
+(defn stop-repl
   "Stop the repl"
-  []
+  [repl-port]
+  (build-log/info "Stop nrepl server on port" repl-port)
   (stop-server (:repl @repl))
   (reset! repl {}))
 
@@ -49,7 +52,6 @@
   [middleware]
   (let [repl-port (get-nrepl-port-parameter)]
     (create-nrepl-files repl-port)
-    (build-repl-portal/start)
     (reset! repl {:nrepl-port repl-port
                   :repl
                   (do
@@ -58,47 +60,23 @@
                                                     repl-port)
                     (start-server :port repl-port
                                   :handler (custom-nrepl-handler middleware)))})
+    (build-portal/start)
     (.addShutdownHook
      (Runtime/getRuntime)
      (Thread. #(do (build-log/info "SHUTDOWN in progress, stop repl on port `"
                                    repl-port
                                    "`")
-                   (build-repl-portal/stop)
                    (-> (build-files/search-files ""
                                                  (str "**" nrepl-port-filename))
                        (build-files/delete-files))
-                   (stop-repl))))))
-(defn- require-package
-  [package]
-  (-> package
-      namespace
-      symbol
-      require))
-
-(defn- require-existing-package
-  [package]
-  (try (require-package package) package (catch Exception _ nil)))
-
-(defn add-packages
-  [packages]
-  (reduce (fn [acc package]
-            (if-let [confirmed-package (require-existing-package package)]
-              (if (coll? @(resolve confirmed-package))
-                (vec (concat @(resolve confirmed-package) acc))
-                (conj acc confirmed-package))
-              acc))
-          []
-          packages))
-
-(defn default-middleware
-  []
-  (add-packages ['cider.nrepl/cider-middleware
-                 'refactor-nrepl.middleware/wrap-refactor]))
+                   (stop-repl repl-port)
+                   (build-portal/stop))))))
 
 (defn start-repl
   "Start repl, setup and catch errors"
-  [mdws]
-  (try (start-repl* mdws)
+  []
+  (try (start-repl* (conj cider-nrepl/cider-middleware
+                          'refactor-nrepl.middleware/wrap-refactor))
        :started
        (catch Exception e
          (build-log/error (ex-info "Uncaught exception" {:error e})))))
