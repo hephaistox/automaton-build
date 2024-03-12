@@ -5,9 +5,7 @@
   * This REPL is for build-app only, all other Hephaistox REPL should use the `automaton-core` version
   * The REPL could have pushed to dev, but leaving it here allows to remotely connect to the remote repl, like la or production"
   (:require
-   [clojure.core.async :refer [<!! chan]]
-   [cider.nrepl :as cider-nrepl]
-   [refactor-nrepl.middleware]))
+   [clojure.core.async :refer [<!! chan]]))
 
 (defn -main
   "Entry point for simple"
@@ -15,6 +13,5 @@
   (let [c (chan)]
     (require '[automaton-build.repl.launcher])
     ((resolve 'automaton-build.repl.launcher/start-repl)
-     (conj cider-nrepl/cider-middleware
-           'refactor-nrepl.middleware/wrap-refactor))
+     ((resolve 'automaton-build.repl.launcher/default-middleware)))
     (<!! c)))

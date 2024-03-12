@@ -108,6 +108,6 @@
   (call-main "lint" "-g") ;; 128
   (call-main "gha" "-f" "-d")
   (call-main "apps-push-local" "-e" "la" "-M" "hello")
-  (call-main "apps-deploy" "-e" "production")
+  (call-main "apps-deploy" "-e" "la")
   ;;
 )

@@ -68,6 +68,32 @@
                                                  (str "**" nrepl-port-filename))
                        (build-files/delete-files))
                    (stop-repl))))))
+(defn- require-package
+  [package]
+  (-> package
+      namespace
+      symbol
+      require))
+
+(defn- require-existing-package
+  [package]
+  (try (require-package package) package (catch Exception _ nil)))
+
+(defn add-packages
+  [packages]
+  (reduce (fn [acc package]
+            (if-let [confirmed-package (require-existing-package package)]
+              (if (coll? @(resolve confirmed-package))
+                (vec (concat @(resolve confirmed-package) acc))
+                (conj acc confirmed-package))
+              acc))
+          []
+          packages))
+
+(defn default-middleware
+  []
+  (add-packages ['cider.nrepl/cider-middleware
+                 'refactor-nrepl.middleware/wrap-refactor]))
 
 (defn start-repl
   "Start repl, setup and catch errors"
