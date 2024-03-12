@@ -18,7 +18,7 @@
                  :runner-ns shadow.test.browser
                  :target :browser-test
                  :test-dir "target/browser-test"}
-  :karma-test {:ns-regexp "-test$"
+  :ltest {:ns-regexp "-test$"
                :output-to "target/karma-test.js"
                :target :karma}}
  :dependencies []
