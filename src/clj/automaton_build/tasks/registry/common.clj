@@ -184,9 +184,10 @@
                                  "org.clojars.hephaistox/automaton-core@*-*"
                                  "org.clojars.hephaistox/automaton-web@*-*"
                                  "org.clojars.hephaistox/automaton-web-dev@*-*"
-                                 "com.taoensso/encore"
-                                 "refactor-nrepl/refactor-nrepl"
-                                 "com.github.liquidz/antq"}}
+                                 "com.taoensso/encore" "djblue/portal"
+                                 "refactor-nrepl/refactor-nrepl"}}
+                     [:set :string]]
+                    [:exclude-dirs {:default #{"tmp" "target"}}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}
