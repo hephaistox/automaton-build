@@ -27,4 +27,4 @@
             build-exit-codes/ok))))))
 
 (comment
-  (build-frontend-compiler/fe-watch "" ["app" "karma-test"]))
+  (build-frontend-compiler/fe-watch "" ["app" "ltest"]))
