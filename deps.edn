@@ -1,7 +1,8 @@
 {:aliases
- {:bb-deps {:extra-deps {djblue/portal {:mvn/version "0.51.1"}
-                         io.github.clojure/tools.build {:mvn/version "0.9.6"}
+ {:bb-deps {:extra-deps {djblue/portal {:mvn/version "0.52.2"}
+                         io.github.clojure/tools.build {:mvn/version "0.10.0"}
                          metosin/malli {:mvn/version "0.14.0"}
+                         org.babashka/json {:mvn/version "0.1.6"}
                          org.clojure/tools.cli {:mvn/version "1.1.230"}}}
   :build {:extra-deps {}}
   :common-test
@@ -12,12 +13,12 @@
                  :sha "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}
                 markdown-clj/markdown-clj {:mvn/version "1.11.9"}
                 org.clojure/tools.namespace {:mvn/version "1.5.0"}
-                org.clojure/tools.reader {:mvn/version "1.4.0"}}
+                org.clojure/tools.reader {:mvn/version "1.4.1"}}
    :extra-paths ["test/clj" "test/resources"]
    :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn"]}
   :env-development-repl
   {:extra-deps {cider/cider-nrepl {:mvn/version "0.44.0"}
-                djblue/portal {:mvn/version "0.51.0"}
+                djblue/portal {:mvn/version "0.52.2"}
                 org.clojure/core.async {:mvn/version "1.6.681"}
                 refactor-nrepl/refactor-nrepl {:mvn/version "3.6.0"}}
    :extra-paths ["env/development/resources"
@@ -35,16 +36,17 @@
                                      "-d"
                                      "test/cljc"]}}
  :deps {babashka/fs {:mvn/version "0.5.20"}
-        djblue/portal {:mvn/version "0.51.1"} ;; developer tooling lib
-        babashka/process {:mvn/version "0.5.21"}
+        djblue/portal {:mvn/version "0.52.2"} ;; developer tooling lib
+        babashka/process {:mvn/version "0.5.22"}
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
+        org.babashka/json {:mvn/version "0.1.6"}
         codox/codox {:mvn/version "0.10.8"}
-        com.github.liquidz/antq {:mvn/version "2.7.1133"}
+        com.github.liquidz/antq {:mvn/version "2.8.1185"}
         dev.weavejester/medley {:mvn/version "1.7.0"}
         hiccup/hiccup {:mvn/version "2.0.0-RC3"}
         io.dominic/vizns {:git/url "https://github.com/SevereOverfl0w/vizns"
                           :sha "36fed24e3673f0562fbc53d4c5d932c51fb0ac53"}
-        io.github.clojure/tools.build {:mvn/version "0.9.6"}
+        io.github.clojure/tools.build {:mvn/version "0.10.0"}
         slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
                              :mvn/version "0.2.2"}
         markdown-clj/markdown-clj {:mvn/version "1.11.9"}
