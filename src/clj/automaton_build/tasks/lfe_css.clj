@@ -21,10 +21,11 @@
                  {:keys [main-css custom-css]} css
                  combined-css-file (apply build-app-files-css/combine-css-files
                                           [main-css custom-css])]
-             (if-not (build-frontend-css/fe-watch app-dir
-                                                  combined-css-file
-                                                  compiled-styles-css)
-               (do (build-log/fatal "Tests have failed")
+             (build-log/info "Start watching css")
+             (if-not (build-frontend-css/fe-css-watch app-dir
+                                                      combined-css-file
+                                                      compiled-styles-css)
+               (do (build-log/fatal "Css watch has failed")
                    build-exit-codes/catch-all)
                build-exit-codes/ok))
            (catch Exception e

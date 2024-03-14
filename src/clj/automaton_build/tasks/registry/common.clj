@@ -105,6 +105,10 @@
     :mandatory-config? true
     :la-test {:skip? true}
     :shared [:publication]}
+   'lfe-css {:doc "Compile css and watch for modifications"
+             :mandatory-config? true
+             :la-test {:skip? true}
+             :shared [:publication]}
    'lfe-test {:doc "Local frontend test"
               :la-test {:skip? true}
               :mandatory-config? true}
@@ -177,14 +181,13 @@
    {:doc
     "Update the dependencies, cider-nrepl and refactor are to be updated manually"
     :build-configs [[:exclude-libs
-                     {:default #{"cider/cider-nrepl"
-                                 "org.clojars.hephaistox/automaton-build@*-*"
+                     {:default #{"org.clojars.hephaistox/automaton-build@*-*"
                                  "org.clojars.hephaistox/automaton-core@*-*"
                                  "org.clojars.hephaistox/automaton-web@*-*"
                                  "org.clojars.hephaistox/automaton-web-dev@*-*"
-                                 "com.taoensso/encore"
-                                 "refactor-nrepl/refactor-nrepl"
-                                 "com.github.liquidz/antq"}}
+                                 "com.taoensso/encore"}}
+                     [:set :string]]
+                    [:exclude-dirs {:default #{"tmp" "target"}}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}
@@ -204,7 +207,7 @@
    'wf-2 {:doc "Start repls"
           :group :wf
           :step 2
-          :wk-tasks ['lbe-repl 'lfe-watch 'mermaid-watch]}
+          :wk-tasks ['lbe-repl 'lfe-css 'lfe-watch 'mermaid-watch]}
    'wf-3 {:doc "Quick verifications and formatting for IDE usage"
           :group :wf
           :step 3

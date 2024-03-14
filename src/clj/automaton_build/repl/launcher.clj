@@ -4,8 +4,9 @@
    [automaton-build.configuration :as build-conf]
    [automaton-build.log :as build-log]
    [automaton-build.os.files :as build-files]
-   [automaton-build.repl.portal.server :as build-repl-portal]
    [automaton-build.os.terminal-msg :as build-terminal-msg]
+   [automaton-build.repl.portal.server :as build-repl-portal]
+   [automaton-build.utils.namespace :as build-namespace]
    [nrepl.server :refer [default-handler start-server stop-server]]))
 
 (defonce nrepl-port-filename ".nrepl-port")
@@ -68,32 +69,18 @@
                                                  (str "**" nrepl-port-filename))
                        (build-files/delete-files))
                    (stop-repl))))))
-(defn- require-package
-  [package]
-  (-> package
-      namespace
-      symbol
-      require))
-
-(defn- require-existing-package
-  [package]
-  (try (require-package package) package (catch Exception _ nil)))
-
-(defn add-packages
-  [packages]
-  (reduce (fn [acc package]
-            (if-let [confirmed-package (require-existing-package package)]
-              (if (coll? @(resolve confirmed-package))
-                (vec (concat @(resolve confirmed-package) acc))
-                (conj acc confirmed-package))
-              acc))
-          []
-          packages))
 
 (defn default-middleware
+  "Default middleware for repl"
   []
-  (add-packages ['cider.nrepl/cider-middleware
-                 'refactor-nrepl.middleware/wrap-refactor]))
+  (let [cider-middlewares (build-namespace/try-require
+                           'cider.nrepl/cider-middleware)
+        nrepl-middleware (build-namespace/try-require
+                          'refactor-nrepl.middleware/wrap-refactor)]
+    (cond-> []
+      cider-middlewares (concat @(resolve cider-middlewares))
+      nrepl-middleware (conj nrepl-middleware)
+      true vec)))
 
 (defn start-repl
   "Start repl, setup and catch errors"

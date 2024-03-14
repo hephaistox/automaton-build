@@ -26,9 +26,9 @@
                          @current-pf)
   (let [start-a-new-clj? (and (= :bb @current-pf) (= :clj pf))]
     (when (= :clj pf) (reset! current-pf :clj))
-    (cond
-      start-a-new-clj? (build-launch-on-clj-env/switch-to-clj task-map
-                                                              app-data
-                                                              task-cli-opts
-                                                              cli-args)
-      :else (build-launch-on-same-env/same-env task-map app-data))))
+    (if start-a-new-clj?
+      (build-launch-on-clj-env/switch-to-clj task-map
+                                             app-data
+                                             task-cli-opts
+                                             cli-args)
+      (build-launch-on-same-env/same-env task-map app-data))))

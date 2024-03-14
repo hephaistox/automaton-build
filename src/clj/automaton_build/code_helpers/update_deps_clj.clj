@@ -1,21 +1,8 @@
 (ns automaton-build.code-helpers.update-deps-clj
   (:require
-   [antq.core]
    [automaton-build.app.bb-edn :as build-bb-edn]
    [automaton-build.app.deps-edn :as build-deps-edn]
-   [automaton-build.utils.map :as build-utils-map]
-   [clojure.string :as str]))
-
-(defn do-update
-  "Update the depenencies.
-
-   Params:
-   * `excluded-libs` - coll of strings of libraries to exclude from update
-   * `dir` - string or coll of strings where dependencies should be updated"
-  [excluded-libs & dirs]
-  (let [dirs-param (format "--directory=%s" (str/join ":" dirs))
-        exclude-params (map #(str "--exclude=" %) excluded-libs)]
-    (apply antq.core/-main "--upgrade" dirs-param exclude-params)))
+   [automaton-build.utils.map :as build-utils-map]))
 
 (defn update-single-dep
   "In `app-dir` update `dep` with `val`.  Returns true when successful."

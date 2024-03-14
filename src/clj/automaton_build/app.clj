@@ -2,12 +2,10 @@
   "The application concept gather all description and setup of the application"
   (:require
    [automaton-build.app-data :as build-app-data]
-   [automaton-build.os.npm :as build-npm]
    [automaton-build.app.build-config :as build-build-config]
    [automaton-build.cicd.version :as build-version]
    [automaton-build.code-helpers.update-deps-clj :as build-update-deps-clj]
    [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]
    [automaton-build.os.files :as build-files]
    [automaton-build.utils.seq :as build-utils-seq]))
 
@@ -48,19 +46,6 @@
 (defn get-tailwind-config
   [app]
   (get-in app [:publication :frontend :css :tailwind-config]))
-
-(defn update-app-deps
-  "Update all deps.edn dependencies in `app-dir` excluding `exclude-libs`"
-  [app-dir exclude-libs]
-  (let [dirs-to-update (build-app-data/project-root-dirs app-dir)]
-    (if (every? true?
-                (map #(zero? (ffirst (build-cmds/execute-with-exit-code
-                                      (build-npm/npm-install-cmd %)
-                                      (build-npm/npm-update-cmd %))))
-                     dirs-to-update))
-      (do (apply build-update-deps-clj/do-update exclude-libs dirs-to-update)
-          true)
-      false)))
 
 (defn update-app-dep
   "Update specific dependency `dep` with `val` in all deps files in `app-dir`.

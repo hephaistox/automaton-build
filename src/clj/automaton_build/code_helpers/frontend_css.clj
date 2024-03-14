@@ -41,8 +41,8 @@
          (tailwind-compile-css-release input-css-file output-css dir))
         build-cmds/first-cmd-failing)))
 
-(defn fe-watch
-  "Watch modification on code on cljs part, from tests or app
+(defn fe-css-watch
+  "Compile css and watch modification on it.
    Params:
    * `dir` the frontend root directory"
   [dir css-file compiled-styles-css]
