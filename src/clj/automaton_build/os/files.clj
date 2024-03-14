@@ -471,10 +471,13 @@
        (into [])))
 
 (defn for-each
-  "Apply fn-each on each files in a directory"
-  [dir fn-each]
-  (when (is-existing-dir? dir)
-    (doseq [file (fs/list-dir dir)] (fn-each (str file)))))
+  "Apply fn-each on each files in a directory
+  Params:
+  * `dir` where to start the search
+  * `file-pattern` is the pattern to match files, could be a glob
+  * `fn-each` function likely with side effects that will be applied on each file name"
+  [dir file-pattern fn-each]
+  (doseq [file (fs/glob dir file-pattern)] (fn-each (str file))))
 
 (defn create-temp-file
   "Create a temporary file

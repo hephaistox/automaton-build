@@ -1,5 +1,5 @@
 #_{:heph-ignore {:forbidden-words ["automaton-core"]}}
-(ns automaton-build.repl
+(ns automaton-build.repl.entry-point
   "REPL component
   Design decision:
   * This REPL is for build-app only, all other Hephaistox REPL should use the `automaton-core` version
@@ -12,5 +12,6 @@
   [& _args]
   (let [c (chan)]
     (require '[automaton-build.repl.launcher])
-    ((resolve 'automaton-build.repl.launcher/start-repl))
+    ((resolve 'automaton-build.repl.launcher/start-repl)
+     ((resolve 'automaton-build.repl.launcher/default-middleware)))
     (<!! c)))

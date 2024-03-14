@@ -5,10 +5,9 @@
    [automaton-build.log :as build-log]
    [automaton-build.os.files :as build-files]
    [automaton-build.os.terminal-msg :as build-terminal-msg]
-   [automaton-build.repl.portal :as build-portal]
-   [cider.nrepl :as cider-nrepl]
-   [nrepl.server :refer [default-handler start-server stop-server]]
-   [refactor-nrepl.middleware]))
+   [automaton-build.repl.portal.server :as build-repl-portal]
+   [automaton-build.utils.namespace :as build-namespace]
+   [nrepl.server :refer [default-handler start-server stop-server]]))
 
 (defonce nrepl-port-filename ".nrepl-port")
 
@@ -29,10 +28,9 @@
   []
   (:nrepl-port @repl))
 
-(defn stop-repl
+(defn- stop-repl
   "Stop the repl"
-  [repl-port]
-  (build-log/info "Stop nrepl server on port" repl-port)
+  []
   (stop-server (:repl @repl))
   (reset! repl {}))
 
@@ -52,6 +50,7 @@
   [middleware]
   (let [repl-port (get-nrepl-port-parameter)]
     (create-nrepl-files repl-port)
+    (build-repl-portal/start)
     (reset! repl {:nrepl-port repl-port
                   :repl
                   (do
@@ -60,23 +59,33 @@
                                                     repl-port)
                     (start-server :port repl-port
                                   :handler (custom-nrepl-handler middleware)))})
-    (build-portal/start)
     (.addShutdownHook
      (Runtime/getRuntime)
      (Thread. #(do (build-log/info "SHUTDOWN in progress, stop repl on port `"
                                    repl-port
                                    "`")
+                   (build-repl-portal/stop)
                    (-> (build-files/search-files ""
                                                  (str "**" nrepl-port-filename))
                        (build-files/delete-files))
-                   (stop-repl repl-port)
-                   (build-portal/stop))))))
+                   (stop-repl))))))
+
+(defn default-middleware
+  "Default middleware for repl"
+  []
+  (let [cider-middlewares (build-namespace/try-require
+                           'cider.nrepl/cider-middleware)
+        nrepl-middleware (build-namespace/try-require
+                          'refactor-nrepl.middleware/wrap-refactor)]
+    (cond-> []
+      cider-middlewares (concat @(resolve cider-middlewares))
+      nrepl-middleware (conj nrepl-middleware)
+      true vec)))
 
 (defn start-repl
   "Start repl, setup and catch errors"
-  []
-  (try (start-repl* (conj cider-nrepl/cider-middleware
-                          'refactor-nrepl.middleware/wrap-refactor))
+  [mdws]
+  (try (start-repl* mdws)
        :started
        (catch Exception e
          (build-log/error (ex-info "Uncaught exception" {:error e})))))

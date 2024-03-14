@@ -6,7 +6,7 @@
    [automaton-build.app.build-config.tasks :as build-config-tasks]
    [automaton-build.app.deps-edn :as build-deps-edn]
    [automaton-build.app.package-json :as build-package-json]
-   [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
+   [automaton-build.code-helpers.compiler.shadow :as build-compiler-shadow]
    [automaton-build.log :as build-log]
    [automaton-build.tasks.launcher.cli-task-opts :as build-tasks-cli-opts]
    [automaton-build.tasks.launcher.task :as build-launcher-task]
@@ -55,7 +55,7 @@
      :app-dir app-dir
      :app-name app-name
      :bb-edn (build-bb-edn/slurp app-dir)
-     :shadow-cljs (build-frontend-compiler/load-shadow-cljs app-dir)
+     :shadow-cljs (build-compiler-shadow/load-shadow-cljs app-dir)
      :package-json (build-package-json/load-package-json app-dir)
      :deps-edn (build-deps-edn/slurp app-dir)}))
 

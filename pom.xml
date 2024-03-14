@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>org.clojars.hephaistox</groupId>
   <artifactId>automaton-build</artifactId>
-  <version>1.2.0-3-la</version>
+  <version>1.2.0-la</version>
   <name>automaton-build</name>
   <dependencies>
     <dependency>
@@ -20,7 +20,7 @@
     <dependency>
       <groupId>djblue</groupId>
       <artifactId>portal</artifactId>
-      <version>0.51.1</version>
+      <version>0.52.2</version>
     </dependency>
     <dependency>
       <groupId>markdown-clj</groupId>
@@ -82,6 +82,11 @@
       <groupId>babashka</groupId>
       <artifactId>fs</artifactId>
       <version>0.5.20</version>
+    </dependency>
+    <dependency>
+      <groupId>org.babashka</groupId>
+      <artifactId>json</artifactId>
+      <version>0.1.6</version>
     </dependency>
   </dependencies>
   <build>

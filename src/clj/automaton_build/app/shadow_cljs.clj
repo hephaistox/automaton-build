@@ -17,38 +17,9 @@
   [build-template build-aliases]
   (map (partial template-build build-template) build-aliases))
 
-(defn shadow-cljs-config
-  [aliases]
-  (reduce (fn [acc m] (update acc :builds merge m)) {:builds {}} aliases))
-
-(defn get-template-build
-  [template-shadow-cljs]
-  (get-in template-shadow-cljs [:builds :app-template]))
-
-(defn template-shadow-cljs-config
-  [build-template build-aliases]
-  (let [shadow-cljs-templated-builds (template-builds build-template
-                                                      build-aliases)]
-    (shadow-cljs-config shadow-cljs-templated-builds)))
-
-(defn remove-template-module
-  "Removes build template"
-  [shadow-cljs]
-  (update-in shadow-cljs [:builds] dissoc :app-template))
-
 (defn merge-shadow-cljs-configs
   [& configs]
   (apply build-utils-map/deep-merge configs))
-
-(defn create-shadow-cljs-from-template
-  [template-shadow-cljs build-aliases]
-  (let [build-alias-template (get-template-build template-shadow-cljs)
-        apps-shadow-cljs (template-shadow-cljs-config build-alias-template
-                                                      build-aliases)
-        prepared-main-shadow-cljs (remove-template-module template-shadow-cljs)
-        new-shadow-cljs (merge-shadow-cljs-configs prepared-main-shadow-cljs
-                                                   apps-shadow-cljs)]
-    new-shadow-cljs))
 
 (defn get-shadow-filename
   "Get the deps-file of the application

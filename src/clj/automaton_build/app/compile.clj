@@ -3,11 +3,13 @@
   (:require
    [automaton-build.app :as build-app]
    [automaton-build.app.deps-edn :as build-deps-edn]
+   [automaton-build.app.files-css :as build-app-files-css]
    [automaton-build.code-helpers.compiler :as build-compiler]
+   [automaton-build.code-helpers.compiler.shadow :as build-compiler-shadow]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
+   [automaton-build.code-helpers.frontend-css :as build-frontend-css]
    [automaton-build.log :as build-log]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.app.files-css :as build-app-files-css]))
+   [automaton-build.os.files :as build-files]))
 
 (defn prepare-compilation-files
   "Creates `app-dir` `paths` in a `target-dir`"
@@ -20,13 +22,13 @@
 
 (defn compile-frontend
   [app-dir deploy-alias css-files compiled-css-path]
-  (if (and (build-frontend-compiler/is-shadow-project? app-dir) deploy-alias)
+  (if (and (build-compiler-shadow/is-shadow-project? app-dir) deploy-alias)
     (let [combined-css-file (apply build-app-files-css/combine-css-files
                                    css-files)]
-      (build-frontend-compiler/compile-release deploy-alias
-                                               combined-css-file
-                                               compiled-css-path
-                                               app-dir)
+      (build-frontend-compiler/compile-release deploy-alias app-dir)
+      (build-frontend-css/compile-release combined-css-file
+                                          compiled-css-path
+                                          app-dir)
       (build-log/info "Frontend compiled"))
     (build-log/info "Frontend compilation skipped")))
 
