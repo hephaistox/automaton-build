@@ -184,7 +184,7 @@
                                  "org.clojars.hephaistox/automaton-core@*-*"
                                  "org.clojars.hephaistox/automaton-web@*-*"
                                  "org.clojars.hephaistox/automaton-web-dev@*-*"
-                                 "com.taoensso/encore" "djblue/portal"
+                                 "com.taoensso/encore"
                                  "refactor-nrepl/refactor-nrepl"}}
                      [:set :string]]
                     [:exclude-dirs {:default #{"tmp" "target"}}
