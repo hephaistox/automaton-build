@@ -6,6 +6,8 @@
    [automaton-build.os.commands :as build-cmds]
    [automaton-build.os.files :as build-files]))
 
+(def ^:private mermaid-pattern "**.mermaid")
+
 (defn need-to-update?
   "Does the `file-in` needed to be modified?
   Params:
@@ -34,23 +36,22 @@
   Params:
   * `archi-dir` Directory where all `.mermaid` extension files are turned into `.svg` files"
   [archi-dir]
-  (build-files/for-each archi-dir build-a-file))
+  (build-files/for-each archi-dir mermaid-pattern build-a-file))
 
 (defn build-all-files
   "Scan all apps and build
   Params:
-  * `archi-dir` Directory where all `.mermaid` extension files are turned into `.svg` files"
-  [archi-dir]
-  (build-log/debug-format "Build mermaid files in `%s`" archi-dir)
-  (let [res (build-all-files* archi-dir)] (every? some? res)))
+  * `dir` Directory and subdir where all `.mermaid` extension files are turned into `.svg` files"
+  [dir]
+  (build-log/debug-format "Build mermaid files in `%s`" dir)
+  (let [res (build-all-files* dir)] (every? some? res)))
 
 (defn watch
   "Watch the docs directory to build mermaid images
-  * `archi-dir` is the directory to watch"
-  [archi-dir]
-  (build-log/info-format "Start watching mermaid files in directory `%s` "
-                         archi-dir)
+  * `dir` is the directory to watch"
+  [dir]
+  (build-log/info-format "Start watching mermaid files in directory `%s` " dir)
   (loop []
-    (build-all-files* archi-dir)
+    (build-all-files* dir)
     (Thread/sleep 1000)
     (recur)))

@@ -37,6 +37,8 @@
           symbol
           require))
 
+(defn try-require [ns] (try (require-ns ns) ns (catch Exception _ nil)))
+
 (defn qualified-name
   "Return the qualified name of a function"
   [s]

@@ -2,9 +2,9 @@
   (:require
    [automaton-build.app-data :as build-app-data]
    [automaton-build.code-helpers.antq :as build-code-helpers-antq]
-   [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
    [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]))
+   [automaton-build.os.commands :as build-cmds]
+   [automaton-build.os.npm :as build-npm]))
 
 (defn update-app-deps
   "Update all deps.edn dependencies in `app-dir` excluding `exclude-libs`"
@@ -14,10 +14,9 @@
     (build-log/info "Updating npm libraries...")
     (if (every? true?
                 (map #(do (build-log/debug-format "Updating npm of %s" %)
-                          (zero? (ffirst
-                                  (build-cmds/execute-with-exit-code
-                                   (build-frontend-compiler/npm-install-cmd %)
-                                   (build-frontend-compiler/npm-update %)))))
+                          (zero? (ffirst (build-cmds/execute-with-exit-code
+                                          (build-npm/npm-install-cmd %)
+                                          (build-npm/npm-update-cmd %)))))
                      dirs-to-update))
       (do (apply build-code-helpers-antq/do-update exclude-libs dirs-to-update)
           true)
