@@ -45,7 +45,10 @@
                                            jar-path
                                            paths
                                            app-dir
-                                           jar-main))))
+                                           jar-main)
+      (do (build-log/info
+           "Backend compilation skipped as :deploy-to is missing")
+          true))))
 
 #_{:clj-kondo/ignore [:redefined-var]}
 (defn compile

@@ -11,11 +11,11 @@
     :as _app-data}]
   (let [{:keys [repo env]} publication
         main-branch (get-in env [:production :push-branch])]
-    (if (true? (build-deployment/push-app-local app-dir
-                                                app-name
-                                                repo
-                                                main-branch
-                                                message-opt
-                                                force?))
+    (if (build-deployment/push-app-local app-dir
+                                         app-name
+                                         repo
+                                         main-branch
+                                         message-opt
+                                         force?)
       build-exit-codes/ok
       build-exit-codes/catch-all)))

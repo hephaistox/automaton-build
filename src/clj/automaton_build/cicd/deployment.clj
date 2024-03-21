@@ -57,17 +57,12 @@
                   "Are you sure you want push changes from `%s` to branch `%s`?"
                   app-name
                   current-branch))
-              (let [res (build-cfg-mgt/push-local-dir-to-repo
-                         (merge {:source-dir app-dir
-                                 :repo-address repo
-                                 :force? force?
-                                 :target-branch current-branch}
-                                (when message {:commit-msg message})))]
-                (build-log/debug-format "Pushed %s with result %s" app-name res)
-                (-> res
-                    last
-                    first
-                    zero?))
+              (build-cfg-mgt/push-local-dir-to-repo
+               (merge {:source-dir app-dir
+                       :repo-address repo
+                       :force? force?
+                       :target-branch current-branch}
+                      (when message {:commit-msg message})))
               true))))
 
 (defn push-app-base

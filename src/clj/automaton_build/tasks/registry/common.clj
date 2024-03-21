@@ -23,6 +23,7 @@
    'clean-hard
    {:doc
     "Clean all files which are not under version control (it doesn't remove untracked file or staged files if there are eligible to `git add .`)"
+    :task-cli-opts-kws [:force]
     :la-test {:process-opts {:in "q"}}}
    'commit {:doc "Commit and push, disallowed for production branch."
             :hidden? true

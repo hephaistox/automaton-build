@@ -15,11 +15,11 @@
                         build-utils-keyword/keywordize)
         {:keys [repo env]} publication
         main-branch (get-in env [environment :push-branch])]
-    (if (true? (build-deployment/push-app-base app-name
-                                               app-dir
-                                               repo
-                                               main-branch
-                                               message
-                                               force?))
+    (if (build-deployment/push-app-base app-name
+                                        app-dir
+                                        repo
+                                        main-branch
+                                        message
+                                        force?)
       build-exit-codes/ok
       build-exit-codes/catch-all)))

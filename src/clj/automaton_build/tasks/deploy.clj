@@ -36,8 +36,9 @@
                     (build-files/create-dir-path app-dir)
                     build-files/absolutize)
                (build-version/current-version app-dir))
-          (build-log/warn-format
-           "Deploy skipped as deploy-to param is incorrect. It's `%s`"
-           deploy-to))
+          (do (build-log/info-format
+               "Deploy skipped as deploy-to param is missing. It's `%s`"
+               deploy-to)
+              true))
       build-exit-codes/ok
       build-exit-codes/catch-all)))
