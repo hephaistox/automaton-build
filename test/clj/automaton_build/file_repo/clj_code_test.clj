@@ -1,8 +1,8 @@
 (ns automaton-build.file-repo.clj-code-test
   (:require
    [automaton-build.file-repo.clj-code :as sut]
-   [automaton-build.file-repo.raw :as build-filerepo-raw]
-   [clojure.test :refer [deftest is testing]]))
+   [automaton-build.file-repo.raw      :as build-filerepo-raw]
+   [clojure.test                       :refer [deftest is testing]]))
 
 (def clj-repo-stub (sut/make-clj-repo-from-dirs [""]))
 

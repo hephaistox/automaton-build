@@ -1,8 +1,8 @@
 (ns automaton-build.app-data.impl
   (:require
-   [automaton-build.app.deps-edn :as build-deps-edn]
+   [automaton-build.app.deps-edn                   :as build-deps-edn]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files                       :as build-files]))
 
 (defn clj-compiler-classpath
   "Return absolutized directories of sources of `app`, only if they already exist!

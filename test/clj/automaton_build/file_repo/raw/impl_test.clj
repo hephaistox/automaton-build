@@ -1,7 +1,7 @@
 (ns automaton-build.file-repo.raw.impl-test
   (:require
    [automaton-build.file-repo.raw.impl :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                       :refer [deftest is testing]]))
 
 (def raw-file-repo-map
   {"foo.clj" ["This is" " the foo file" " hey!"]

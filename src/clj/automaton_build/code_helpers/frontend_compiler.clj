@@ -1,10 +1,10 @@
 (ns automaton-build.code-helpers.frontend-compiler
   "Front end compiler toolings. Use shadow on npx."
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]
    [automaton-build.code-helpers.compiler.shadow :as build-compiler-shadow]
-   [automaton-build.os.command :as build-cmd]))
+   [automaton-build.log                          :as build-log]
+   [automaton-build.os.command                   :as build-cmd]
+   [automaton-build.os.commands                  :as build-cmds]))
 
 (defn compile-target
   "Compile the target given as a parameter, in dev mode

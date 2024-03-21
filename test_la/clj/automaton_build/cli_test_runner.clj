@@ -1,8 +1,8 @@
 (ns automaton-build.cli-test-runner
   "Test all the cli that they returns the expected exit code, as setup in the registry"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]
+   [automaton-build.log           :as build-log]
+   [automaton-build.os.commands   :as build-cmds]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 (defn- run-cmd
@@ -40,9 +40,9 @@
         la-test
         expanded-cmd (build-cmds/expand-cmd cmd)]
     (if (or (empty? la-test) skip?)
-      [true #(build-log/info-format "Skip `%s` " expanded-cmd)]
+      [true #(build-log/debug-format "Skip `%s` " expanded-cmd)]
       (do
-        (build-log/info-format "Test cmd `%s`:" expanded-cmd)
+        (build-log/debug-format "Test cmd `%s`:" expanded-cmd)
         (run-cmd cmd expanded-cmd expected-exit-code cli-args process-opts)))))
 
 (defn- exec-and-return

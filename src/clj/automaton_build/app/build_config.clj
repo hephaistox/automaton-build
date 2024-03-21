@@ -1,10 +1,10 @@
 (ns automaton-build.app.build-config
   "Manage `build-config.edn` file"
   (:require
+   [automaton-build.log.files    :as build-log-files]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.log.files :as build-log-files]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.schema :as build-schema]))
+   [automaton-build.os.files     :as build-files]
+   [automaton-build.schema       :as build-schema]))
 
 (def build-config-filename "build_config.edn")
 
@@ -17,7 +17,7 @@
     [:map {:closed true}
      [:account {:default "hephaistox"}
       :string]
-     [:gha
+     [:gha {:optional true}
       [:map {:closed true}
        [:repo-branch {:default "main"}
         :string]
@@ -28,7 +28,9 @@
      [:monorepo {:optional true}
       [:map {:closed true}
        [:template-dir {:optional true}
-        :string]]]
+        :string]
+       [:apps-roots {:optional true}
+        [:vector :string]]]]
      [:repl-aliases [:vector :keyword]]
      [:storage-datomic {:optional true}
       [:map

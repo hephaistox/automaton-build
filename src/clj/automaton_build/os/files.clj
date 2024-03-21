@@ -5,10 +5,10 @@
 
   Is a proxy to babashka.fs tools"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log               :as build-log]
    [automaton-build.utils.comparators :as build-utils-comparators]
-   [babashka.fs :as fs]
-   [clojure.string :as str]))
+   [babashka.fs                       :as fs]
+   [clojure.string                    :as str]))
 
 ;; ***********************
 ;; Manipulate file path (need no access)

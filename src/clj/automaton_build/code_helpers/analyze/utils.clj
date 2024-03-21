@@ -1,10 +1,10 @@
 (ns automaton-build.code-helpers.analyze.utils
   "Helpers function to manage analyze of code"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.edn-utils :as build-edn-utils]
+   [automaton-build.log           :as build-log]
+   [automaton-build.os.edn-utils  :as build-edn-utils]
    [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files      :as build-files]))
 
 (defn- matches-to-output-lines
   [match-to-output-line matches]

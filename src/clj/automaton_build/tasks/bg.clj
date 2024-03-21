@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.bg
   (:require
-   [clojure.core.async :refer [<!! chan]]
-   [automaton-build.log :as build-log]))
+   [automaton-build.log :as build-log]
+   [clojure.core.async  :refer [<!! chan]]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

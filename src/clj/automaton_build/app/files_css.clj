@@ -2,7 +2,7 @@
   "Code for manipulation of css files"
   (:require
    [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [clojure.string           :as str]))
 
 (def main-css "main.css")
 

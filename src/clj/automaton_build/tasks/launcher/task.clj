@@ -4,7 +4,7 @@
   Design decision:
   * This task is the one ready to launch, which is not the task in the registry"
   (:require
-   [automaton-build.tasks.registry :as build-task-registry]
+   [automaton-build.tasks.registry      :as build-task-registry]
    [automaton-build.tasks.registry.find :as build-task-registry-find]))
 
 (defn build

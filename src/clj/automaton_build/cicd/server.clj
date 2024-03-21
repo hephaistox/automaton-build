@@ -6,9 +6,9 @@
   * When run is github action container image, we set manually that variable in the `Dockerfile`(clojure/container-images/gha_runner/Dockerfile)
   * Otherwise, that variable is not set and `is-cicd?` returns false"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [clojure.string           :as str]))
 
 (def ^:private github-env-var "CI")
 

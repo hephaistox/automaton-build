@@ -3,11 +3,11 @@
 
   Currently use shadow on npx"
   (:require
-   [automaton-build.os.command :as build-cmd]
-   [automaton-build.os.commands :as build-cmds]
+   [automaton-build.os.command   :as build-cmd]
+   [automaton-build.os.commands  :as build-cmds]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.os.npm :as build-npm]))
+   [automaton-build.os.files     :as build-files]
+   [automaton-build.os.npm       :as build-npm]))
 
 (def ^:private shadow-cljs-edn "shadow-cljs.edn")
 

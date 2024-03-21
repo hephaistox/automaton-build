@@ -1,7 +1,7 @@
 (ns automaton-build.os.commands-test
   (:require
    [automaton-build.os.commands :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                :refer [deftest is testing]]))
 
 (deftest execute-with-exit-code-test
   (testing "A simple command return"

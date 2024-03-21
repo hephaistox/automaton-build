@@ -1,9 +1,9 @@
 (ns automaton-build.tasks.launcher.launch-on-clj-env
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.os.edn-utils :as build-edn-utils]))
+   [automaton-build.log           :as build-log]
+   [automaton-build.os.commands   :as build-cmds]
+   [automaton-build.os.edn-utils  :as build-edn-utils]
+   [automaton-build.os.exit-codes :as build-exit-codes]))
 
 (defn switch-to-clj
   "Run the `task-fn` on a clojure environment"

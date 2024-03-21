@@ -6,9 +6,9 @@
    Alternatively it could be done by using clever CLI, but currently we don't need any features that can't be done by simply manipulating the repository in the git. Which is a simpler option in terms of complexity (no need for API to check), while still being flexible (a lot of options to manipulate in git). Additionally this doesn't require to install the clever cloud cli."
   (:require
    [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.log          :as build-log]
+   [automaton-build.os.commands  :as build-cmds]
+   [automaton-build.os.files     :as build-files]))
 
 (defn clone-repo
   "Clones clever repo from `uri` to a `target-dir`, repo will be stored as `repo-name`.  Returns the path to the repository."

@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.lbe-repl
   (:require
-   [babashka.process :as babashka-process]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.log           :as build-log]
+   [automaton-build.os.exit-codes :as build-exit-codes]
+   [babashka.process              :as babashka-process]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

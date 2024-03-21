@@ -2,10 +2,10 @@
   "Execute a process
   Is a proxy for `babashka.process`"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log            :as build-log]
    [automaton-build.os.command.str :as build-cmd-str]
-   [babashka.process :as babashka-process]
-   [clojure.string :as str]))
+   [babashka.process               :as babashka-process]
+   [clojure.string                 :as str]))
 
 (defn- generate-process
   [command]

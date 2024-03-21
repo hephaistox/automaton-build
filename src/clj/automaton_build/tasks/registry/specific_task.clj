@@ -3,9 +3,9 @@
   This namespace is used to start the cli, so no log or files namespaces are used.
   So there are not used before they got intialized"
   (:require
-   [clojure.string :as str]
-   [clojure.edn :as edn]
-   [babashka.fs :as fs]))
+   [babashka.fs    :as fs]
+   [clojure.edn    :as edn]
+   [clojure.string :as str]))
 
 (def ^:private specific-task-registry "specific_task_registry.edn")
 

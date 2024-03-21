@@ -2,9 +2,9 @@
   "Visualize namespaces
   Proxy to io.dominic.vizns.core"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]
-   [io.dominic.vizns.core :as vizns]))
+   [io.dominic.vizns.core    :as vizns]))
 
 (defn visualize-ns
   "Visualize all namespaces relations"

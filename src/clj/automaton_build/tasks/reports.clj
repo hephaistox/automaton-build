@@ -1,22 +1,26 @@
 (ns automaton-build.tasks.reports
   (:require
-   [automaton-build.app-data :as build-app-data]
+   [automaton-build.app-data                                     :as
+                                                                 build-app-data]
    [automaton-build.code-helpers.analyze.alias-has-one-namespace
-    :as
-    build-analyze-alias]
-   [automaton-build.code-helpers.analyze.comments :as build-analyze-comments]
-   [automaton-build.code-helpers.analyze.css :as build-analyze-css]
+    :as build-analyze-alias]
+   [automaton-build.code-helpers.analyze.comments
+    :as build-analyze-comments]
+   [automaton-build.code-helpers.analyze.css
+    :as build-analyze-css]
    [automaton-build.code-helpers.analyze.forbidden-words
-    :as
-    build-forbidden-words]
+    :as build-forbidden-words]
    [automaton-build.code-helpers.analyze.namespace-has-one-alias
-    :as
-    build-analyze-namespace]
-   [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
-   [automaton-build.file-repo.clj-code :as build-clj-code]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.os.files :as build-files]))
+    :as build-analyze-namespace]
+   [automaton-build.code-helpers.frontend-compiler
+    :as build-frontend-compiler]
+   [automaton-build.file-repo.clj-code                           :as
+                                                                 build-clj-code]
+   [automaton-build.log                                          :as build-log]
+   [automaton-build.os.exit-codes
+    :as build-exit-codes]
+   [automaton-build.os.files                                     :as
+                                                                 build-files]))
 
 (defn- alias-report
   [{:keys [alias-outputfilename]} code-repo]

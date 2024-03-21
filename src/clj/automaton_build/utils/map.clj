@@ -2,7 +2,7 @@
   "Gather utility functions for maps"
   (:require
    [automaton-build.utils.comparators :as build-utils-comparators]
-   [clojure.walk :as walk]))
+   [clojure.walk                      :as walk]))
 
 (defn update-k-v
   "Update key value in map, works with keywords that are nested.
@@ -35,6 +35,11 @@
                               (sorted-map-by
                                build-utils-comparators/comparator-kw-symbol)))
           (recur rkss)))))
+
+(defn sorted-map-nested
+  "Turn map into sorted-map and apply it to all nested submaps."
+  [m]
+  (walk/prewalk (fn [item] (if (map? item) (into (sorted-map) item) item)) m))
 
 (defn deep-merge
   "Deep merge nested maps.

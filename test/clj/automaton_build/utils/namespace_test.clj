@@ -1,7 +1,7 @@
 (ns automaton-build.utils.namespace-test
   (:require
    [automaton-build.utils.namespace :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                    :refer [deftest is testing]]))
 
 (deftest update-last-test
   (testing "Add clj to last element"

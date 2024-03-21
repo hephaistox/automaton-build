@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.format-code
   (:require
    [automaton-build.code-helpers.formatter :as build-code-formatter]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.os.exit-codes          :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

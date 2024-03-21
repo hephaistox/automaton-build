@@ -1,12 +1,10 @@
 (ns automaton-build.tasks.launcher.pf-dispatcher
   (:require
+   [automaton-build.log                               :as build-log]
+   [automaton-build.tasks.launcher.launch-on-clj-env  :as
+                                                      build-launch-on-clj-env]
    [automaton-build.tasks.launcher.launch-on-same-env
-    :as
-    build-launch-on-same-env]
-   [automaton-build.tasks.launcher.launch-on-clj-env
-    :as
-    build-launch-on-clj-env]
-   [automaton-build.log :as build-log]))
+    :as build-launch-on-same-env]))
 
 (defonce ^:private current-pf (atom :bb))
 

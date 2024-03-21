@@ -1,8 +1,9 @@
 (ns automaton-build.code-helpers.analyze.forbidden-words-test
   (:require
    [automaton-build.code-helpers.analyze.forbidden-words :as sut]
-   [automaton-build.file-repo.clj-code :as build-clj-code]
-   [clojure.test :refer [deftest is testing]]))
+   [automaton-build.file-repo.clj-code                   :as build-clj-code]
+   [clojure.test                                         :refer
+                                                         [deftest is testing]]))
 
 (def clj-repo
   (build-clj-code/->CljCodeFileRepo {"foo.clj" ["  automaton-foobar"]

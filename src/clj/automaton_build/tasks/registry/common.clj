@@ -34,10 +34,7 @@
                :pf :clj
                :la-test {:skip? true}
                :shared [:publication]
-               :build-configs [[:aliases {:default [:run]}
-                                [:vector :keyword]]
-                               [:class-dir {:default "target/classes/"}
-                                :string]]}
+               :task-cli-opts-kws [:environment]}
    'container-clear {:doc "Clear all local containers"
                      :la-test {:skip? true}}
    'container-list {:doc "List all available containers"}
@@ -77,6 +74,11 @@
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
                   :la-test {:skip? true}}
+   'generate-pom-xml {:doc "generate pom xml if applies"
+                      :pf :clj
+                      :shared [:publication]
+                      :task-cli-opts-kws [:environment]
+                      :la-test {:skip? true}}
    'is-cicd {:doc "Tested if runned on cicd"
              :la-test {:cmd ["bb" "heph-task" "is-cicd" "-f"]}
              :hidden? true
@@ -119,15 +121,9 @@
    'mermaid {:doc "Build all mermaid files"}
    'mermaid-watch {:doc "Watch mermaid files modifications"
                    :la-test {:skip? true}}
-   'publish-library
+   'deploy
    {:doc
-    "Publish project, by deploying the jar to clojars and pushing git main branch with new version"
-    :pf :clj
-    :shared [:publication]
-    :la-test {:skip? true}}
-   'publish-app
-   {:doc
-    "Publish project to CC, same as above, but instead of clojars the uberjar is pushed to clever-cloud repo."
+    "Publish project, by deploying the jar to either clojars or clever cloud"
     :pf :clj
     :shared [:publication]
     :task-cli-opts-kws [:environment]
@@ -135,8 +131,13 @@
    'push-local {:doc "Push this repo"
                 :la-test {:skip? true}
                 :shared [:publication]
-                :task-cli-opts-kws [:force :message :tag :environment]
+                :task-cli-opts-kws [:force :message-opt :environment]
                 :pf :clj}
+   'push-base {:doc "Push this repo to base branch of environment"
+               :la-test {:skip? true}
+               :shared [:publication]
+               :task-cli-opts-kws [:force :message :environment]
+               :pf :clj}
    'pull-base-branch {:doc "Checks if you are up to date with base branch."
                       :pf :clj
                       :shared [:publication]
@@ -180,17 +181,14 @@
    'update-deps
    {:doc
     "Update the dependencies, cider-nrepl and refactor are to be updated manually"
-    :build-configs [[:exclude-libs
-                     {:default #{"org.clojars.hephaistox/automaton-build@*-*"
-                                 "org.clojars.hephaistox/automaton-core@*-*"
-                                 "org.clojars.hephaistox/automaton-web@*-*"
-                                 "org.clojars.hephaistox/automaton-web-dev@*-*"
-                                 "com.taoensso/encore"}}
-                     [:set :string]]
-                    [:exclude-dirs {:default #{"tmp" "target"}}
+    :build-configs [[:exclude-libs {:default #{"com.taoensso/encore"}}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}
+   'update-version {:doc "Update version of current library"
+                    :pf :clj
+                    :task-cli-opts-kws [:environment]
+                    :la-test {:skip? true}}
    'visualize-deps {:doc "Visualize the dependencies in a graph"
                     :build-configs [[:output-file {:default
                                                    "docs/code/deps.svg"}

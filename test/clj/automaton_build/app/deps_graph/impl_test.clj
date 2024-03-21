@@ -1,8 +1,9 @@
 (ns automaton-build.app.deps-graph.impl-test
   (:require
-   [automaton-build.app.deps-graph.impl :as sut]
+   [automaton-build.app.deps-graph.impl            :as sut]
    [automaton-build.data-structure.graph.apps-stub :as graph-apps-stub]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                                   :refer
+                                                   [deftest is testing]]))
 
 (deftest app-dependency-graph-test
   (testing "Test the graph creation"

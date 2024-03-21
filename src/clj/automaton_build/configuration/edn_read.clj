@@ -3,8 +3,8 @@
   We cannot use edn-utils there, as that namespace would create a cycle dependancy"
   (:require
    [automaton-build.log :as build-log]
-   [babashka.fs :as fs]
-   [clojure.edn :as edn]))
+   [babashka.fs         :as fs]
+   [clojure.edn         :as edn]))
 
 (defn read-edn
   "Read the `.edn` file,

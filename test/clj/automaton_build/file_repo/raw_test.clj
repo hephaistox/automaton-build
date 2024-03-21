@@ -1,8 +1,8 @@
 (ns automaton-build.file-repo.raw-test
   (:require
-   [automaton-build.file-repo.raw :as sut]
+   [automaton-build.file-repo.raw           :as sut]
    [automaton-build.file-repo.raw.impl-test :as sut-raw-impl]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                            :refer [deftest is testing]]))
 
 (def raw-file-repo (sut/->RawFileRepo sut-raw-impl/raw-file-repo-map))
 

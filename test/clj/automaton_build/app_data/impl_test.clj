@@ -1,7 +1,7 @@
 (ns automaton-build.app-data.impl-test
   (:require
    [automaton-build.app-data.impl :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                  :refer [deftest is testing]]))
 
 (def app-stub
   {:build-config {}

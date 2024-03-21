@@ -1,14 +1,15 @@
 (ns automaton-build.tasks.launcher.bb-entrypoint
   "Function to be called from the bb tasks"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]
+   [automaton-build.log                                   :as build-log]
+   [automaton-build.os.exit-codes                         :as build-exit-codes]
    [automaton-build.tasks.launcher.cli-task-agnostic-opts
-    :as
-    build-cli-task-agnostic-opts]
-   [automaton-build.tasks.launcher.print-exception :as build-print-exception]
-   [automaton-build.tasks.launcher.task-execute :as build-tasks-execute]
-   [clojure.pprint :as pp]))
+    :as build-cli-task-agnostic-opts]
+   [automaton-build.tasks.launcher.print-exception        :as
+                                                          build-print-exception]
+   [automaton-build.tasks.launcher.task-execute           :as
+                                                          build-tasks-execute]
+   [clojure.pprint                                        :as pp]))
 
 (defn -main
   "Entry point for the bb task:
@@ -109,5 +110,7 @@
   (call-main "gha" "-f" "-d")
   (call-main "apps-push-local" "-e" "la" "-M" "hello")
   (call-main "apps-deploy" "-e" "la")
+  (call-main "apps-version" "-e" "la")
+  (call-main "generate-pom-xml" "-e" "la")
   ;;
 )

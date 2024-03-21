@@ -1,7 +1,7 @@
 (ns automaton-build.code-helpers.code-stats-test
   (:require
    [automaton-build.code-helpers.code-stats :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                            :refer [deftest is testing]]))
 
 (deftest count-lines
   (testing "Count the line number in the files"
