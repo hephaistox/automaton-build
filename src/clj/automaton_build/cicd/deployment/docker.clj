@@ -7,13 +7,11 @@
    [automaton-build.os.files                 :as build-files]))
 
 (defn publish-container
-  [container container-dir tag workflows repo-url repo-branch]
+  [container container-dir _tag workflows repo-url repo-branch]
   (let [container-name (build-containers/container-name container)]
     (build-cicd-server/show-tag-in-workflows workflows container-name)
     (build-cfg-mgt/clone-repo-branch container-dir repo-url repo-branch)
-    (and container
-         (build-containers/build container true)
-         (build-cicd-server/update-workflows workflows tag container-name))))
+    (and container (build-containers/build container true))))
 
 (defn publish-test-docker-image
   "Publish gha image to docker.

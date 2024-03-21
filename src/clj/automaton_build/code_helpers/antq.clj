@@ -4,7 +4,8 @@
    [antq.api]
    [automaton-build.app.bb-edn              :as build-bb-edn]
    [automaton-build.app.deps-edn            :as build-deps-edn]
-   [automaton-build.cicd.deployment.pom-xml :as build-pom-xml]))
+   [automaton-build.cicd.deployment.pom-xml :as build-pom-xml]
+   [automaton-build.os.files                :as build-files]))
 
 (defn exclude-libraries
   "Returns `libs` without those that name is in `excluded-libs-names`"
@@ -40,9 +41,12 @@
 (defn generate-file-path
   [dir type]
   (case type
-    :clojure [{:file (build-deps-edn/deps-path dir)}
-              {:file (build-bb-edn/bb-edn-filename-fullpath dir)}]
-    :pom [{:file (build-pom-xml/pom-xml dir)}]))
+    :clojure [{:file (build-deps-edn/deps-path dir)
+               :type :clojure}
+              {:file (build-bb-edn/bb-edn-filename-fullpath dir)
+               :type :clojure}]
+    :pom [{:file (build-pom-xml/pom-xml dir)
+           :type :pom}]))
 
 #_(defn add-project-paths
     [project-dir types]
@@ -56,3 +60,18 @@
           :latest-version version}))
 
 (defn update-deps [deps-to-update] (antq.api/upgrade-deps! deps-to-update))
+
+(comment
+  (require '[automaton-build.cicd.server :as build-cicd-server])
+  (build-cicd-server/update-workflows
+   ["cust_app/landing/.github/workflows/commit_validation.yml"]
+   "1.1.3-la"
+   "gha-landing")
+  (build-files/is-existing-file?
+   "cust_app/landing/.github/workflows/commit_validation.yml")
+  (update-deps [{:file
+                 "cust_app/landing/.github/workflows/commit_validation.yml"
+                 :dependency {:name "hephaistox/landing"
+                              :project :github-action
+                              :type :github-tag
+                              :latest-version "1.1.3-la"}}]))

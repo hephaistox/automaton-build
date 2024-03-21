@@ -57,6 +57,8 @@
   (build-cmds/execute-with-exit-code
    ["git"
     "clone"
+    "--branch"
+    branch-name
     repo-address
     repo-dir-name
     "--depth"
@@ -150,7 +152,7 @@
   * `branch-name` branch name
   * `force?` optional for forcing a new commit to be a new point for the remote (even if there may be conflicts with previous)"
   ([dir msg branch-name force?]
-   (let [msg (or msg "commit")]
+   (let [msg (or msg "automatic commit")]
      (when (git-installed?)
        (let [commit-res
              (build-cmds/execute-with-exit-code
