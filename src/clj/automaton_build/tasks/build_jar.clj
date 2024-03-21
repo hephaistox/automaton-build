@@ -8,7 +8,6 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   [_task-map {:keys [app-name app-dir deps-edn publication environment]}]
-  (prn "all stuff: " app-name app-dir deps-edn publication environment)
   (let [environment (-> environment
                         build-utils-keyword/trim-colon
                         build-utils-keyword/keywordize)
