@@ -1,13 +1,15 @@
 (ns automaton-build.repl.launcher
   "This namespace is apart from repl to allow initialization of log before the init of configuration for instance"
   (:require
-   [automaton-build.configuration :as build-conf]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.os.terminal-msg :as build-terminal-msg]
+   [automaton-build.configuration      :as build-conf]
+   [automaton-build.log                :as build-log]
+   [automaton-build.os.files           :as build-files]
+   [automaton-build.os.terminal-msg    :as build-terminal-msg]
    [automaton-build.repl.portal.server :as build-repl-portal]
-   [automaton-build.utils.namespace :as build-namespace]
-   [nrepl.server :refer [default-handler start-server stop-server]]))
+   [automaton-build.utils.namespace    :as build-namespace]
+   [nrepl.server                       :refer [default-handler
+                                               start-server
+                                               stop-server]]))
 
 (defonce nrepl-port-filename ".nrepl-port")
 

@@ -3,9 +3,9 @@
 
   We call analysis the process and analyze the result of it"
   (:require
+   [automaton-build.log          :as build-log]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.log :as build-log]
-   [clojure.string :as str]))
+   [clojure.string               :as str]))
 
 (defn filter-matches
   "Filter with the `filter-fn`

@@ -1,7 +1,7 @@
 (ns automaton-build.utils.map-test
   (:require
    [automaton-build.utils.map :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test              :refer [deftest is testing]]))
 
 (deftest sort-submap-test
   (testing "Are keywords first, symbol then and each sorted alphabetically"
@@ -119,3 +119,32 @@
   (testing "Different values replaced"
     (is (= {:a 2} (sut/update-k-v {:a {:test 15}} :a 2)))
     (is (= {:a 2} (sut/update-k-v {:a ["paths" "to" "a"]} :a 2)))))
+
+(deftest sorted-map-nested-test
+  (testing "Are maps sorted?"
+    (is (= {:a 1
+            :b 5
+            :c 2
+            :e {:a 2
+                :b 5}}
+           (sut/sorted-map-nested {:a 1
+                                   :b 5
+                                   :c 2
+                                   :e {:a 2
+                                       :b 5}})))
+    (is (= {:a 1
+            :b 5
+            :c 2}
+           (sut/sorted-map-nested {:b 5
+                                   :a 1
+                                   :c 2})))
+    (is (= {:a 1
+            :b 5
+            :c 2
+            :e {:a 2
+                :b 5}}
+           (sut/sorted-map-nested {:c 2
+                                   :b 5
+                                   :a 1
+                                   :e {:b 5
+                                       :a 2}})))))

@@ -3,9 +3,9 @@
   Right now is counting how much core line and tests line there are"
   (:require
    [automaton-build.doc.markdown :as build-markdown]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.log          :as build-log]
+   [automaton-build.os.files     :as build-files]
+   [clojure.string               :as str]))
 
 (defn count-lines
   "Count lines in the file list"

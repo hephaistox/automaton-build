@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.blog
   (:require
-   [automaton-build.doc.blog :as build-blog]
+   [automaton-build.doc.blog      :as build-blog]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}

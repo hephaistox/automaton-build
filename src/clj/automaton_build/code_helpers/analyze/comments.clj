@@ -2,9 +2,9 @@
 (ns automaton-build.code-helpers.analyze.comments
   "Analyze all comments in the code, forbid that comments so their publication is controlled"
   (:require
-   [automaton-build.file-repo.text :as build-filerepo-text]
    [automaton-build.code-helpers.analyze.utils :as build-analyze-utils]
-   [automaton-build.log :as build-log]))
+   [automaton-build.file-repo.text             :as build-filerepo-text]
+   [automaton-build.log                        :as build-log]))
 
 ;;These are defined as a workaround, so it won't create false positive when you
 ;;search them with regexp

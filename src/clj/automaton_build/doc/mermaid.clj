@@ -2,9 +2,9 @@
   "To create mermaid images
   Proxy to cli mermaid"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log         :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files    :as build-files]))
 
 (def ^:private mermaid-pattern "**.mermaid")
 

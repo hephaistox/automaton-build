@@ -1,9 +1,9 @@
 (ns automaton-build.tasks.storage-install
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.storage :as build-storage]
+   [automaton-build.log           :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]
-   [clojure.string :as str]))
+   [automaton-build.storage       :as build-storage]
+   [clojure.string                :as str]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

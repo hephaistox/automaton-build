@@ -1,8 +1,8 @@
 (ns automaton-build.utils.string-test
   (:require
-   [clojure.test :refer [deftest is testing]]
    [automaton-build.utils.string :as sut]
-   [clojure.string :as str]))
+   [clojure.string               :as str]
+   [clojure.test                 :refer [deftest is testing]]))
 
 (deftest remove-last-character
   (testing "Remove a character"

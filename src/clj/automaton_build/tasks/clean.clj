@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.clean
   (:require
-   [automaton-build.os.files :as build-files]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.log           :as build-log]
+   [automaton-build.os.exit-codes :as build-exit-codes]
+   [automaton-build.os.files      :as build-files]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

@@ -8,11 +8,11 @@
   * specific needs will be addressed later on, with more specific technologies
   * the choice of technology should be as independant as possible, so a defprotocol is welcome to access their features"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.log           :as build-log]
+   [automaton-build.os.commands   :as build-cmds]
+   [automaton-build.os.exit-codes :as build-exit-codes]
+   [automaton-build.os.files      :as build-files]
+   [clojure.string                :as str]))
 
 (defn- is-datomic-transactor?
   "Returns true if datomic pro transactor is already existing.

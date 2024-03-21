@@ -1,7 +1,7 @@
 (ns automaton-build.os.java-properties-test
   (:require
    [automaton-build.os.java-properties :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                       :refer [deftest is testing]]))
 
 (deftest get-java-properties-test
   (testing "Java properties are valid"

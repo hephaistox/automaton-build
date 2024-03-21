@@ -1,20 +1,18 @@
 (ns automaton-build.tasks.registry
   "Build, validate and access the global registry for the automaton-build"
   (:require
-   [automaton-build.app.build-config.tasks :as build-config-tasks]
-   [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.terminal-msg :as build-terminal-msg]
-   [automaton-build.schema :as build-schema]
-   [automaton-build.tasks.registry.common :as build-tasks-common]
+   [automaton-build.app.build-config.tasks          :as build-config-tasks]
+   [automaton-build.os.edn-utils                    :as build-edn-utils]
+   [automaton-build.os.terminal-msg                 :as build-terminal-msg]
+   [automaton-build.schema                          :as build-schema]
+   [automaton-build.tasks.registry.common           :as build-tasks-common]
    [automaton-build.tasks.registry.specific-task
-    :as
-    build-specific-task-registry]
-   [automaton-build.tasks.workflow.workflow-to-task
-    :as
-    build-task-workflow-to-task]
-   [automaton-build.utils.map :as build-utils-map]
-   [automaton-build.utils.namespace :as build-namespace]
-   [automaton-build.utils.string :as build-string]))
+    :as build-specific-task-registry]
+   [automaton-build.tasks.workflow.workflow-to-task :as
+                                                    build-task-workflow-to-task]
+   [automaton-build.utils.map                       :as build-utils-map]
+   [automaton-build.utils.namespace                 :as build-namespace]
+   [automaton-build.utils.string                    :as build-string]))
 
 (def ^:private schema
   [:map-of

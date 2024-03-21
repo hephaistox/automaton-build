@@ -1,7 +1,7 @@
 (ns automaton-build.utils.comparators-test
   (:require
    [automaton-build.utils.comparators :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                      :refer [deftest is testing]]))
 
 (deftest comparator-kw-symbol-test
   (testing "Keywords first" (is (sut/comparator-kw-symbol :a 'foo)))

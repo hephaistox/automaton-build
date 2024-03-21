@@ -6,7 +6,7 @@
   * That options are called only once, at the beginning of the bb tasks, the task related cli options are in a different namespaces"
   (:require
    [automaton-build.log :as build-log]
-   [clojure.tools.cli :refer [parse-opts]]))
+   [clojure.tools.cli   :refer [parse-opts]]))
 
 (defn cli-common-opts
   []

@@ -2,7 +2,7 @@
   "Search for aliases which are used for many namespaces"
   (:require
    [automaton-build.code-helpers.analyze.utils :as build-analyze-utils]
-   [automaton-build.file-repo.text :as build-filerepo-text]))
+   [automaton-build.file-repo.text             :as build-filerepo-text]))
 
 (def alias-pattern
   #"^\s*\[\s*([A-Za-z0-9\*\+\!\-\_\.\'\?<>=]*)\s*(?:(?::as)\s*([A-Za-z0-9\*\+\!\-\_\.\'\?<>=]*)|(:refer).*)\s*\]\s*(?:\)\))*$")

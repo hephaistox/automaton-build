@@ -1,8 +1,8 @@
 (ns automaton-build.app.shadow-cljs
   (:require
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.utils.map :as build-utils-map]))
+   [automaton-build.os.files     :as build-files]
+   [automaton-build.utils.map    :as build-utils-map]))
 
 (def shadow-cljs-edn "shadow-cljs.edn")
 

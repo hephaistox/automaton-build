@@ -1,16 +1,16 @@
 (ns automaton-build.tasks.launcher.app-data
   "Before a task execution, gather all data needed by the task to provide its app-data"
   (:require
-   [automaton-build.app.bb-edn :as build-bb-edn]
-   [automaton-build.app.build-config :as build-build-config]
-   [automaton-build.app.build-config.tasks :as build-config-tasks]
-   [automaton-build.app.deps-edn :as build-deps-edn]
-   [automaton-build.app.package-json :as build-package-json]
+   [automaton-build.app.bb-edn                   :as build-bb-edn]
+   [automaton-build.app.build-config             :as build-build-config]
+   [automaton-build.app.build-config.tasks       :as build-config-tasks]
+   [automaton-build.app.deps-edn                 :as build-deps-edn]
+   [automaton-build.app.package-json             :as build-package-json]
    [automaton-build.code-helpers.compiler.shadow :as build-compiler-shadow]
-   [automaton-build.log :as build-log]
+   [automaton-build.log                          :as build-log]
    [automaton-build.tasks.launcher.cli-task-opts :as build-tasks-cli-opts]
-   [automaton-build.tasks.launcher.task :as build-launcher-task]
-   [automaton-build.utils.map :as build-utils-map]))
+   [automaton-build.tasks.launcher.task          :as build-launcher-task]
+   [automaton-build.utils.map                    :as build-utils-map]))
 
 (defn build-config-task-data
   "Get task data from `build-config`"

@@ -1,7 +1,7 @@
 (ns automaton-build.app.deps-graph.impl
   (:require
-   [automaton-build.app.deps-edn :as build-deps-edn]
-   [automaton-build.graph :as graph]
+   [automaton-build.app.deps-edn    :as build-deps-edn]
+   [automaton-build.graph           :as graph]
    [automaton-build.utils.namespace :as build-namespace]))
 
 (defn add-hephaistox-deps

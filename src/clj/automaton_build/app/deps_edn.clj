@@ -2,9 +2,9 @@
   "Proxy for `deps.edn` file"
   (:refer-clojure :exclude [slurp spit])
   (:require
-   [automaton-build.os.files :as build-files]
-   [automaton-build.utils.map :as build-utils-map]
-   [automaton-build.os.edn-utils :as build-edn-utils]))
+   [automaton-build.os.edn-utils :as build-edn-utils]
+   [automaton-build.os.files     :as build-files]
+   [automaton-build.utils.map    :as build-utils-map]))
 
 (def deps-edn "deps.edn")
 

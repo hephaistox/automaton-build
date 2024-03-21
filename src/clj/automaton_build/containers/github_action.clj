@@ -1,12 +1,12 @@
 (ns automaton-build.containers.github-action
   "Manage the github action containers"
   (:require
-   [automaton-build.app.deps-edn :as build-deps-edn]
-   [automaton-build.app.package-json :as build-package-json]
-   [automaton-build.containers :as build-containers]
+   [automaton-build.app.deps-edn            :as build-deps-edn]
+   [automaton-build.app.package-json        :as build-package-json]
+   [automaton-build.containers              :as build-containers]
    [automaton-build.containers.local-engine :as build-local-engine]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.log                     :as build-log]
+   [automaton-build.os.files                :as build-files]))
 
 (defrecord GithubAction [app-name container-dir app-dir remote-repo-account tag]
   build-containers/Container

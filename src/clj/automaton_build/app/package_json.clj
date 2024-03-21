@@ -1,7 +1,8 @@
 (ns automaton-build.app.package-json
   (:require
-   [automaton-build.os.files :as build-files]
-   [automaton-build.os.json :as build-json]))
+   [automaton-build.os.files  :as build-files]
+   [automaton-build.os.json   :as build-json]
+   [automaton-build.utils.map :as build-utils-map]))
 
 (def package-json "package.json")
 
@@ -49,4 +50,5 @@
 (defn write-package-json
   "Saves package-json content to a json file in `target-dir` with `content`."
   [target-dir content]
-  (build-json/write-file (package-json-path target-dir) content))
+  (build-json/write-file (package-json-path target-dir)
+                         (build-utils-map/sorted-map-nested content)))

@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.pull-base-branch
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.log :as build-log]
+   [automaton-build.cicd.cfg-mgt  :as build-cfg-mgt]
+   [automaton-build.log           :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 (defn- current-branch-not-base

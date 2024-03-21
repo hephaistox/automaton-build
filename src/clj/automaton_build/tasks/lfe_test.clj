@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.lfe-test
   (:require
-   [automaton-build.log :as build-log]
    [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.log                            :as build-log]
+   [automaton-build.os.exit-codes                  :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

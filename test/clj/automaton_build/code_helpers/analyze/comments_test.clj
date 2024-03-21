@@ -2,9 +2,9 @@
 (ns automaton-build.code-helpers.analyze.comments-test
   (:require
    [automaton-build.code-helpers.analyze.comments :as sut]
-   [automaton-build.file-repo.clj-code :as build-clj-code]
-   [automaton-build.file-repo.text :as build-filerepo-text]
-   [clojure.test :refer [deftest is testing]]))
+   [automaton-build.file-repo.clj-code            :as build-clj-code]
+   [automaton-build.file-repo.text                :as build-filerepo-text]
+   [clojure.test                                  :refer [deftest is testing]]))
 
 (deftest comment-pattern-test
   (testing

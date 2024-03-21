@@ -1,10 +1,10 @@
 (ns automaton-build.cicd.cfg-mgt-test
   (:require
    [automaton-build.cicd.cfg-mgt :as sut]
-   [automaton-build.cicd.server :as build-cicd-server]
-   [clojure.test :refer [deftest is testing]]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.cicd.server  :as build-cicd-server]
+   [automaton-build.os.files     :as build-files]
+   [clojure.string               :as str]
+   [clojure.test                 :refer [deftest is testing]]))
 
 (deftest git-installed?*-test
   (when-not (build-cicd-server/is-cicd?)

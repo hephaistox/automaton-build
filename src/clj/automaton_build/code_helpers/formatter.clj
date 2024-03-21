@@ -2,10 +2,10 @@
   "Format code
   Proxy to [zprint](https://github.com/kkinnear/zprint)"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.files :as build-files]
    [automaton-build.cicd.server :as build-cicd-server]
-   [automaton-build.os.command :as build-cmd]))
+   [automaton-build.log         :as build-log]
+   [automaton-build.os.command  :as build-cmd]
+   [automaton-build.os.files    :as build-files]))
 
 (def ^:private use-local-zprint-config-parameter #":search-config\?\s*true")
 

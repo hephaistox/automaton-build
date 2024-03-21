@@ -1,6 +1,6 @@
 (ns automaton-build.app.tailwind-config
   (:require
-   [automaton-build.os.files :as build-files]
+   [automaton-build.os.files     :as build-files]
    [automaton-build.os.js-config :as js-config]))
 
 (def tailwind-config-js "tailwind.config.js")

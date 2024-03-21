@@ -2,7 +2,7 @@
   "To use when logging needs to be done to a file."
   (:require
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files     :as build-files]))
 
 (defn save-debug-info
   ([filename content header]

@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.clean-state
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.log :as build-log]
+   [automaton-build.cicd.cfg-mgt  :as build-cfg-mgt]
+   [automaton-build.log           :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 (defn clean-state? [app-dir] (not (build-cfg-mgt/git-changes? app-dir)))

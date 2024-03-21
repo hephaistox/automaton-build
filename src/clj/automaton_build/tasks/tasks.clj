@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.tasks
   (:require
-   [automaton-build.tasks.registry :as build-task-registry]
    [automaton-build.cicd.cfg-mgt]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.os.exit-codes  :as build-exit-codes]
+   [automaton-build.tasks.registry :as build-task-registry]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

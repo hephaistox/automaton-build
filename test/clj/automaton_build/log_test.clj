@@ -1,7 +1,7 @@
 (ns automaton-build.log-test
   (:require
    [automaton-build.log :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test        :refer [deftest is testing]]))
 
 (deftest log-level-to-ix-test
   (testing "Compare accepted log levels"

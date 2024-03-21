@@ -1,10 +1,10 @@
 (ns automaton-build.cicd.deployment.docker
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.cicd.server :as build-cicd-server]
-   [automaton-build.containers :as build-containers]
+   [automaton-build.cicd.cfg-mgt             :as build-cfg-mgt]
+   [automaton-build.cicd.server              :as build-cicd-server]
+   [automaton-build.containers               :as build-containers]
    [automaton-build.containers.github-action :as build-github-action]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files                 :as build-files]))
 
 (defn publish-container
   [container container-dir tag workflows repo-url repo-branch]

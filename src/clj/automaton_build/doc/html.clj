@@ -2,8 +2,8 @@
   "Manipulate html"
   (:require
    [automaton-build.doc.markdown-to-html :as build-to-html-markdown]
-   [automaton-build.os.files :as build-files]
-   [hiccup2.core :as hiccup2]))
+   [automaton-build.os.files             :as build-files]
+   [hiccup2.core                         :as hiccup2]))
 
 (defn- hephaistox-logo
   "Hephaistox logo clj-pdf element created for header"

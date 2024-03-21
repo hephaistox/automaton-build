@@ -2,7 +2,7 @@
   "Manipulates strings of command"
   (:require
    [babashka.process :as babashka-process]
-   [clojure.string :as str]))
+   [clojure.string   :as str]))
 
 (def default-opts
   {:in :inherit

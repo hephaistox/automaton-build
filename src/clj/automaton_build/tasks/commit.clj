@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.commit
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.os.exit-codes :as build-exit-codes]
+   [automaton-build.cicd.cfg-mgt    :as build-cfg-mgt]
+   [automaton-build.os.exit-codes   :as build-exit-codes]
    [automaton-build.os.terminal-msg :as build-terminal-msg]))
 
 (defn- base-branch-push-disallowed

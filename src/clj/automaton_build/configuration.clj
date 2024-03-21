@@ -3,9 +3,9 @@
    This namespace is the entry point to call conf"
   (:require
    [automaton-build.configuration.environment :as build-conf-env]
-   [automaton-build.configuration.files :as build-conf-files]
-   [automaton-build.configuration.protocol :as build-conf-prot]
-   [automaton-build.log :as build-log]))
+   [automaton-build.configuration.files       :as build-conf-files]
+   [automaton-build.configuration.protocol    :as build-conf-prot]
+   [automaton-build.log                       :as build-log]))
 
 (defn start-conf
   []

@@ -1,8 +1,9 @@
 (ns automaton-build.graph-test
   (:require
-   [clojure.test :refer [deftest is testing]]
    [automaton-build.data-structure.graph.graph-stub :as graph-stub]
-   [automaton-build.graph :as sut]))
+   [automaton-build.graph                           :as sut]
+   [clojure.test                                    :refer
+                                                    [deftest is testing]]))
 
 (deftest topologically-ordered-test-copy
   (testing "Check doseq is ordered in the right order"

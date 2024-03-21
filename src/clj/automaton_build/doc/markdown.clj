@@ -2,7 +2,7 @@
   "Markdown adapter"
   (:require
    [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [clojure.string           :as str]))
 
 (defn create-md
   "Build the markdown file

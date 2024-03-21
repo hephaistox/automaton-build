@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.lconnect
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log         :as build-log]
    [automaton-build.os.commands :as build-cmds]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}

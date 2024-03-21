@@ -2,9 +2,9 @@
   "Manipulate pdfs file"
   (:require
    [automaton-build.os.files :as build-files]
-   [automaton-build.web.uri :as build-uri]
-   [clj-htmltopdf.core :refer [->pdf]]
-   [clojure.string :as str]))
+   [automaton-build.web.uri  :as build-uri]
+   [clj-htmltopdf.core       :refer [->pdf]]
+   [clojure.string           :as str]))
 
 (defn- img-src
   "full html img tag src, containing both a key and a value as a string"

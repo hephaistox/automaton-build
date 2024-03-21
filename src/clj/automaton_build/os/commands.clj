@@ -2,11 +2,11 @@
   "Execute a process
   Is a proxy for `babashka.process`"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log            :as build-log]
    [automaton-build.os.command.str :as build-cmd-str]
-   [babashka.process :as babashka-process]
-   [clojure.java.io :as io]
-   [clojure.string :as str]))
+   [babashka.process               :as babashka-process]
+   [clojure.java.io                :as io]
+   [clojure.string                 :as str]))
 
 (defn- log-a-stream
   "Connect to output and error stream and log them

@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.launcher.cli-task-opts-test
   (:require
    [automaton-build.tasks.launcher.cli-task-opts :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                                 :refer [deftest is testing]]))
 
 (deftest cli-opts-spec-test
   (testing "Find at least the 3 common options, even if tasks has no option"

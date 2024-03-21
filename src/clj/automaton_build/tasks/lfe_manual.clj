@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.lfe-manual
   (:require
-   [automaton-build.os.cli-input :as build-cli-input]
+   [automaton-build.os.cli-input  :as build-cli-input]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 (defn- lfe-tests-successful?

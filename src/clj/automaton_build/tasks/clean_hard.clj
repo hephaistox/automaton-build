@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.clean-hard
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.cicd.cfg-mgt  :as build-cfg-mgt]
+   [automaton-build.os.exit-codes :as build-exit-codes]
+   [automaton-build.os.files      :as build-files]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

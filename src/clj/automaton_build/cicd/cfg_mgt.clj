@@ -3,15 +3,20 @@
 
   Proxy to git"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log         :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.os.files    :as build-files]
+   [clojure.string              :as str]))
 
 (defn latest-commit-message
   []
   (first (build-cmds/execute-get-string
           ["git" "log" "-1" "--pretty=format:%B"])))
+
+(defn file-modified?
+  [file]
+  (not (str/blank? (str (first (build-cmds/execute-get-string
+                                ["git" "diff" file]))))))
 
 (defn git-installed?*
   "Returns true if git is properly installed
@@ -46,6 +51,25 @@
                                      :error-to-std? true}])
      (do (build-log/warn "Clean cannot be done as git is not installed") nil)))
   ([root-dir] (clean-hard root-dir true)))
+
+(defn clone-file
+  [repo-address repo-dir-name target-dir branch-name file-name]
+  (build-cmds/execute-with-exit-code
+   ["git"
+    "clone"
+    repo-address
+    repo-dir-name
+    "--depth"
+    "1"
+    "--no-checkout"
+    "--filter=blob:none"
+    {:dir target-dir}]
+   ["git"
+    "checkout"
+    branch-name
+    "--"
+    file-name
+    {:dir (build-files/create-dir-path target-dir repo-dir-name)}]))
 
 (defn clone-repo-branch
   "Clone one branch of a remote repository to the `target-dir`

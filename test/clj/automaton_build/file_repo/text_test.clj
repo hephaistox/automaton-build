@@ -1,9 +1,9 @@
 (ns automaton-build.file-repo.text-test
   (:require
+   [automaton-build.file-repo.raw  :as build-filerepo-raw]
    [automaton-build.file-repo.text :as sut]
-   [automaton-build.file-repo.raw :as build-filerepo-raw]
-   [clojure.test :refer [deftest is testing]]
-   [clojure.string :as str]))
+   [clojure.string                 :as str]
+   [clojure.test                   :refer [deftest is testing]]))
 
 (def files-to-test
   "Should be a list of existing files in all context where that tests are run

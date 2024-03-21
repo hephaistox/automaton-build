@@ -21,7 +21,7 @@
   ```"
   (:require
    [automaton-build.data-structure.graph.graph-impl :as graph-impl]
-   [automaton-build.log :as build-log]))
+   [automaton-build.log                             :as build-log]))
 
 (defn topologically-ordered
   "Apply with side effects the `update-fn` on the `graph` while respecting the topological order

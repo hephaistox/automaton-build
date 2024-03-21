@@ -2,9 +2,9 @@
   "Code documentation creation
   Proxy to codox"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]
-   [codox.main :as codox]))
+   [codox.main               :as codox]))
 
 (defn docstring
   "Generate the documentation

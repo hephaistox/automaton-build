@@ -3,9 +3,9 @@
   (:refer-clojure :exclude [slurp spit])
   (:require
    [automaton-build.app.deps-edn :as build-deps-edn]
-   [automaton-build.log :as build-log]
+   [automaton-build.log          :as build-log]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files     :as build-files]))
 
 (def bb-edn-filename
   "Should not be used externally except in test namespaces"

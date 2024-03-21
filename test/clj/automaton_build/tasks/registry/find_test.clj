@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.registry.find-test
   (:require
    [automaton-build.tasks.registry.find :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                        :refer [deftest is testing]]))
 
 (def stub
   (into

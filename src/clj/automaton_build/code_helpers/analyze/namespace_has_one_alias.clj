@@ -2,8 +2,8 @@
   "Search for namespaces which are aliazed many times"
   (:require
    [automaton-build.code-helpers.analyze.utils :as build-analyze-utils]
-   [automaton-build.file-repo.text :as build-filerepo-text]
-   [automaton-build.log :as build-log]))
+   [automaton-build.file-repo.text             :as build-filerepo-text]
+   [automaton-build.log                        :as build-log]))
 
 (def alias-pattern
   #"^\s*(?:\[\s*|\(:require\s*\[\s*)([A-Za-z0-9\*\+\!\-\_\.\'\?<>=]*)\s*(?:(?::as)\s*([A-Za-z0-9\*\+\!\-\_\.\'\?<>=]*)|(:refer).*)\s*\]\s*(?:\)\))*$")

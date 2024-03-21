@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.docstring
   (:require
-   [automaton-build.app-data :as build-app-data]
+   [automaton-build.app-data      :as build-app-data]
    [automaton-build.doc.docstring :as build-docstring]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 

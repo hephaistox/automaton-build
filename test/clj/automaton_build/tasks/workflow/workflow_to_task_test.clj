@@ -1,7 +1,8 @@
 (ns automaton-build.tasks.workflow.workflow-to-task-test
   (:require
    [automaton-build.tasks.workflow.workflow-to-task :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                                    :refer
+                                                    [deftest is testing]]))
 
 (def registry-stub
   {'clean {:doc "Clean cache files for compiles, and logs"

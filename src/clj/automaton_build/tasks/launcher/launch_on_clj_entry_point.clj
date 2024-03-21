@@ -1,12 +1,11 @@
 (ns automaton-build.tasks.launcher.launch-on-clj-entry-point
   (:require
-   [automaton-build.os.files :as build-files]
+   [automaton-build.os.exit-codes                         :as build-exit-codes]
+   [automaton-build.os.files                              :as build-files]
    [automaton-build.tasks.launcher.cli-task-agnostic-opts
-    :as
-    build-cli-task-agnostic-opts]
-   [automaton-build.utils.namespace :as build-namespace]
-   [clojure.edn :as edn]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+    :as build-cli-task-agnostic-opts]
+   [automaton-build.utils.namespace                       :as build-namespace]
+   [clojure.edn                                           :as edn]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn entry-point

@@ -1,8 +1,8 @@
 (ns automaton-build.doc.mermaid-test
   (:require
-   [automaton-build.doc.mermaid :as sut]
+   [automaton-build.doc.mermaid  :as sut]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                 :refer [deftest is testing]]))
 
 (deftest need-to-update?
   (let [older-test-file (build-edn-utils/create-tmp-edn "older-test-file")

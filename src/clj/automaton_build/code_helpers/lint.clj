@@ -1,9 +1,9 @@
 (ns automaton-build.code-helpers.lint
   "Code linter"
   (:require
+   [automaton-build.log         :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.log :as build-log]))
+   [automaton-build.os.files    :as build-files]))
 
 (defn- lint-cmd
   "Lint command"

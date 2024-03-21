@@ -1,7 +1,7 @@
 (ns automaton-build.app-data-test
   (:require
    [automaton-build.app-data :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test             :refer [deftest is testing]]))
 
 (def build-app-stub
   "Application after the loading"

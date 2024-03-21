@@ -1,11 +1,11 @@
 (ns automaton-build.tasks.gha-lconnect
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.containers :as build-containers]
+   [automaton-build.cicd.cfg-mgt             :as build-cfg-mgt]
+   [automaton-build.containers               :as build-containers]
    [automaton-build.containers.github-action :as build-github-action]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.log                      :as build-log]
+   [automaton-build.os.exit-codes            :as build-exit-codes]
+   [automaton-build.os.files                 :as build-files]))
 
 (defn- gha-lconnect*
   [tmp-dir repo-url repo-branch app-name container-repo-account tag]

@@ -3,9 +3,9 @@
   Is a proxy for malli"
   (:require
    [automaton-build.log :as build-log]
-   [malli.core :as malli]
-   [malli.transform :as malli-transform]
-   [malli.error :as malli-error]))
+   [malli.core          :as malli]
+   [malli.error         :as malli-error]
+   [malli.transform     :as malli-transform]))
 
 (defn valid?
   "Returns data if the data is matching the schema

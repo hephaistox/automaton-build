@@ -43,3 +43,6 @@ docs/codox
 #tmp-directory
 tmp
 repos
+
+#archive file when creating pom.xml, not need to store it
+pom.properties

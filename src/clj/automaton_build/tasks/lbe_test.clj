@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.lbe-test
   (:require
-   [automaton-build.os.commands :as build-cmds]
+   [automaton-build.os.commands   :as build-cmds]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}

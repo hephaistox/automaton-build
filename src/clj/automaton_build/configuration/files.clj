@@ -4,7 +4,7 @@
   (:require
    [automaton-build.configuration.edn-read :as build-conf-edn-read]
    [automaton-build.configuration.protocol :as build-conf-prot]
-   [automaton-build.os.java-properties :as build-java-properties]))
+   [automaton-build.os.java-properties     :as build-java-properties]))
 
 (defrecord FilesConf [config-map]
   build-conf-prot/Conf

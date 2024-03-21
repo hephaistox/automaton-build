@@ -1,8 +1,8 @@
 (ns automaton-build.configuration.environment
   (:require
    [automaton-build.configuration.protocol :as build-conf-prot]
-   [automaton-build.utils.keyword :as build-utils-keyword]
-   [clojure.string :as str]))
+   [automaton-build.utils.keyword          :as build-utils-keyword]
+   [clojure.string                         :as str]))
 
 (defn env-key-path
   "Turns key-path into environment type key."

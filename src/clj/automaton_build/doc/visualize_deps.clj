@@ -2,7 +2,7 @@
   "Build the dependencies
   Proxy to tools deps"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]))
 
 (defn visualize-deps

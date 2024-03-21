@@ -2,9 +2,9 @@
   "Search for keywords in the project"
   (:require
    [automaton-build.code-helpers.analyze.utils :as build-analyze-utils]
-   [automaton-build.file-repo.text :as build-filerepo-text]
-   [automaton-build.log :as build-log]
-   [clojure.string :as str]))
+   [automaton-build.file-repo.text             :as build-filerepo-text]
+   [automaton-build.log                        :as build-log]
+   [clojure.string                             :as str]))
 
 (defn coll-to-alternate-in-regexp
   "Turn a collection of strings (or patterns) like (\"a\" \"b\") to \"(a|b)\"

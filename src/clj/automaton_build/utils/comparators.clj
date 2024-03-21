@@ -1,8 +1,8 @@
 (ns automaton-build.utils.comparators
   "Gathering useful specific comparators"
   (:require
-   [clojure.string :as str]
-   [automaton-build.utils.regexp :as build-utils-regexp]))
+   [automaton-build.utils.regexp :as build-utils-regexp]
+   [clojure.string               :as str]))
 
 (defn comparator-kw-symbol
   "Comparator to sort keywords and symbol.
