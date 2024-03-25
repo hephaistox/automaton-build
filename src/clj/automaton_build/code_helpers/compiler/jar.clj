@@ -3,17 +3,11 @@
    [automaton-build.code-helpers.artifacts :as build-helpers-artifacts]
    [automaton-build.os.files               :as build-files]))
 
-
-
 (defn compile-jar
   "Creates pom.xml and jar from `class-dir`. Jar will be created in `jar-file` and `pom.xml` in the root of project directory."
-  [class-dir jar-file project-root _as-lib]
+  [class-dir jar-file project-root]
   (build-helpers-artifacts/set-project-root! (build-files/absolutize
                                               project-root))
-  ;; _as-lib above should be removed
-  ;; jar-required-pom-path (build-files/create-dir-path class-dir "META-INF/maven" as-lib)
-  #_(build-files/copy-files-or-dir [(build-pom-xml/pom-xml project-root)]
-                                   jar-required-pom-path)
   (build-helpers-artifacts/jar {:class-dir class-dir
                                 :jar-file jar-file}))
 

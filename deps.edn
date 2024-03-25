@@ -1,5 +1,5 @@
 {:aliases
- {:bb-deps {:extra-deps {djblue/portal {:mvn/version "0.52.2"}
+ {:bb-deps {:extra-deps {djblue/portal {:mvn/version "0.53.0"}
                          io.github.clojure/tools.build {:mvn/version "0.10.0"}
                          metosin/malli {:mvn/version "0.14.0"}
                          cheshire/cheshire {:mvn/version "5.12.0"}
@@ -11,13 +11,13 @@
                 com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
                  :sha "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}
-                markdown-clj/markdown-clj {:mvn/version "1.12.0"}
+                markdown-clj/markdown-clj {:mvn/version "1.12.1"}
                 org.clojure/tools.namespace {:mvn/version "1.5.0"}
                 org.clojure/tools.reader {:mvn/version "1.4.1"}}
    :extra-paths ["test/clj" "test/resources"]
    :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn"]}
   :env-development-repl
-  {:extra-deps {djblue/portal {:mvn/version "0.52.2"}
+  {:extra-deps {djblue/portal {:mvn/version "0.53.0"}
                 org.clojure/core.async {:mvn/version "1.6.681"}}
    :extra-paths ["env/development/resources"
                  "env/development/src/clj"
@@ -34,7 +34,7 @@
                                      "-d"
                                      "test/cljc"]}}
  :deps {babashka/fs {:mvn/version "0.5.20"}
-        djblue/portal {:mvn/version "0.52.2"}
+        djblue/portal {:mvn/version "0.53.0"}
         babashka/process {:mvn/version "0.5.22"}
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
         cheshire/cheshire {:mvn/version "5.12.0"}
@@ -47,7 +47,7 @@
         io.github.clojure/tools.build {:mvn/version "0.10.0"}
         slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
                              :mvn/version "0.2.2"}
-        markdown-clj/markdown-clj {:mvn/version "1.12.0"}
+        markdown-clj/markdown-clj {:mvn/version "1.12.1"}
         metosin/malli {:mvn/version "0.14.0"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :ns-default automaton-build.core

@@ -5,7 +5,7 @@
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
-  "Push the current repository from current branch"
+  "Push local repository to current branch"
   [_task-map
    {:keys [app-dir app-name publication message-opt force?]
     :as _app-data}]
