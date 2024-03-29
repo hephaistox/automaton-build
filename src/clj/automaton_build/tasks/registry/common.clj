@@ -23,7 +23,6 @@
    'clean-hard
    {:doc
     "Clean all files which are not under version control (it doesn't remove untracked file or staged files if there are eligible to `git add .`)"
-    :task-cli-opts-kws [:force]
     :la-test {:process-opts {:in "q"}}}
    'commit {:doc "Commit and push, disallowed for production branch."
             :hidden? true
@@ -75,7 +74,7 @@
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
                   :la-test {:skip? true}}
-   'generate-pom-xml {:doc "Generate pom xml file in root of an app"
+   'generate-pom-xml {:doc "generate pom xml if applies"
                       :pf :clj
                       :shared [:publication]
                       :task-cli-opts-kws [:environment]
@@ -122,12 +121,7 @@
    'mermaid {:doc "Build all mermaid files"}
    'mermaid-watch {:doc "Watch mermaid files modifications"
                    :la-test {:skip? true}}
-   'deploy {:doc "Compile, deploy to gha, push to main branch and publish jar."
-            :pf :clj
-            :la-test {:skip? true}
-            :shared [:publication :monorepo :gha :account]
-            :task-cli-opts-kws [:environment]}
-   'publish-jar
+   'deploy
    {:doc
     "Publish project, by deploying the jar to either clojars or clever cloud"
     :pf :clj

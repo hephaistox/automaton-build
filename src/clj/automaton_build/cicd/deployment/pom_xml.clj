@@ -27,5 +27,7 @@
              :lib as-lib
              :version version
              :basis basis
+             ;; idk why we don't include resources but it seems to work anyway without it
+             ;; :resource-dirs ["resources/"]
              :src-dirs app-source-paths}
             (when pom-data {:pom-data pom-data})))))

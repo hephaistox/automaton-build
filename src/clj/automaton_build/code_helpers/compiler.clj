@@ -8,10 +8,13 @@
 
 (defn compile-jar
   "Compile code to jar or uber-jar based on `jar-type`."
-  [class-dir target-jar-path project-dir]
+  [as-lib class-dir target-jar-path project-dir]
   (build-log/debug "Launch clj compilation")
   (try (build-log/trace-format "Jar is built `%s`" target-jar-path)
-       (build-compiler-jar/compile-jar class-dir target-jar-path project-dir)
+       (build-compiler-jar/compile-jar class-dir
+                                       target-jar-path
+                                       project-dir
+                                       as-lib)
        (build-log/info-format "Compilation ending successfully: `%s`"
                               target-jar-path)
        target-jar-path

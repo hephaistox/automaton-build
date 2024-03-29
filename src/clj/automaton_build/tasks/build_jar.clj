@@ -11,7 +11,8 @@
   (let [environment (-> environment
                         build-utils-keyword/trim-colon
                         build-utils-keyword/keywordize)
-        {:keys [class-dir target-jar-filename jar-main deploy-to frontend env]}
+        {:keys
+         [as-lib class-dir target-jar-filename jar-main deploy-to frontend env]}
         publication
         {:keys [deploy-alias css compiled-styles-css]} frontend
         {:keys [main-css custom-css]} css
@@ -24,6 +25,7 @@
                                    deploy-to
                                    deps-edn
                                    exclude-aliases
+                                   as-lib
                                    class-dir
                                    jar-path
                                    jar-main

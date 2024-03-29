@@ -34,18 +34,6 @@
   That version executes only once"
   (memoize git-installed?*))
 
-(defn clean
-  "Removes all .gitignored specified files/dirs"
-  [root-dir]
-  (build-log/debug-format "Clean the repository `%s`" root-dir)
-  (if (git-installed?)
-    (build-cmds/execute-and-trace ["git"
-                                   "clean"
-                                   (str "-dfX")
-                                   {:dir root-dir
-                                    :error-to-std? true}])
-    (do (build-log/warn "Clean cannot be done as git is not installed") nil)))
-
 (defn clean-hard
   "Configuration management comes back to the same state than the repository is freshly donwloaded
    Returns true if cleaning suceeded.
@@ -156,17 +144,6 @@
        result)
       result)))
 
-#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
-(defn current-commit-sha
-  "Returns the current commit sha in the directory `dir`
-  It will look at the currently selected branch
-  Params:
-  * `dir` directory where the local repo is stored"
-  [dir]
-  (-> (build-cmds/execute-get-string
-       ["git" "log" "-n" "1" "--pretty=format:%H" {:dir dir}])
-      first))
-
 (defn commit-and-push
   "Push to its `origin` what is the working state in `dir` to branch `branch-name`
  Params:
@@ -183,21 +160,20 @@
               ["git" "commit" "-m" msg {:dir dir}]
               (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
                            (when force? ["--force"])
-                           [{:dir dir}])))
-             [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
-         (case cmd-failing
-           nil (do (build-log/info "Successfully pushed") true)
-           1 (do (build-log/info-format "Nothing to commit, skip the push")
-                 true)
-           2 (do (build-log/error-format "Push has failed - %s" message) false)
-           3 (do (build-log/error-format "Push has failed with message: %s"
-                                         message)
-                 false)
-           :else (do (build-log/error
-                      "Unexpected error during commit-and-push : "
-                      (into [] commit-res))
-                     false))))))
+                           [{:dir dir}])))]
+         commit-res))))
   ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
+
+#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
+(defn current-commit-sha
+  "Returns the current commit sha in the directory `dir`
+  It will look at the currently selected branch
+  Params:
+  * `dir` directory where the local repo is stored"
+  [dir]
+  (-> (build-cmds/execute-get-string
+       ["git" "log" "-n" "1" "--pretty=format:%H" {:dir dir}])
+      first))
 
 (defn commit-and-push-and-tag
   "Push to its `origin` what is the working state in `dir` to branch `branch-name`
@@ -232,7 +208,7 @@
                     version)
                    true)
            1 (do (build-log/info-format "Nothing to commit, skip the push")
-                 true)
+                 false)
            2 (do (build-log/error-format "Tag has failed - %s" message) false)
            3
            (do
@@ -321,6 +297,10 @@
      ["git" "config" "--local" "pager.branch" "false" {:dir tmp-dir}]
      ["git" "remote" "add" "origin" repo-url {:dir tmp-dir}])
     (build-cmds/execute-get-string ["git" "branch" "-aqr" {:dir tmp-dir}])))
+
+
+
+
 
 (defn push-local-dir-to-repo
   "Commit and push `target-branch` with files from `source-dir`.
