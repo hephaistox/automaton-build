@@ -7,7 +7,6 @@
   (:require
    [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
    [automaton-build.log          :as build-log]
-   [automaton-build.os.commands  :as build-cmds]
    [automaton-build.os.files     :as build-files]))
 
 (defn clone-repo
@@ -27,12 +26,5 @@
    Params:
    * `dir` where clever git repository that should be deployed resides.
    * `msg` (optional) a commit message for the deploy"
-  ([dir msg]
-   (let [commit-res (build-cfg-mgt/commit-and-push dir msg "master")]
-     (case (first (build-cmds/first-cmd-failing commit-res))
-       nil (do (build-log/info "Successfully published") true)
-       1 (do (build-log/debug "No new files to publish, skip the push") true)
-       (do (build-log/error "Unexpected error during publishing : "
-                            (into [] commit-res))
-           false))))
+  ([dir msg] (build-cfg-mgt/commit-and-push dir msg "master"))
   ([dir] (deploy dir "Automatically pushed version")))

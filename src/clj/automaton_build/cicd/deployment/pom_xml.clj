@@ -1,4 +1,5 @@
 (ns automaton-build.cicd.deployment.pom-xml
+  "Code related to pom.xml file that is used for deployment"
   (:require
    [automaton-build.cicd.version           :as build-version]
    [automaton-build.code-helpers.artifacts :as build-helpers-artifacts]
@@ -6,14 +7,14 @@
    [automaton-build.os.files               :as build-files]))
 
 (defn pom-xml
+  "pom.xml file name and location"
   ([] "pom.xml")
   ([project-root]
    (build-files/absolutize (build-files/create-file-path project-root
                                                          (pom-xml)))))
 
-
-
 (defn generate-pom-xml
+  "Generates pom.xml in the root of the project"
   [as-lib app-source-paths project-root license]
   (build-helpers-artifacts/set-project-root! (build-files/absolutize
                                               project-root))
@@ -27,7 +28,5 @@
              :lib as-lib
              :version version
              :basis basis
-             ;; idk why we don't include resources but it seems to work anyway without it
-             ;; :resource-dirs ["resources/"]
              :src-dirs app-source-paths}
             (when pom-data {:pom-data pom-data})))))

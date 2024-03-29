@@ -33,19 +33,22 @@
     (build-log/info "Frontend compilation skipped")))
 
 (defn compile-backend
-  [deploy-to app-dir paths as-lib class-dir jar-path jar-main env]
+  [deploy-to app-dir paths class-dir jar-path jar-main env]
   (let [env (name env)
         class-dir (build-files/absolutize (build-files/create-dir-path
                                            app-dir
                                            (format class-dir env)))]
     (prepare-compilation-files class-dir paths app-dir)
     (case deploy-to
-      :clojars (build-compiler/compile-jar as-lib class-dir jar-path app-dir)
+      :clojars (build-compiler/compile-jar class-dir jar-path app-dir)
       :cc (build-compiler/compile-uber-jar class-dir
                                            jar-path
                                            paths
                                            app-dir
-                                           jar-main))))
+                                           jar-main)
+      (do (build-log/info
+           "Backend compilation skipped as :deploy-to is missing")
+          true))))
 
 #_{:clj-kondo/ignore [:redefined-var]}
 (defn compile
@@ -68,7 +71,6 @@
    deploy-to
    deps-edn
    exclude-aliases
-   as-lib
    class-dir
    jar-path
    jar-main
@@ -82,11 +84,4 @@
                       deploy-alias
                       [main-css custom-css]
                       compiled-styles-css)
-    (compile-backend deploy-to
-                     app-dir
-                     paths
-                     as-lib
-                     class-dir
-                     jar-path
-                     jar-main
-                     env)))
+    (compile-backend deploy-to app-dir paths class-dir jar-path jar-main env)))

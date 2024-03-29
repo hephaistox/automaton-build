@@ -23,6 +23,7 @@
    'clean-hard
    {:doc
     "Clean all files which are not under version control (it doesn't remove untracked file or staged files if there are eligible to `git add .`)"
+    :task-cli-opts-kws [:force]
     :la-test {:process-opts {:in "q"}}}
    'commit {:doc "Commit and push, disallowed for production branch."
             :hidden? true
@@ -74,10 +75,10 @@
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
                   :la-test {:skip? true}}
-   'generate-pom-xml {:doc "generate pom xml if applies"
+   'generate-pom-xml {:doc "Generate pom xml file in root of an app"
                       :pf :clj
                       :shared [:publication]
-                      :task-cli-opts-kws [:environment]
+                      :task-cli-opts-kws [:environment :force]
                       :la-test {:skip? true}}
    'is-cicd {:doc "Tested if runned on cicd"
              :la-test {:cmd ["bb" "heph-task" "is-cicd" "-f"]}
@@ -121,7 +122,17 @@
    'mermaid {:doc "Build all mermaid files"}
    'mermaid-watch {:doc "Watch mermaid files modifications"
                    :la-test {:skip? true}}
-   'deploy
+   'is-deploy {:doc "Tells if app should be deployed"
+               :pf :clj
+               :la-test {:skip? true}
+               :shared [:publication]
+               :task-cli-opts-kws [:environment]}
+   'deploy {:doc "Compile, deploy to gha, push to base branch and publish jar."
+            :pf :clj
+            :la-test {:skip? true}
+            :shared [:publication :gha :account]
+            :task-cli-opts-kws [:environment]}
+   'publish-jar
    {:doc
     "Publish project, by deploying the jar to either clojars or clever cloud"
     :pf :clj
@@ -185,7 +196,17 @@
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}
-   'update-version {:doc "Update version of current library"
+   'update-gha-workflow-file {:doc "Update gha workflow file of an app"
+                              :pf :clj
+                              :shared [:gha :account :force]
+                              :task-cli-opts-kws [:environment]
+                              :la-test {:skip? true}}
+   'is-update-version {:doc "Tells if app should have version update"
+                       :pf :clj
+                       :shared [:publication]
+                       :task-cli-opts-kws [:environment]
+                       :la-test {:skip? true}}
+   'update-version {:doc "Update version"
                     :pf :clj
                     :task-cli-opts-kws [:environment]
                     :la-test {:skip? true}}

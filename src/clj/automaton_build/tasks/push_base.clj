@@ -6,7 +6,7 @@
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
-  "Push the current repository from current branch"
+  "Push local repository to base branch"
   [_task-map
    {:keys [app-dir app-name publication message force? environment]
     :as _app-data}]
@@ -15,11 +15,11 @@
                         build-utils-keyword/keywordize)
         {:keys [repo env]} publication
         main-branch (get-in env [environment :push-branch])]
-    (if (true? (build-deployment/push-app-base app-name
-                                               app-dir
-                                               repo
-                                               main-branch
-                                               message
-                                               force?))
+    (if (build-deployment/push-app-base app-name
+                                        app-dir
+                                        repo
+                                        main-branch
+                                        message
+                                        force?)
       build-exit-codes/ok
       build-exit-codes/catch-all)))

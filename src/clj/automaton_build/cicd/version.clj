@@ -20,35 +20,23 @@
    [automaton-build.os.terminal-msg :as build-terminal-msg]
    [clojure.string                  :as str]))
 
-(def version-file "version.edn")
+(defn version-file
+  ([] "version.edn")
+  ([dir] (build-files/create-file-path dir (version-file))))
 
-(defn create-version-file-path
+(defn- slurp-version-file
   [app-dir]
-  (build-files/create-file-path app-dir version-file))
-
-(defn read-version-file
-  [app-dir]
-  (let [version-filename (create-version-file-path app-dir)]
+  (let [version-filename (version-file app-dir)]
     (if (build-files/is-existing-file? version-filename)
       (build-edn-utils/read-edn version-filename)
       (build-log/warn-format "Version file in %s does not exist" app-dir))))
 
-(defn current-version [app-dir] (:version (read-version-file app-dir)))
-
-(defn confirm-version?
-  "It's safety measure before changing version of the project to be sure user is concious of change."
-  [project-name old-version new-version]
-  (build-cli-input/yes-question
-   (format
-    "Your change will affect the version of the project `%s`, old version `%s` replaced with `%s` one are you sure you want to continue? y/n"
-    project-name
-    old-version
-    new-version)))
+(defn current-version [app-dir] (:version (slurp-version-file app-dir)))
 
 (defn- spit-version-file
   [app-dir content]
   (build-edn-utils/spit-edn
-   (create-version-file-path app-dir)
+   (version-file app-dir)
    content
    "Last generated version, note a failed push consume a number"))
 
@@ -56,16 +44,13 @@
   "Update app version file `version.edn` in `app-dir`. Captures requirement for the version to be consciously decided when saved
   Params:
   * `app-dir` directory of the version to count
-  * `app-name`
   * `new-version`"
-  [app-dir app-name new-version]
-  (if (confirm-version? app-name (current-version app-dir) new-version)
-    (do (spit-version-file app-dir {:version new-version}) new-version)
-    (do (build-log/warn "Version couldn't be updated without user consent")
-        nil)))
+  [app-dir new-version]
+  (spit-version-file app-dir {:version new-version})
+  new-version)
 
 (defn ask-version
-  "It's safety measure before changing version of the project to be sure user is concious of change."
+  "Asks user what should be a new version following the non-breaking version system"
   ([project-name current-version changes]
    (when changes
      (build-terminal-msg/println-msg (format "To see what changed visit %s"

@@ -110,7 +110,7 @@
   (call-main "gha" "-f" "-d")
   (call-main "apps-push-local" "-e" "la" "-M" "hello")
   (call-main "apps-deploy" "-e" "la")
-  (call-main "apps-version" "-e" "la")
+  (call-main "apps-update-version" "-e" "la")
   (call-main "generate-pom-xml" "-e" "la")
   ;;
 )

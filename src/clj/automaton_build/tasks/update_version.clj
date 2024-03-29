@@ -17,10 +17,9 @@
                (build-version/generate-test-env-version current-version
                                                         app-name
                                                         (name target-env)))]
-      (if-let [_save-version
-               (build-version/save-version app-dir app-name version)]
-        true
-        (build-log/warn "Abort, as saving new version failed"))
+      (if-let [_save-version (build-version/save-version app-dir version)]
+        (do (build-log/info-format "New version %s" version) true)
+        (do (build-log/warn "Abort, as saving new version failed") false))
       (build-log/warn "Abort, as to continue user permission is needed"))))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
