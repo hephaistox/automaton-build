@@ -9,7 +9,7 @@
    [automaton-build.utils.keyword           :as build-utils-keyword]))
 
 (defn generate-pom-xml?
-  "POM xml should be generated only if version file has changed"
+  "POM xml should be generated only if version file has changed - for optimization"
   [app-dir]
   (build-cfg-mgt/file-modified? (build-version/version-file app-dir)))
 

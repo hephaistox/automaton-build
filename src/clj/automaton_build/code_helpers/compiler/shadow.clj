@@ -21,7 +21,7 @@
     (when (build-npm/npx-installed? dir)
       (every? string?
               (build-cmds/execute-get-string
-               [npx-cmd shadow-cmd "-info" {:dir dir}])))))
+               [npx-cmd shadow-cmd "-h" {:dir dir}])))))
 
 (def shadow-installed?
   "Is shadow installed on that project?

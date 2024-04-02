@@ -59,10 +59,10 @@
   ([project-name current-version]
    (build-cli-input/question-loop
     (format
-     "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n4 Add version manually."
+     "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n4 Add version manually.\n5 Do not update"
      project-name
      current-version)
-    #{"1" "2" "3" "4"})))
+    #{"1" "2" "3" "4" "5"})))
 
 (defn ask-manual-version
   "Asks user to input version manually"
@@ -101,36 +101,5 @@
                 "1" [(inc-str major-version) "0" "0"]
                 "2" [major-version (inc-str minor-version) "0"]
                 "3" [major-version minor-version (inc-str non-breaking)]
-                "4" [(str (ask-manual-version))]))))
-
-(defn- generate-new-test-env-version
-  [version]
-  (let [splitted-version (split-optional-qualifier version)]
-    (str/join "-"
-              (if (= 2 (count splitted-version))
-                [(first splitted-version) 2 (second splitted-version)]
-                [(first splitted-version)
-                 (str (inc (Integer. (second splitted-version))))
-                 (last splitted-version)]))))
-
-(defn generate-production-version
-  "Generates version that is production ready.
-   If there is optional qualifier it is stripped and kept
-   Else asks user for new version"
-  ([version app-name changes]
-   (if (production? version)
-     (generate-new-version version app-name changes)
-     (first (split-optional-qualifier version))))
-  ([version app-name] (generate-production-version version app-name nil)))
-
-(defn generate-test-env-version
-  "Generates version that is to be used in test environment.
-   If there is optional qualifier appends one number to it (e.g. 1.0.0-la -> 1.0.0-2-la)
-   else adds optional qualifier based on targeted-env"
-  ([version app-name target-env changes]
-   (if (production? version)
-     (-> (generate-new-version version app-name changes)
-         (add-optional-qualifier target-env))
-     (generate-new-test-env-version version)))
-  ([version app-name target-env]
-   (generate-test-env-version version app-name target-env nil)))
+                "4" [(str (ask-manual-version))]
+                "5" [current-version]))))

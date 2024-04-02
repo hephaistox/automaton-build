@@ -122,16 +122,11 @@
    'mermaid {:doc "Build all mermaid files"}
    'mermaid-watch {:doc "Watch mermaid files modifications"
                    :la-test {:skip? true}}
-   'is-deploy {:doc "Tells if app should be deployed"
-               :pf :clj
-               :la-test {:skip? true}
-               :shared [:publication]
-               :task-cli-opts-kws [:environment]}
    'deploy {:doc "Compile, deploy to gha, push to base branch and publish jar."
             :pf :clj
             :la-test {:skip? true}
             :shared [:publication :gha :account]
-            :task-cli-opts-kws [:environment]}
+            :task-cli-opts-kws [:environment :force]}
    'publish-jar
    {:doc
     "Publish project, by deploying the jar to either clojars or clever cloud"
@@ -139,16 +134,16 @@
     :shared [:publication]
     :task-cli-opts-kws [:environment]
     :la-test {:skip? true}}
-   'push-local {:doc "Push this repo"
-                :la-test {:skip? true}
-                :shared [:publication]
-                :task-cli-opts-kws [:force :message-opt :environment]
-                :pf :clj}
-   'push-base {:doc "Push this repo to base branch of environment"
-               :la-test {:skip? true}
-               :shared [:publication]
-               :task-cli-opts-kws [:force :message :environment]
-               :pf :clj}
+   'git-push-local-branch {:doc "Push this repo"
+                           :la-test {:skip? true}
+                           :shared [:publication]
+                           :task-cli-opts-kws [:force :message-opt :environment]
+                           :pf :clj}
+   'git-push-base-branch {:doc "Push this repo to base branch of environment"
+                          :la-test {:skip? true}
+                          :shared [:publication]
+                          :task-cli-opts-kws [:force :message :environment]
+                          :pf :clj}
    'pull-base-branch {:doc "Checks if you are up to date with base branch."
                       :pf :clj
                       :shared [:publication]
@@ -198,14 +193,9 @@
     :pf :clj}
    'update-gha-workflow-file {:doc "Update gha workflow file of an app"
                               :pf :clj
-                              :shared [:gha :account :force]
+                              :shared [:gha :account]
                               :task-cli-opts-kws [:environment]
                               :la-test {:skip? true}}
-   'is-update-version {:doc "Tells if app should have version update"
-                       :pf :clj
-                       :shared [:publication]
-                       :task-cli-opts-kws [:environment]
-                       :la-test {:skip? true}}
    'update-version {:doc "Update version"
                     :pf :clj
                     :task-cli-opts-kws [:environment]

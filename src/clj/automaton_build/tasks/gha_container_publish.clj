@@ -12,17 +12,12 @@
   [_task-map {:keys [app-dir app-name tag account gha]}]
   (build-log/info "Build and publish github container")
   (let [{:keys [repo-url repo-branch workflows]} gha]
-    (if gha
-      (if (build-deployment-docker/publish-test-docker-image repo-url
-                                                             repo-branch
-                                                             workflows
-                                                             app-dir
-                                                             app-name
-                                                             tag
-                                                             account)
-        build-exit-codes/ok
-        build-exit-codes/catch-all)
-      (do (build-log/debug-format
-           "Gha missing for `%s`, gha-container-publish is skipped"
-           app-name)
-          build-exit-codes/ok))))
+    (if (build-deployment-docker/publish-test-docker-image repo-url
+                                                           repo-branch
+                                                           workflows
+                                                           app-dir
+                                                           app-name
+                                                           tag
+                                                           account)
+      build-exit-codes/ok
+      build-exit-codes/catch-all)))

@@ -34,18 +34,6 @@
   That version executes only once"
   (memoize git-installed?*))
 
-(defn clean
-  "Removes all .gitignored specified files/dirs"
-  [root-dir]
-  (build-log/debug-format "Clean the repository `%s`" root-dir)
-  (if (git-installed?)
-    (build-cmds/execute-and-trace ["git"
-                                   "clean"
-                                   (str "-dfX")
-                                   {:dir root-dir
-                                    :error-to-std? true}])
-    (do (build-log/warn "Clean cannot be done as git is not installed") nil)))
-
 (defn clean-hard
   "Configuration management comes back to the same state than the repository is freshly donwloaded
    Returns true if cleaning suceeded.
