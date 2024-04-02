@@ -56,13 +56,10 @@
     :as app}]
   (let [new-changes-branch (build-cfg-mgt/current-branch ".")
         {:keys [repo]} publication
-        tmp-dir-app (build-files/create-dir-path (build-files/create-temp-dir)
-                                                 app-name)
+        tmp-dir (build-files/create-temp-dir)
+        tmp-dir-app (build-files/create-dir-path tmp-dir app-name)
         app (assoc app :app-dir tmp-dir-app)]
-    (build-cfg-mgt/clone-repo-branch tmp-dir-app
-                                     app-name
-                                     repo
-                                     new-changes-branch)
+    (build-cfg-mgt/clone-repo-branch tmp-dir app-name repo new-changes-branch)
     app))
 
 (defn deploy?
