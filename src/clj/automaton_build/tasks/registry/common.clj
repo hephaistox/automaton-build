@@ -220,7 +220,7 @@
    'wf-3 {:doc "Quick verifications and formatting for IDE usage"
           :group :wf
           :step 3
-          :wk-tasks ['format-code 'lint 'reports 'commit]}
+          :wk-tasks ['reports 'format-code 'lint 'commit]}
    'wf-3f {:doc "Full work verification workflow"
            :group :wf
            :step 3
