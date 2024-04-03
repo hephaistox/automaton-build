@@ -9,6 +9,6 @@
   [_task-map
    {:keys [exclude-libs app-dir]
     :as _app}]
-  (if (true? (build-code-update-deps/update-app-deps-edn app-dir exclude-libs))
+  (if (true? (build-code-update-deps/update-app-deps app-dir exclude-libs))
     build-exit-codes/ok
-    build-exit-codes/cannot-execute))
+    build-exit-codes/catch-all))

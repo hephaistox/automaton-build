@@ -187,7 +187,7 @@
    'update-deps
    {:doc
     "Update the dependencies, cider-nrepl and refactor are to be updated manually"
-    :build-configs [[:exclude-libs {:default #{"com.taoensso/encore"}}
+    :build-configs [[:exclude-libs {:optional true}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}

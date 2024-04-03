@@ -32,7 +32,14 @@
 (defn npm-install
   "Install the packages defined in `package.json` and version in `package-lock.json`"
   [dir]
-  (build-cmd/log-if-fail ["npm" "install" {:dir dir}]))
+  (build-cmd/log-if-fail (build-npm/npm-install-cmd dir)))
+
+(defn npm-update
+  "Install the packages defined in `package.json` and version in `package-lock.json`"
+  [dir]
+  (build-cmd/log-if-fail (concat (build-npm/npm-update-cmd)
+                                 (build-npm/npm-audit-fix-cmd)
+                                 [{:dir dir}])))
 
 (defn is-shadow-project?
   "Returns true if the project is shadow"

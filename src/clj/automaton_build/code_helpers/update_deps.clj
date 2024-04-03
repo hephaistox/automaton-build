@@ -1,14 +1,14 @@
 (ns automaton-build.code-helpers.update-deps
   "Code to help with project dependencies update"
   (:require
-   [automaton-build.app.bb-edn              :as build-bb-edn]
-   [automaton-build.app.deps-edn            :as build-deps-edn]
-   [automaton-build.cicd.deployment.pom-xml :as build-pom-xml]
-   [automaton-build.code-helpers.antq       :as build-code-helpers-antq]
-   [automaton-build.log                     :as build-log]
-   [automaton-build.os.commands             :as build-cmds]
-   [automaton-build.os.files                :as build-files]
-   [automaton-build.os.npm                  :as build-npm]))
+   [automaton-build.app.bb-edn                     :as build-bb-edn]
+   [automaton-build.app.deps-edn                   :as build-deps-edn]
+   [automaton-build.cicd.deployment.pom-xml        :as build-pom-xml]
+   [automaton-build.code-helpers.antq              :as build-code-helpers-antq]
+   [automaton-build.code-helpers.compiler.shadow   :as build-compiler-shadow]
+   [automaton-build.code-helpers.frontend-compiler :as build-frontend-compiler]
+   [automaton-build.log                            :as build-log]
+   [automaton-build.os.files                       :as build-files]))
 
 (defn type-schema
   "Type of dependency file to update"
@@ -20,6 +20,7 @@
   []
   [:map [:name :string] [:latest-version :string]])
 
+#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn update-dep-schema
   "Defines required keys for dependency update.
    Requires:
@@ -50,10 +51,12 @@
 
 (defn update-frontend-deps!
   [app-dir]
-  (zero? (ffirst (build-cmds/execute-with-exit-code
-                  (build-npm/npm-install-cmd app-dir)
-                  (build-npm/npm-update-cmd app-dir)
-                  (build-npm/npm-audit-fix-cmd app-dir)))))
+  (if (build-frontend-compiler/is-frontend-project? app-dir)
+    (do (build-log/info "Updating npm libraries...")
+        (if (= :ok (build-compiler-shadow/npm-install app-dir))
+          (= :ok (build-compiler-shadow/npm-update app-dir))
+          (do (build-log/warn "Npm projects version update failed") false)))
+    (do (build-log/info "Frontend update deps skipped") true)))
 
 (defn update-deps! [deps-maps] (build-code-helpers-antq/update-deps! deps-maps))
 
@@ -77,15 +80,15 @@
        (map #(add-type :deps-edn %))
        (map #(add-file-path app-dir %))))
 
-(defn update-app-deps-edn
-  "Update all deps.edn dependencies in `app-dir` excluding `exclude-libs`"
+(defn update-app-deps
+  "Update all dependencies in `app-dir` excluding `exclude-libs`"
   [app-dir exclude-libs]
   (build-log/info "Updating npm libraries...")
   (if (update-frontend-deps! app-dir)
     (do (build-log/info "Updating deps.edn file")
         (-> (find-outdated-deps-edn app-dir)
             (exclude-libraries exclude-libs)
-            build-code-helpers-antq/update-deps!)
+            update-deps!)
         true)
     (do (build-log/warn "Npm projects version update failed") false)))
 
