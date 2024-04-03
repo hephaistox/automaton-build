@@ -23,6 +23,7 @@
    'clean-hard
    {:doc
     "Clean all files which are not under version control (it doesn't remove untracked file or staged files if there are eligible to `git add .`)"
+    :task-cli-opts-kws [:force]
     :la-test {:process-opts {:in "q"}}}
    'commit {:doc "Commit and push, disallowed for production branch."
             :hidden? true
@@ -34,10 +35,7 @@
                :pf :clj
                :la-test {:skip? true}
                :shared [:publication]
-               :build-configs [[:aliases {:default [:run]}
-                                [:vector :keyword]]
-                               [:class-dir {:default "target/classes/"}
-                                :string]]}
+               :task-cli-opts-kws [:environment]}
    'container-clear {:doc "Clear all local containers"
                      :la-test {:skip? true}}
    'container-list {:doc "List all available containers"}
@@ -77,6 +75,11 @@
                   :shared [:gha :account]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
                   :la-test {:skip? true}}
+   'generate-pom-xml {:doc "Generate pom xml file in root of an app"
+                      :pf :clj
+                      :shared [:publication]
+                      :task-cli-opts-kws [:environment :force]
+                      :la-test {:skip? true}}
    'is-cicd {:doc "Tested if runned on cicd"
              :la-test {:cmd ["bb" "heph-task" "is-cicd" "-f"]}
              :hidden? true
@@ -119,24 +122,28 @@
    'mermaid {:doc "Build all mermaid files"}
    'mermaid-watch {:doc "Watch mermaid files modifications"
                    :la-test {:skip? true}}
-   'publish-library
+   'deploy {:doc "Compile, deploy to gha, push to base branch and publish jar."
+            :pf :clj
+            :la-test {:skip? true}
+            :shared [:publication :gha :account]
+            :task-cli-opts-kws [:environment :force]}
+   'publish-jar
    {:doc
-    "Publish project, by deploying the jar to clojars and pushing git main branch with new version"
-    :pf :clj
-    :shared [:publication]
-    :la-test {:skip? true}}
-   'publish-app
-   {:doc
-    "Publish project to CC, same as above, but instead of clojars the uberjar is pushed to clever-cloud repo."
+    "Publish project, by deploying the jar to either clojars or clever cloud"
     :pf :clj
     :shared [:publication]
     :task-cli-opts-kws [:environment]
     :la-test {:skip? true}}
-   'push-local {:doc "Push this repo"
-                :la-test {:skip? true}
-                :shared [:publication]
-                :task-cli-opts-kws [:force :message :tag :environment]
-                :pf :clj}
+   'git-push-local-branch {:doc "Push this repo"
+                           :la-test {:skip? true}
+                           :shared [:publication]
+                           :task-cli-opts-kws [:force :message-opt :environment]
+                           :pf :clj}
+   'git-push-base-branch {:doc "Push this repo to base branch of environment"
+                          :la-test {:skip? true}
+                          :shared [:publication]
+                          :task-cli-opts-kws [:force :message :environment]
+                          :pf :clj}
    'pull-base-branch {:doc "Checks if you are up to date with base branch."
                       :pf :clj
                       :shared [:publication]
@@ -180,17 +187,19 @@
    'update-deps
    {:doc
     "Update the dependencies, cider-nrepl and refactor are to be updated manually"
-    :build-configs [[:exclude-libs
-                     {:default #{"org.clojars.hephaistox/automaton-build@*-*"
-                                 "org.clojars.hephaistox/automaton-core@*-*"
-                                 "org.clojars.hephaistox/automaton-web@*-*"
-                                 "org.clojars.hephaistox/automaton-web-dev@*-*"
-                                 "com.taoensso/encore"}}
-                     [:set :string]]
-                    [:exclude-dirs {:default #{"tmp" "target"}}
+    :build-configs [[:exclude-libs {:optional true}
                      [:set :string]]]
     :la-test {:skip? true}
     :pf :clj}
+   'update-gha-workflow-file {:doc "Update gha workflow file of an app"
+                              :pf :clj
+                              :shared [:gha :account]
+                              :task-cli-opts-kws [:environment]
+                              :la-test {:skip? true}}
+   'update-version {:doc "Update version"
+                    :pf :clj
+                    :task-cli-opts-kws [:environment]
+                    :la-test {:skip? true}}
    'visualize-deps {:doc "Visualize the dependencies in a graph"
                     :build-configs [[:output-file {:default
                                                    "docs/code/deps.svg"}

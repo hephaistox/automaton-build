@@ -8,8 +8,8 @@
       * Deciding if the task should be launched in bb or clj
   * A composer callable from tasks and calling successively the different tasks composing the workflow"
   (:require
-   [automaton-build.tasks.registry.find :as build-task-registry-find]
-   [automaton-build.log :as build-log]))
+   [automaton-build.log                 :as build-log]
+   [automaton-build.tasks.registry.find :as build-task-registry-find]))
 
 (defn- workflow-to-task
   "Transform one workflow item to a real task, with all necessary fields set"

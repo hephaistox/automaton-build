@@ -1,14 +1,14 @@
 (ns automaton-build.tasks.launcher.cli-task-opts
   "Cli options for tasks"
   (:require
-   [clojure.string :as str]
+   [automaton-build.log                                   :as build-log]
+   [automaton-build.os.terminal-msg                       :as
+                                                          build-terminal-msg]
    [automaton-build.tasks.launcher.cli-task-agnostic-opts
-    :as
-    build-cli-task-agnostic-opts]
-   [automaton-build.os.terminal-msg :as build-terminal-msg]
-   [clojure.tools.cli :refer [parse-opts]]
-   [clojure.set :as set]
-   [automaton-build.log :as build-log]))
+    :as build-cli-task-agnostic-opts]
+   [clojure.set                                           :as set]
+   [clojure.string                                        :as str]
+   [clojure.tools.cli                                     :refer [parse-opts]]))
 
 (defn- cli-opts-spec-register
   "Register container specs of tasks dependent cli options"

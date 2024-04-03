@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.error
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log           :as build-log]
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}

@@ -1,9 +1,9 @@
 (ns automaton-build.code-helpers.frontend-css
   "Front end compiler toolings. Currently use shadow on npx"
   (:require
-   [automaton-build.os.npm :as build-npm]
    [automaton-build.code-helpers.compiler.shadow :as build-compiler-shadow]
-   [automaton-build.os.commands :as build-cmds]))
+   [automaton-build.os.commands                  :as build-cmds]
+   [automaton-build.os.npm                       :as build-npm]))
 
 (defn- tailwind-compile-css
   [css-file compiled-dir]

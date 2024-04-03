@@ -1,9 +1,9 @@
 (ns automaton-build.utils.namespace
   "Helpers for namespace"
   (:require
-   [clojure.string :as str]
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]
-   [automaton-build.log :as build-log]))
+   [clojure.string           :as str]))
 
 (defn namespaced-keyword
   "Create a namespaced keyword"

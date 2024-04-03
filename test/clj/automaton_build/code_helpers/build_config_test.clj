@@ -1,7 +1,7 @@
 (ns automaton-build.code-helpers.build-config-test
   (:require
    [automaton-build.app.build-config :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test                     :refer [deftest is testing]]))
 
 (deftest read-build-config-test
   (testing "Read the current build config"

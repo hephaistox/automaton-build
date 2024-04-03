@@ -1,7 +1,7 @@
 (ns automaton-build.schema-test
   (:require
    [automaton-build.schema :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test           :refer [deftest is testing]]))
 
 (deftest schema
   (testing "Valid schema"

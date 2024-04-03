@@ -13,51 +13,56 @@
   * major version has to be changed in the major-version in `build_config.edn` (many sources of truth and build_config shouldn't be a place that is used as variable that change often)
   * counting commits from a branch to base a minor version on it (Many edgecases where commits don't match the version, initial commits, PRs having more than one commit...)"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.cli-input :as build-cli-input]
-   [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]
-   [automaton-build.os.terminal-msg :as build-terminal-msg]))
+   [automaton-build.log             :as build-log]
+   [automaton-build.os.cli-input    :as build-cli-input]
+   [automaton-build.os.edn-utils    :as build-edn-utils]
+   [automaton-build.os.files        :as build-files]
+   [automaton-build.os.terminal-msg :as build-terminal-msg]
+   [clojure.string                  :as str]))
 
-(def version-file "version.edn")
+(defn version-file
+  ([] "version.edn")
+  ([dir] (build-files/create-file-path dir (version-file))))
 
-(defn read-version-file
+(defn- slurp-version-file
   [app-dir]
-  (let [version-filename (build-files/create-file-path app-dir version-file)]
+  (let [version-filename (version-file app-dir)]
     (if (build-files/is-existing-file? version-filename)
       (build-edn-utils/read-edn version-filename)
       (build-log/warn-format "Version file in %s does not exist" app-dir))))
 
-(defn save-version-file
+(defn current-version [app-dir] (:version (slurp-version-file app-dir)))
+
+(defn- spit-version-file
   [app-dir content]
   (build-edn-utils/spit-edn
-   (build-files/create-file-path app-dir version-file)
+   (version-file app-dir)
    content
    "Last generated version, note a failed push consume a number"))
 
-(defn current-version [app-dir] (:version (read-version-file app-dir)))
-
-(defn confirm-version?
-  "It's safety measure before changing version of the project to be sure user is concious of change."
-  [project-name old-version new-version]
-  (build-cli-input/yes-question
-   (format
-    "Your change will affect the version of the project `%s`, old version `%s` replaced with `%s` one are you sure you want to continue? y/n"
-    project-name
-    old-version
-    new-version)))
+(defn save-version
+  "Update app version file `version.edn` in `app-dir`. Captures requirement for the version to be consciously decided when saved
+  Params:
+  * `app-dir` directory of the version to count
+  * `new-version`"
+  [app-dir new-version]
+  (spit-version-file app-dir {:version new-version})
+  new-version)
 
 (defn ask-version
-  "It's safety measure before changing version of the project to be sure user is concious of change."
-  [project-name current-version changes]
-  (build-cli-input/question-loop
-   (format
-    "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nTo see what changed see: `%s`\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n4 Add version manually."
-    project-name
-    current-version
-    changes)
-   #{"1" "2" "3" "4"}))
+  "Asks user what should be a new version following the non-breaking version system"
+  ([project-name current-version changes]
+   (when changes
+     (build-terminal-msg/println-msg (format "To see what changed visit %s"
+                                             changes)))
+   (ask-version project-name current-version))
+  ([project-name current-version]
+   (build-cli-input/question-loop
+    (format
+     "Project `%s` current version is: `%s`.\nPattern is <major>.<minor>.<non-breaking>.\nPress \n1 to update major \n2 to update minor \n3 to update non-breaking \n4 Add version manually.\n5 Do not update"
+     project-name
+     current-version)
+    #{"1" "2" "3" "4" "5"})))
 
 (defn ask-manual-version
   "Asks user to input version manually"
@@ -72,6 +77,11 @@
    So e.g. `0.0.20-SNAPSHOT` -> `0.0.20`"
   [version]
   (str/split version #"-"))
+
+(defn production?
+  "Tells if version is a production one or test env"
+  [version]
+  (nil? (second (split-optional-qualifier version))))
 
 (defn add-optional-qualifier
   [version qualifier]
@@ -91,4 +101,5 @@
                 "1" [(inc-str major-version) "0" "0"]
                 "2" [major-version (inc-str minor-version) "0"]
                 "3" [major-version minor-version (inc-str non-breaking)]
-                "4" [(str (ask-manual-version))]))))
+                "4" [(str (ask-manual-version))]
+                "5" [current-version]))))

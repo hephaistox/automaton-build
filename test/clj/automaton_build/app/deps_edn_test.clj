@@ -1,8 +1,8 @@
 (ns automaton-build.app.deps-edn-test
   (:require
    [automaton-build.app.deps-edn :as sut]
-   [automaton-build.os.files :as build-files]
-   [clojure.test :refer [deftest is testing]]))
+   [automaton-build.os.files     :as build-files]
+   [clojure.test                 :refer [deftest is testing]]))
 
 (def tmp-dir (build-files/create-temp-dir))
 

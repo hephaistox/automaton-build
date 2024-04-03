@@ -1,16 +1,16 @@
 (ns automaton-build.cicd.deployment
   (:require
-   [automaton-build.cicd.clever-cloud :as build-clever-cloud]
+   [automaton-build.cicd.clever-cloud   :as build-clever-cloud]
    [automaton-build.cicd.deployment.jar :as build-deploy-jar]
-   [automaton-build.configuration :as build-conf]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.configuration       :as build-conf]
+   [automaton-build.os.files            :as build-files]))
 
 (defn publish-library
   "Publish jar to clojars"
   [jar-path pom-path]
   (build-deploy-jar/deploy
    jar-path
-   (build-files/absolutize pom-path)
+   pom-path
    {"clojars" {:url "https://clojars.org/repo"
                :username (build-conf/read-param [:clojars-username])
                :password (build-conf/read-param [:clojars-password])}})

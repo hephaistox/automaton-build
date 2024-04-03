@@ -1,9 +1,9 @@
 (ns automaton-build.file-repo.raw.impl
   "Implementations an helper functions for raw file repo"
   (:require
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]
-   [automaton-build.log :as build-log]
-   [clojure.string :as str]))
+   [clojure.string           :as str]))
 
 (defn filter-repo-map
   "Filter a file repo map with the filter-fn

@@ -4,7 +4,7 @@
   Is built based on `apps` as done in `monorepo-app.apps`"
   (:require
    [automaton-build.app.deps-graph.impl :as deps-graph-impl]
-   [automaton-build.os.files :as build-files]))
+   [automaton-build.os.files            :as build-files]))
 
 (defn sorted-apps
   [apps]

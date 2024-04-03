@@ -1,8 +1,8 @@
 (ns automaton-build.tasks.gha-container-publish
   (:require
    [automaton-build.cicd.deployment.docker :as build-deployment-docker]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.log                    :as build-log]
+   [automaton-build.os.exit-codes          :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

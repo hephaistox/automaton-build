@@ -2,8 +2,8 @@
 (ns automaton-build.code-helpers.analyze.css-test
   (:require
    [automaton-build.code-helpers.analyze.css :as sut]
-   [automaton-build.file-repo.text :as build-filerepo-text]
-   [clojure.test :refer [deftest is testing]]))
+   [automaton-build.file-repo.text           :as build-filerepo-text]
+   [clojure.test                             :refer [deftest is testing]]))
 
 (deftest css-pattern-test
   (testing "Detect class string"

@@ -2,9 +2,9 @@
   "Adapter to read an edn file"
   (:require
    [automaton-build.code-helpers.formatter :as build-code-formatter]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.log :as build-log]
-   [clojure.edn :as edn]))
+   [automaton-build.log                    :as build-log]
+   [automaton-build.os.files               :as build-files]
+   [clojure.edn                            :as edn]))
 
 (defn parse-edn
   "Parse an `edn` string,

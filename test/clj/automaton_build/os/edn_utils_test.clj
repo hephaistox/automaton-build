@@ -1,9 +1,9 @@
 (ns automaton-build.os.edn-utils-test
   (:require
    [automaton-build.os.edn-utils :as sut]
-   [automaton-build.os.files :as build-files]
-   [clojure.java.io :as io]
-   [clojure.test :refer [deftest is testing]]))
+   [automaton-build.os.files     :as build-files]
+   [clojure.java.io              :as io]
+   [clojure.test                 :refer [deftest is testing]]))
 
 (def stub-edn (io/resource "os/edn-file.edn"))
 

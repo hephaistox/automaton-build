@@ -1,9 +1,9 @@
 (ns automaton-build.tasks.lfe-css
   (:require
+   [automaton-build.app.files-css             :as build-app-files-css]
    [automaton-build.code-helpers.frontend-css :as build-frontend-css]
-   [automaton-build.app.files-css :as build-app-files-css]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.log                       :as build-log]
+   [automaton-build.os.exit-codes             :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

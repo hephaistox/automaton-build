@@ -1,10 +1,10 @@
 (ns automaton-build.app-data
   "Helpers manipulating an application through its `app-data`"
   (:require
-   [automaton-build.app-data.impl :as build-app-data-impl]
+   [automaton-build.app-data.impl      :as build-app-data-impl]
    [automaton-build.file-repo.clj-code :as build-clj-code]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.os.files           :as build-files]
+   [clojure.string                     :as str]))
 
 (defn classpath-dirs
   "Existing source directories for front and back, as strings of absolutized directories

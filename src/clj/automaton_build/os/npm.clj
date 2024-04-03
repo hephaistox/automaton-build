@@ -8,20 +8,9 @@
   [dir]
   ["npm" "install" {:dir dir}])
 
-(defn- npm-audit-fix-cmd
-  "Audit existing npm packages"
-  [dir]
-  ["npm" "audit" "fix" {:dir dir}])
+(defn npm-audit-fix-cmd "Audit existing npm packages" [] ["npm" "audit" "fix"])
 
-(defn npm-audit-fix
-  "Fix npm package issues"
-  [dir]
-  (build-cmds/execute-with-exit-code (npm-audit-fix-cmd dir)))
-
-(defn npm-update-cmd
-  "Command to update the dependencies"
-  [dir]
-  ["npm" "update" {:dir dir}])
+(defn npm-update-cmd "Command to update the dependencies" [] ["npm" "update"])
 
 (defn- npx-installed?*
   "Check if npx is installed

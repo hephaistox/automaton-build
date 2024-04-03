@@ -1,9 +1,9 @@
 (ns automaton-build.os.js-config
   "Everything about config.js files manipulation"
   (:require
+   [automaton-build.log      :as build-log]
    [automaton-build.os.files :as build-files]
-   [clojure.string :as str]
-   [automaton-build.log :as build-log]))
+   [clojure.string           :as str]))
 
 (defn join-config-items
   "Joins config items (like prestes requires, content paths etc.). Any items in a way that is acceptable by js config files"

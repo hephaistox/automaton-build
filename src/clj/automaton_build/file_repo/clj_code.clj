@@ -2,11 +2,11 @@
   "Repository of files associating the name of a file to its content
   This repo deal with text files and will split the file in vector of lines"
   (:require
-   [automaton-build.file-repo.text :as build-filerepo-text]
+   [automaton-build.file-repo.raw      :as build-filerepo-raw]
    [automaton-build.file-repo.raw.impl :as build-raw-impl]
-   [automaton-build.file-repo.raw :as build-filerepo-raw]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.file-repo.text     :as build-filerepo-text]
+   [automaton-build.os.files           :as build-files]
+   [clojure.string                     :as str]))
 
 ;; Match a usage of the code and list all concerned extensions
 (defonce ^:private usage-to-extension

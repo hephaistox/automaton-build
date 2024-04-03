@@ -1,13 +1,13 @@
 (ns automaton-build.doc.blog
   "Blog page creation"
   (:require
-   [automaton-build.doc.html :as build-html]
-   [automaton-build.log :as build-log]
+   [automaton-build.doc.html     :as build-html]
+   [automaton-build.log          :as build-log]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.os.pdf :as build-pdf]
-   [automaton-build.web.uri :as build-uri]
-   [clojure.string :as str]))
+   [automaton-build.os.files     :as build-files]
+   [automaton-build.os.pdf       :as build-pdf]
+   [automaton-build.web.uri      :as build-uri]
+   [clojure.string               :as str]))
 
 (defn pdf-metadata
   [document-name description keywords]

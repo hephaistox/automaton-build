@@ -1,10 +1,10 @@
 (ns automaton-build.os.files-test
   (:require
    [automaton-build.os.files :as sut]
-   [babashka.fs :as fs]
-   [clojure.java.io :as io]
-   [clojure.test :refer [deftest is testing]]
-   [clojure.string :as str]))
+   [babashka.fs              :as fs]
+   [clojure.java.io          :as io]
+   [clojure.string           :as str]
+   [clojure.test             :refer [deftest is testing]]))
 
 ;; ***********************
 ;; Manipulate file path (need no access)

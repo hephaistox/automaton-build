@@ -1,14 +1,14 @@
 (ns automaton-build.os.json
   "Everything about json manipulation"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.os.files :as build-files]
+   [automaton-build.log               :as build-log]
+   [automaton-build.os.files          :as build-files]
    [automaton-build.utils.comparators :as build-utils-comparators]
-   [babashka.json :as json]))
+   [cheshire.core                     :as json]))
 
 (defn read-file
   [filepath]
-  (try (json/read-str (build-files/read-file filepath) {:key-fn identity})
+  (try (json/parse-string (build-files/read-file filepath))
        (catch Exception e
          (build-log/error-exception e)
          (build-log/error-data {:path filepath} "Loading json file has failed ")
@@ -18,7 +18,7 @@
   [filename content]
   (try (build-files/spit-file
         filename
-        (json/write-str content)
+        (json/generate-string content {:pretty true})
         nil
         (partial build-utils-comparators/compare-file-change read-file))
        (catch Exception e

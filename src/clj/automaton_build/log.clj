@@ -11,8 +11,8 @@
      * cli has its own default value, meaning that a user launching this code through the cli will be defaulted to the default values in this namespace"
   (:require
    [automaton-build.os.java-properties :as build-java-properties]
-   [automaton-build.utils.string :as build-string]
-   [clojure.pprint :as pp]))
+   [automaton-build.utils.string       :as build-string]
+   [clojure.pprint                     :as pp]))
 
 (def size-command
   "Size of the command line to be managed, measured on mcbook pro"

@@ -1,10 +1,10 @@
 (ns automaton-build.tasks.workflow.composer
   "Compose (i.e. call successively) different tasks"
   (:require
-   [automaton-build.log :as build-log]
-   [automaton-build.utils.namespace :as build-namespace]
+   [automaton-build.log                 :as build-log]
+   [automaton-build.os.exit-codes       :as build-exit-codes]
    [automaton-build.tasks.registry.find :as build-task-registry-find]
-   [automaton-build.os.exit-codes :as build-exit-codes]))
+   [automaton-build.utils.namespace     :as build-namespace]))
 
 (defn- execute-task-in-wf
   "In a workflow, execute one task - one step

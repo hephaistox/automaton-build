@@ -3,10 +3,10 @@
 
   Proxy to git"
   (:require
-   [automaton-build.log :as build-log]
+   [automaton-build.log         :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.os.files    :as build-files]
+   [clojure.string              :as str]))
 
 (defn latest-commit-message
   []
@@ -46,6 +46,29 @@
                                      :error-to-std? true}])
      (do (build-log/warn "Clean cannot be done as git is not installed") nil)))
   ([root-dir] (clean-hard root-dir true)))
+
+(defn clone-file
+  "Clones specific file with it's latest revision.
+   It's quick as it ignores all other files of the repository and git history."
+  [repo-address repo-dir-name target-dir branch-name file-name]
+  (build-cmds/execute-with-exit-code
+   ["git"
+    "clone"
+    "--branch"
+    branch-name
+    repo-address
+    repo-dir-name
+    "--depth"
+    "1"
+    "--no-checkout"
+    "--filter=blob:none"
+    {:dir target-dir}]
+   ["git"
+    "checkout"
+    branch-name
+    "--"
+    file-name
+    {:dir (build-files/create-dir-path target-dir repo-dir-name)}]))
 
 (defn clone-repo-branch
   "Clone one branch of a remote repository to the `target-dir`
@@ -118,26 +141,6 @@
        result)
       result)))
 
-(defn commit-and-push
-  "Push to its `origin` what is the working state in `dir` to branch `branch-name`
- Params:
-  * `dir` directory where the repository is stored
-  * `msg` message for the commit
-  * `branch-name` branch name
-  * `force?` optional for forcing a new commit to be a new point for the remote (even if there may be conflicts with previous)"
-  ([dir msg branch-name force?]
-   (let [msg (or msg "commit")]
-     (when (git-installed?)
-       (let [commit-res
-             (build-cmds/execute-with-exit-code
-              ["git" "add" "-A" {:dir dir}]
-              ["git" "commit" "-m" msg {:dir dir}]
-              (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
-                           (when force? ["--force"])
-                           [{:dir dir}])))]
-         commit-res))))
-  ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
-
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn current-commit-sha
   "Returns the current commit sha in the directory `dir`
@@ -148,6 +151,38 @@
   (-> (build-cmds/execute-get-string
        ["git" "log" "-n" "1" "--pretty=format:%H" {:dir dir}])
       first))
+
+(defn commit-and-push
+  "Push to its `origin` what is the working state in `dir` to branch `branch-name`
+ Params:
+  * `dir` directory where the repository is stored
+  * `msg` message for the commit
+  * `branch-name` branch name
+  * `force?` optional for forcing a new commit to be a new point for the remote (even if there may be conflicts with previous)"
+  ([dir msg branch-name force?]
+   (let [msg (or msg "automatic commit")]
+     (when (git-installed?)
+       (let [commit-res
+             (build-cmds/execute-with-exit-code
+              ["git" "add" "-A" {:dir dir}]
+              ["git" "commit" "-m" msg {:dir dir}]
+              (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
+                           (when force? ["--force"])
+                           [{:dir dir}])))
+             [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
+         (case cmd-failing
+           nil (do (build-log/info "Successfully pushed") true)
+           1 (do (build-log/info-format "Nothing to commit, skip the push")
+                 true)
+           2 (do (build-log/error-format "Push has failed - %s" message) false)
+           3 (do (build-log/error-format "Push has failed with message: %s"
+                                         message)
+                 false)
+           :else (do (build-log/error
+                      "Unexpected error during commit-and-push : "
+                      (into [] commit-res))
+                     false))))))
+  ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
 
 (defn commit-and-push-and-tag
   "Push to its `origin` what is the working state in `dir` to branch `branch-name`
@@ -182,7 +217,7 @@
                     version)
                    true)
            1 (do (build-log/info-format "Nothing to commit, skip the push")
-                 false)
+                 true)
            2 (do (build-log/error-format "Tag has failed - %s" message) false)
            3
            (do
@@ -271,10 +306,6 @@
      ["git" "config" "--local" "pager.branch" "false" {:dir tmp-dir}]
      ["git" "remote" "add" "origin" repo-url {:dir tmp-dir}])
     (build-cmds/execute-get-string ["git" "branch" "-aqr" {:dir tmp-dir}])))
-
-
-
-
 
 (defn push-local-dir-to-repo
   "Commit and push `target-branch` with files from `source-dir`.

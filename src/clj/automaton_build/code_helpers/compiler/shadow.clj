@@ -3,16 +3,17 @@
 
   Currently use shadow on npx"
   (:require
-   [automaton-build.os.command :as build-cmd]
-   [automaton-build.os.commands :as build-cmds]
+   [automaton-build.os.command   :as build-cmd]
+   [automaton-build.os.commands  :as build-cmds]
    [automaton-build.os.edn-utils :as build-edn-utils]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.os.npm :as build-npm]))
+   [automaton-build.os.files     :as build-files]
+   [automaton-build.os.npm       :as build-npm]))
 
 (def ^:private shadow-cljs-edn "shadow-cljs.edn")
 
 (defn- shadow-installed?*
   "Check if shadow-cljs is installed
+  Don't use on server before npm install, because npx will interactively ask if shadow-cljs should be installed.
   Params:
   * `dir` where to check if `shadow-cljs` is installed"
   [dir]
@@ -21,7 +22,7 @@
     (when (build-npm/npx-installed? dir)
       (every? string?
               (build-cmds/execute-get-string
-               [npx-cmd shadow-cmd "-info" {:dir dir}])))))
+               [npx-cmd shadow-cmd "-h" {:dir dir}])))))
 
 (def shadow-installed?
   "Is shadow installed on that project?
@@ -31,7 +32,14 @@
 (defn npm-install
   "Install the packages defined in `package.json` and version in `package-lock.json`"
   [dir]
-  (build-cmd/log-if-fail ["npm" "install" {:dir dir}]))
+  (build-cmd/log-if-fail (build-npm/npm-install-cmd dir)))
+
+(defn npm-update
+  "Install the packages defined in `package.json` and version in `package-lock.json`"
+  [dir]
+  (build-cmd/log-if-fail (concat (build-npm/npm-update-cmd)
+                                 (build-npm/npm-audit-fix-cmd)
+                                 [{:dir dir}])))
 
 (defn is-shadow-project?
   "Returns true if the project is shadow"

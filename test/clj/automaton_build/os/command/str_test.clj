@@ -1,8 +1,8 @@
 (ns automaton-build.os.command.str-test
   (:require
    [automaton-build.os.command.str :as sut]
-   [babashka.process :as babashka-process]
-   [clojure.test :refer [deftest is testing]]))
+   [babashka.process               :as babashka-process]
+   [clojure.test                   :refer [deftest is testing]]))
 
 (deftest cmd-tokens-test
   (testing "cmd-tokens"

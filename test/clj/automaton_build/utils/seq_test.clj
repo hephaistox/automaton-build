@@ -1,7 +1,7 @@
 (ns automaton-build.utils.seq-test
   (:require
    [automaton-build.utils.seq :as sut]
-   [clojure.test :refer [deftest is testing]]))
+   [clojure.test              :refer [deftest is testing]]))
 
 (deftest contains?-test
   (testing "Sequence contains value"

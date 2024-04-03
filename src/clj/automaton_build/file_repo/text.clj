@@ -2,11 +2,11 @@
   "Repository of files associating the name of a file to its content
   This repo deal with text files and will split the file in vector of lines"
   (:require
-   [automaton-build.file-repo.raw :as build-filerepo-raw]
+   [automaton-build.file-repo.raw      :as build-filerepo-raw]
    [automaton-build.file-repo.raw.impl :as build-raw-impl]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.utils.string :as build-string]
-   [clojure.string :as str]))
+   [automaton-build.os.files           :as build-files]
+   [automaton-build.utils.string       :as build-string]
+   [clojure.string                     :as str]))
 
 (defrecord TextFileRepo [_file-repo-map]
   build-filerepo-raw/FileRepo

@@ -3,10 +3,10 @@
 
   Is a docker proxy"
   (:require
+   [automaton-build.log         :as build-log]
    [automaton-build.os.commands :as build-cmds]
-   [automaton-build.os.files :as build-files]
-   [automaton-build.log :as build-log]
-   [clojure.string :as str]))
+   [automaton-build.os.files    :as build-files]
+   [clojure.string              :as str]))
 
 (defn container-installed?*
   "Check if docker is properly installed

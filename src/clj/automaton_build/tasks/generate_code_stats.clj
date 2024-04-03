@@ -1,11 +1,11 @@
 (ns automaton-build.tasks.generate-code-stats
   (:require
-   [automaton-build.app-data :as build-app-data]
+   [automaton-build.app-data                :as build-app-data]
    [automaton-build.code-helpers.code-stats :as build-code-stats]
-   [automaton-build.log :as build-log]
-   [automaton-build.os.exit-codes :as build-exit-codes]
-   [automaton-build.os.files :as build-files]
-   [clojure.string :as str]))
+   [automaton-build.log                     :as build-log]
+   [automaton-build.os.exit-codes           :as build-exit-codes]
+   [automaton-build.os.files                :as build-files]
+   [clojure.string                          :as str]))
 
 (defn- generate-code-stats
   [{:keys [stats-outputfilename]
