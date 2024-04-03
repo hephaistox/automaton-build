@@ -13,6 +13,7 @@
 
 (defn- shadow-installed?*
   "Check if shadow-cljs is installed
+  Don't use on server before npm install, because npx will interactively ask if shadow-cljs should be installed.
   Params:
   * `dir` where to check if `shadow-cljs` is installed"
   [dir]

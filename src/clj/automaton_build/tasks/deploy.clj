@@ -75,7 +75,11 @@
                                                  repo
                                                  target-branch)
         true
-        false))
+        (do (build-log/debug-format
+             "`%s` version file between local version and `%s` didn't change"
+             app-name
+             target-branch)
+            false)))
     (do (build-log/debug-format "`%s` does not have a git repo so it's skipped"
                                 app-name)
         false)))

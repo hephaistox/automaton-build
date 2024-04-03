@@ -13,11 +13,6 @@
   (first (build-cmds/execute-get-string
           ["git" "log" "-1" "--pretty=format:%B"])))
 
-(defn file-modified?
-  [file]
-  (not (str/blank? (str (first (build-cmds/execute-get-string
-                                ["git" "diff" file]))))))
-
 (defn git-installed?*
   "Returns true if git is properly installed
   Params:

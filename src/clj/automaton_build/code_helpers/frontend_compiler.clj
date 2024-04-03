@@ -29,15 +29,17 @@
   * `target-alias` the name of the alias in `shadow-cljs.edn` to compile
   * `dir` the frontend root directory"
   [target-alias dir]
-  (when (build-compiler-shadow/shadow-installed? dir)
-    (build-compiler-shadow/npm-install dir)
-    (-> (build-cmds/execute-with-exit-code ["npx"
-                                            "shadow-cljs"
-                                            "release"
-                                            target-alias
-                                            {:dir dir
-                                             :error-to-std? true}])
-        build-cmds/first-cmd-failing)))
+  (try (build-compiler-shadow/npm-install dir)
+       (-> (build-cmds/execute-with-exit-code ["npx"
+                                               "shadow-cljs"
+                                               "release"
+                                               target-alias
+                                               {:dir dir
+                                                :error-to-std? true}])
+           build-cmds/first-cmd-failing)
+       (catch Exception e
+         (build-log/error (ex-info "Release compilation failed." e))
+         nil)))
 
 (defn builds
   "List shadow-cljs-build setup in the application
