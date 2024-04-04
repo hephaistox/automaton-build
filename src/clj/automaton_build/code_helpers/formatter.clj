@@ -47,20 +47,6 @@
     (= :ok (build-cmd/log-if-fail ["zprint" "-w" filename])) nil
     :else (do (build-log/trace-format "Execution of zprint failed") true)))
 
-(defn files-formatted
-  "Formats all files to make sure they are compliant with our styling standards
-
-  Returns nil if all files have successfully updated
-  Is non blocking if the formatter is not setup (as formatting is not setup on CICD)
-
-  Params:
-  * `files` is a seq of file paths"
-  [files]
-  (when (is-formatter-setup)
-    (let [formattings (map format-file files)]
-      (build-log/info "Files formatted")
-      (every? nil? formattings))))
-
 (defn format-clj
   "Format all clj files in a dir
   Returns true if successfully updated
@@ -69,4 +55,16 @@
   * `dir` directory where to find"
   [dir]
   (= :ok
-     (build-cmd/log-if-fail ["fd" "-e" "clj" "-x" "zprint" "-w" {:dir dir}])))
+     (build-cmd/log-if-fail ["fd"
+                             "-e"
+                             "clj"
+                             "-e"
+                             "cljc"
+                             "-e"
+                             "cljs"
+                             "-e"
+                             "edn"
+                             "-x"
+                             "zprint"
+                             "-w"
+                             {:dir dir}])))
