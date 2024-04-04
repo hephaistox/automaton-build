@@ -55,11 +55,7 @@
                :la-test {:expected-exit-code 131}
                :pf :clj
                :hidden? true}
-   'format-code {:doc "Format the whole documentation"
-                 :build-configs [[:include-files {:default #{"build_config.edn"
-                                                             "deps.edn"
-                                                             "shadow-cljs.edn"}}
-                                  [:set :string]]]}
+   'format-code {:doc "Format the whole documentation"}
    'generate-code-stats {:doc "Update code statistics"
                          :la-test {:skip? true}
                          :build-configs [[:stats-outputfilename

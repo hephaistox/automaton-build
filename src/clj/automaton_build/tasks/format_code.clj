@@ -6,10 +6,7 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   "Format all code files"
-  [_task-map {:keys [include-files app-dir]}]
-  (cond
-    (= :fail (build-code-formatter/format-clj app-dir))
+  [_task-map {:keys [app-dir]}]
+  (if (= :fail (build-code-formatter/format-clj app-dir))
     build-exit-codes/catch-all
-    (not (build-code-formatter/files-formatted include-files))
-    build-exit-codes/catch-all
-    :else build-exit-codes/ok))
+    build-exit-codes/ok))

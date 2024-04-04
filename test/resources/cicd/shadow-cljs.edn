@@ -19,8 +19,8 @@
                  :target :browser-test
                  :test-dir "target/browser-test"}
   :ltest {:ns-regexp "-test$"
-               :output-to "target/karma-test.js"
-               :target :karma}}
+          :output-to "target/karma-test.js"
+          :target :karma}}
  :dependencies []
  :devDependencies []
  :jvm-opts ["-Xmx1G"]
