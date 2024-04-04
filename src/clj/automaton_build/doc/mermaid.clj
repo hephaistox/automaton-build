@@ -23,7 +23,7 @@
   * `file-in` input mermaid file"
   [file-in]
   (when (build-files/is-existing-file? file-in)
-    (let [file-out (build-files/change-extension file-in ".svg")]
+    (let [file-out (build-files/change-extension file-in ".png")]
       (when (need-to-update? file-in file-out)
         (build-log/trace-format "Compile mermaid `%s`, to `%s`"
                                 file-in
@@ -34,14 +34,14 @@
 (defn build-all-files*
   "Build all mermaid files in the directory `archi-dir`
   Params:
-  * `archi-dir` Directory where all `.mermaid` extension files are turned into `.svg` files"
+  * `archi-dir` Directory where all `.mermaid` extension files are turned into images"
   [archi-dir]
   (build-files/for-each archi-dir mermaid-pattern build-a-file))
 
 (defn build-all-files
   "Scan all apps and build
   Params:
-  * `dir` Directory and subdir where all `.mermaid` extension files are turned into `.svg` files"
+  * `dir` Directory and subdir where all `.mermaid` extension files are turned into images"
   [dir]
   (build-log/debug-format "Build mermaid files in `%s`" dir)
   (let [res (build-all-files* dir)] (every? some? res)))
