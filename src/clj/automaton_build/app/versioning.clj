@@ -1,23 +1,42 @@
 (ns automaton-build.app.versioning
   "Code related to app versioning, holds current strategy for versioning"
   (:require
-   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
-   [automaton-build.cicd.version :as build-version]
-   [automaton-build.os.files     :as build-files]
-   [clojure.string               :as str]))
+   [automaton-build.app.versioning :as build-app-versioning]
+   [automaton-build.cicd.cfg-mgt   :as build-cfg-mgt]
+   [automaton-build.cicd.version   :as build-version]
+   [automaton-build.os.files       :as build-files]
+   [clojure.string                 :as str]))
+
+(defn production?
+  "Tells if version is a production one or test env"
+  [version]
+  (nil? (second (build-version/split-optional-qualifier version))))
+
+(defn- correct-environment?
+  "Checks that deploy the right environment is targeted for version change.
+   Covers case that project branch version will be different because there was deploy to la and than to  production."
+  [app-dir environment]
+  (let [current-version-production? (build-app-versioning/production?
+                                     (build-version/current-version app-dir))]
+    (if (or (and current-version-production? (= :production environment))
+            (and (not current-version-production?)
+                 (not= :production environment)))
+      true
+      false)))
 
 (defn version-changed?
   "Checks if current version in `app-dir` is the same as in `target-branch`"
-  [app-dir app-name repo target-branch]
+  [app-dir app-name repo target-branch environment]
   (let [tmp-dir (build-files/create-temp-dir)]
     (build-cfg-mgt/clone-file repo
                               app-name
                               tmp-dir
                               target-branch
                               (build-version/version-file))
-    (not= (build-version/current-version (build-files/create-dir-path tmp-dir
-                                                                      app-name))
-          (build-version/current-version app-dir))))
+    (and (correct-environment? app-dir environment)
+         (not= (build-version/current-version
+                (build-files/create-dir-path tmp-dir app-name))
+               (build-version/current-version app-dir)))))
 
 (defn- generate-new-test-env-version
   [version]
@@ -34,7 +53,7 @@
    If there is optional qualifier it is stripped and kept
    Else asks user for new version"
   ([version app-name changes]
-   (if (build-version/production? version)
+   (if (production? version)
      (build-version/generate-new-version version app-name changes)
      (first (build-version/split-optional-qualifier version))))
   ([version app-name] (generate-production-version version app-name nil)))
@@ -44,7 +63,7 @@
    If there is optional qualifier appends one number to it (e.g. 1.0.0-la -> 1.0.0-2-la)
    else adds optional qualifier based on targeted-env"
   ([version app-name target-env changes]
-   (if (build-version/production? version)
+   (if (production? version)
      (let [new-version
            (build-version/generate-new-version version app-name changes)]
        (if (= version new-version)
