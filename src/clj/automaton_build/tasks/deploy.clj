@@ -66,14 +66,12 @@
   "Automatic check if app should be deployed"
   [publication environment app-dir app-name]
   (if-let [repo (:repo publication)]
-    (let [environment (-> environment
-                          build-utils-keyword/trim-colon
-                          build-utils-keyword/keywordize)
-          target-branch (get-in publication [:env environment :push-branch])]
+    (let [target-branch (get-in publication [:env environment :push-branch])]
       (if (build-app-versioning/version-changed? app-dir
                                                  app-name
                                                  repo
-                                                 target-branch)
+                                                 target-branch
+                                                 environment)
         true
         (do (build-log/debug-format
              "`%s` version file between local version and `%s` didn't change"
@@ -98,33 +96,36 @@
   [task-map
    {:keys [app-name publication app-dir gha force environment]
     :as app}]
-  (if (or (base-branch-push-disallowed publication)
-          (state-should-be-clean app-dir)
-          (and (not force)
-               (not (deploy? publication environment app-dir app-name))))
-    (do (build-log/info-format
-         "Deployment skipped for `%s` as initial conditions are not met"
-         app-name)
-        build-exit-codes/ok)
-    (let [app (ensure-no-cache app)]
-      (build-log/info-format "Deployment process started for `%s`" app-name)
-      (if (= build-exit-codes/ok (build-tasks-build-jar/exec task-map app))
-        (if gha
-          (if (= build-exit-codes/ok
-                 (build-tasks-gha-container-publish/exec
-                  task-map
-                  (assoc app
-                         :tag
-                         (build-version/current-version (:app-dir app)))))
-            (deployment* task-map app)
-            (do (build-log/warn-format
-                 "GHA deploy of %s failed - deploy aborted"
+  (let [environment (-> environment
+                        build-utils-keyword/trim-colon
+                        build-utils-keyword/keywordize)]
+    (if (or (base-branch-push-disallowed publication)
+            (state-should-be-clean app-dir)
+            (and (not force)
+                 (not (deploy? publication environment app-dir app-name))))
+      (do (build-log/info-format
+           "Deployment skipped for `%s` as initial conditions are not met"
+           app-name)
+          build-exit-codes/ok)
+      (let [app (ensure-no-cache app)]
+        (build-log/info-format "Deployment process started for `%s`" app-name)
+        (if (= build-exit-codes/ok (build-tasks-build-jar/exec task-map app))
+          (if gha
+            (if (= build-exit-codes/ok
+                   (build-tasks-gha-container-publish/exec
+                    task-map
+                    (assoc app
+                           :tag
+                           (build-version/current-version (:app-dir app)))))
+              (deployment* task-map app)
+              (do (build-log/warn-format
+                   "GHA deploy of %s failed - deploy aborted"
+                   app-name)
+                  build-exit-codes/catch-all))
+            (do (build-log/debug-format
+                 "Gha missing for `%s`, gha-container-publish is skipped"
                  app-name)
-                build-exit-codes/catch-all))
-          (do (build-log/debug-format
-               "Gha missing for `%s`, gha-container-publish is skipped"
-               app-name)
-              (deployment* task-map app)))
-        (do (build-log/warn-format "Compilation of %s failed - deploy aborted"
-                                   app-name)
-            build-exit-codes/catch-all)))))
+                (deployment* task-map app)))
+          (do (build-log/warn-format "Compilation of %s failed - deploy aborted"
+                                     app-name)
+              build-exit-codes/catch-all))))))

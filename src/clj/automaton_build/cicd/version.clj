@@ -78,11 +78,6 @@
   [version]
   (str/split version #"-"))
 
-(defn production?
-  "Tells if version is a production one or test env"
-  [version]
-  (nil? (second (split-optional-qualifier version))))
-
 (defn add-optional-qualifier
   [version qualifier]
   (str/join "-" [version qualifier]))
