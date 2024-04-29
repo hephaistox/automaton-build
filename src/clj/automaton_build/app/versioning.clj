@@ -1,11 +1,10 @@
 (ns automaton-build.app.versioning
   "Code related to app versioning, holds current strategy for versioning"
   (:require
-   [automaton-build.app.versioning :as build-app-versioning]
-   [automaton-build.cicd.cfg-mgt   :as build-cfg-mgt]
-   [automaton-build.cicd.version   :as build-version]
-   [automaton-build.os.files       :as build-files]
-   [clojure.string                 :as str]))
+   [automaton-build.cicd.cfg-mgt :as build-cfg-mgt]
+   [automaton-build.cicd.version :as build-version]
+   [automaton-build.os.files     :as build-files]
+   [clojure.string               :as str]))
 
 (defn production?
   "Tells if version is a production one or test env"
@@ -16,8 +15,8 @@
   "Checks that deploy the right environment is targeted for version change.
    Covers case that project branch version will be different because there was deploy to la and than to  production."
   [app-dir environment]
-  (let [current-version-production? (build-app-versioning/production?
-                                     (build-version/current-version app-dir))]
+  (let [current-version-production? (production? (build-version/current-version
+                                                  app-dir))]
     (if (or (and current-version-production? (= :production environment))
             (and (not current-version-production?)
                  (not= :production environment)))

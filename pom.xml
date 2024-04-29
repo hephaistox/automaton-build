@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>org.clojars.hephaistox</groupId>
   <artifactId>automaton-build</artifactId>
-  <version>1.4.1-la</version>
+  <version>1.4.2-2-la</version>
   <name>automaton-build</name>
   <dependencies>
     <dependency>
