@@ -37,7 +37,7 @@ with at least two lines in it"
     (is (= 2 (build-filerepo-raw/nb-files text-file-repo)))))
 
 (deftest filter-by-extension-test
-  (testing ""
+  (testing "Filter files with their extensions"
     (is (= 1
            (-> (build-filerepo-raw/filter-by-extension text-file-repo #{".edn"})
                count)))))
