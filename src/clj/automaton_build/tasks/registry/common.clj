@@ -155,7 +155,7 @@
       :string]
      [:forbiddenwords-words {:default #{"tap>"}}
       [:set :string]]
-     [:forbiddenwords-outputfilename {:default "docs/code/forbbiden-words.edn"}
+     [:forbiddenwords-outputfilename {:default "docs/code/forbidden-words.edn"}
       :string]
      [:shadow-report-outputfilename {:default "doc/codes/code-size.edn"}
       :string]
