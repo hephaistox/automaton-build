@@ -21,12 +21,12 @@
   (let [pom-data [[:licenses
                    [:license [:name (:name license)] [:url (:url license)]]]]
         basis (build-helpers-artifacts/create-basis)
-        version (build-version/current-version project-root)
-        pom-params (merge {:target (build-files/absolutize project-root)
-                           :lib as-lib
-                           :version version
-                           :basis basis
-                           :src-dirs app-source-paths}
-                          (when pom-data {:pom-data pom-data}))]
+        version (build-version/current-version project-root)]
     (build-log/debug "Write POM files")
-    (build-helpers-artifacts/write-pom pom-params)))
+    (build-helpers-artifacts/write-pom
+     (merge {:target (build-files/absolutize project-root)
+             :lib as-lib
+             :version version
+             :basis basis
+             :src-dirs app-source-paths}
+            (when pom-data {:pom-data pom-data})))))
