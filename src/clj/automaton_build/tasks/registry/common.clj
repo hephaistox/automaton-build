@@ -69,6 +69,7 @@
                            :task-cli-opts-kws [:tag]}
    'gha-lconnect {:doc "Connect to a local container running this code"
                   :shared [:gha :account]
+                  :task-cli-opts-kws [:tag]
                   :hidden? 'automaton-build.tasks.registry.conditions/not-cicd?
                   :la-test {:skip? true}}
    'generate-pom-xml {:doc "Generate pom xml file in root of an app"
