@@ -16,6 +16,7 @@
   [target-dir paths app-dir]
   (let [app-paths (->> paths
                        (build-app/append-app-dir app-dir)
+                       (filter #(not (re-matches #".*bb.*" %)))
                        (map build-files/absolutize))]
     (build-log/debug-format "Copy files from `%s` to `%s`" app-paths target-dir)
     (build-files/copy-files-or-dir app-paths target-dir)))
