@@ -95,12 +95,12 @@
        (cond
          (zero? exit-code) true
          (re-find #"Could not find remote branch" message)
-         (do (build-log/error-format "Branch `%s` does not exists in repo `%s`"
-                                     branch-name
-                                     repo-address)
+         (do (build-log/warn-format "Branch `%s` does not exists in repo `%s`"
+                                    branch-name
+                                    repo-address)
              false)
          (re-find #"Repository not found" message)
-         (do (build-log/error-format "Repository `%s` not found" repo-address)
+         (do (build-log/warn-format "Repository `%s` not found" repo-address)
              false)
          :else (do (build-log/error "Unexpected error during clone repo: "
                                     message)
