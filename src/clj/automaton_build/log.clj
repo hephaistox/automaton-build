@@ -61,20 +61,18 @@
 (defn set-min-level!
   "Set the minimum level"
   [min-level*]
-  (reset! min-level min-level*)
-  (when (compare-log-levels @min-level :debug)
-    (print-message "D"
-                   (format "Log is initialized with level `%s`" min-level*))))
+  (reset! min-level min-level*))
 
 (defn set-details?
   "If true, the console will limit to the size"
   [b]
-  (reset! details? b)
-  (when (compare-log-levels @min-level :debug)
-    (print-message "D"
-                   (if b
-                     "Log details can overflow the line"
-                     "Logs are ellipsis if they overflow the line width"))))
+  (reset! details? b))
+
+(defn print-log-parameters
+  []
+  (print-message
+   "I"
+   (format "Log `%s` (%s)" @min-level (if @details? "Overflow" "Ellipsis"))))
 
 (defn min-level-kw [] @min-level)
 
