@@ -45,5 +45,5 @@
         {:keys [log details help]} options]
     (build-log/set-min-level! log)
     (build-log/set-details? details)
-    (build-log/trace-data cli-opts)
+    (build-log/print-log-parameters)
     (if help (do (print-help-message task-name cli-opts) true) nil)))
