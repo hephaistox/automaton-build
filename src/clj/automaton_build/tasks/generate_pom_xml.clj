@@ -1,33 +1,19 @@
 (ns automaton-build.tasks.generate-pom-xml
   (:require
-   [automaton-build.app.deps-edn            :as build-deps-edn]
    [automaton-build.cicd.deployment.pom-xml :as build-pom-xml]
    [automaton-build.log                     :as build-log]
-   [automaton-build.os.exit-codes           :as build-exit-codes]
-   [automaton-build.utils.keyword           :as build-utils-keyword]))
+   [automaton-build.os.exit-codes           :as build-exit-codes]))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   "Generate pom.xml file"
   [_task-map
-   {:keys [app-name app-dir deps-edn publication environment]
+   {:keys [app-name app-dir publication]
     :as _app-data}]
-  (let [environment (-> environment
-                        build-utils-keyword/trim-colon
-                        build-utils-keyword/keywordize)
-        {:keys [as-lib deploy-to license env]} publication
-        exclude-aliases (get-in env [environment :exclude-aliases])
-        paths (build-deps-edn/extract-paths deps-edn exclude-aliases)
-        app-source-paths (->> paths
-                              (filter #(re-matches #".*src.*" %))
-                              (filter #(not (re-matches #".*development.*"
-                                                        %))))]
+  (let [{:keys [as-lib deploy-to license]} publication]
     (build-log/info-format "Generation of pom-xml started for `%s`" app-name)
     (if (= deploy-to :clojars)
-      (if (nil? (build-pom-xml/generate-pom-xml as-lib
-                                                app-source-paths
-                                                app-dir
-                                                license))
+      (if (nil? (build-pom-xml/generate-pom-xml as-lib ["src"] app-dir license))
         build-exit-codes/ok
         build-exit-codes/catch-all)
       (do (build-log/debug
