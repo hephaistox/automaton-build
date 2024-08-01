@@ -19,8 +19,9 @@
         exclude-aliases (get-in env [environment :exclude-aliases])
         paths (build-deps-edn/extract-paths deps-edn exclude-aliases)
         app-source-paths (->> paths
-                              (filter #(re-find #"src" %))
-                              (filter #(not (re-find #"development" %))))]
+                              (filter #(re-matches #".*src.*" %))
+                              (filter #(not (re-matches #".*development.*"
+                                                        %))))]
     (build-log/info-format "Generation of pom-xml started for `%s`" app-name)
     (if (= deploy-to :clojars)
       (if (nil? (build-pom-xml/generate-pom-xml as-lib
