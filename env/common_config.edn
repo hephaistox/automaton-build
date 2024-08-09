@@ -1,3 +1,0 @@
-;; This configuration file contains all configuration common to all
-;; environments.
-{:app-name "automaton-build"}
