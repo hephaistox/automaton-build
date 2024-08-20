@@ -22,7 +22,8 @@
 (defn absolutize
   "Returns the absolute path of `relative-path` (file or dir)."
   [relative-path]
-  (when relative-path (str (fs/absolutize relative-path))))
+  (let [relative-path (if (nil? relative-path) "" relative-path)]
+    (str (fs/absolutize relative-path))))
 
 (defn match-extension?
   "Returns true if the `filename` match the at least one of the `extensions`."
@@ -34,3 +35,67 @@
   "Turns `filename` extension into `new-extension`."
   [file-name new-extension]
   (str (fs/strip-ext file-name) new-extension))
+
+(defn create-file-path
+  "Creates a path for which each element of `dirs` is a subdirectory."
+  [& dirs]
+  (-> (if (some? dirs)
+          (->> dirs
+               (mapv str)
+               (filter #(not (str/blank? %)))
+               (mapv remove-trailing-separator)
+               (interpose directory-separator)
+               (apply str))
+          "./")
+      str))
+
+(defn create-dir-path
+  "Creates a path with the list of parameters.
+  Removes the empty strings, add needed separators, including the trailing ones"
+  [& dirs]
+  (if (empty? dirs)
+    "."
+    (str (apply create-file-path dirs) directory-separator)))
+
+(defn relativize
+  "Turn the `path` into a relative directory starting from `root-dir`"
+  [path root-dir]
+  (let [path (-> path
+                 remove-trailing-separator
+                 absolutize)
+        root-dir (-> root-dir
+                     remove-trailing-separator
+                     absolutize)]
+    (when-not (str/blank? root-dir)
+      (->> path
+           (fs/relativize root-dir)
+           str))))
+
+(defn is-absolute?
+  "Returns true if `path` is an absolute directory."
+  [path]
+  (= (str directory-separator) (str (first path))))
+
+(defn extract-path
+  "Extract the directory path to the `filename`."
+  [filename]
+  (when-not (str/blank? filename)
+    (if (or (fs/directory? filename)
+            (= directory-separator (str (last filename))))
+      filename
+      (let [filepath (->> filename
+                          fs/components
+                          butlast
+                          (mapv str))]
+        (cond
+          (= [] filepath) ""
+          (is-absolute? filename)
+          (apply create-dir-path directory-separator filepath)
+          :else (apply create-dir-path filepath))))))
+
+(defn parent "Returns the parent of `path`." [path] (fs/parent path))
+
+(defn filename
+  "Returns the filename of a path."
+  [full-path]
+  (fs/file-name full-path))

@@ -1,14 +1,70 @@
 (ns automaton-build.os.cli-opts
-  "Parse cli options."
+  "Parse cli options.
+
+  Proxy to [tools.cli](https://github.com/clojure/tools.cli)"
   (:require
    [clojure.string    :as str]
    [clojure.tools.cli :as tools-cli]))
 
+;; Definitions
 (def help-options [["-h" "--help" "Print usage."]])
 
 (def verbose-options [["-v" "--verbose" "Verbose"]])
 
-(def log-options [["-l" "--log-level" "Log levels" :default :info]])
+(def inverse-options [["-i" "--inverse" "Only set subtasks are executed."]])
+
+;; Helpers
+(defn inverse
+  "Update `cli-opts` like the options in the list `opts`"
+  [cli-opts opts]
+  (update cli-opts
+          :options
+          #(if (:inverse %)
+             (reduce (fn [cli-opts opt] (update cli-opts opt not)) % opts)
+             %)))
+
+;; Parsing
+(defn parse-cli
+  "Analyse `args` with `cli-options.`. (`args` is defaulted to actual cli arguments.)
+  Returns a map with `[options arguments errors summary]` fields."
+  ([cli-options] (tools-cli/parse-opts *command-line-args* cli-options))
+  ([args cli-options] (tools-cli/parse-opts args cli-options)))
+
+;; To print cli options
+(defn error-msg
+  "Returns string reporting a parsing error."
+  [{:keys [errors]
+    :as _cli-opts}]
+  (when errors
+    (str "The following errors occured while parsing your command:\n\n"
+         (str/join \newline errors))))
+
+(defn print-usage
+  "Returns the string for the summary of the task."
+  [{:keys [summary]} current-task]
+  (->> [(str "Usage: bb " current-task " [options]") "" "Options:" summary]
+       (str/join \newline)))
+
+(defn print-usage-with-arguments
+  "Returns the string explaining the usage of the task, with mandatory arguments."
+  [{:keys [summary]} current-task arguments arguments-desc]
+  (->> [(str "Usage: bb " current-task " [options] " arguments)
+        ""
+        "Arguments:"
+        arguments-desc
+        ""
+        "Options:"
+        summary]
+       (str/join \newline)))
+
+(defn errors
+  "If errors occur, displays them."
+  [{:keys [errors]
+    :as _cli-options}]
+  (when errors
+    (->> errors
+         (str/join \newline)
+         str/split-lines)))
 
 (comment
  ;; For an example:
@@ -42,7 +98,7 @@
  ;;    ["-v"
  ;;     nil
  ;;     "Verbosity level; may be specified multiple times to increase value"
- ;;     ;; If no long-option is specified, an option :id must be given
+ ;;      no long-option is specified, an option :id must be given
  ;;     :id
  ;;     :verbosity
  ;;     :default
@@ -80,42 +136,4 @@
  ;;    ;; :assoc-fn (fn [m k _] (update-in m [k] inc))
  ;;    ;; A boolean option defaulting to nil
  ;;    ["-h" "--help"]])
-)
-
-(defn error-msg
-  [errors]
-  (str "The following errors occurred while parsing your command:\n\n"
-       (str/join \newline errors)))
-
-(defn parse-cli
-  "Analyse `args` with `cli-options.`. (`args` is defaulted to actual cli arguments.)
-  Returns a map with `[options arguments errors summary]` fields."
-  ([cli-options] (tools-cli/parse-opts *command-line-args* cli-options))
-  ([args cli-options] (tools-cli/parse-opts args cli-options)))
-
-(defn opt?
-  "Returns value set for `option` in the command line (analyzed with `cli-options)`."
-  [cli-options option]
-  (get-in (parse-cli cli-options) [:options option]))
-
-(defn usage
-  "If set, print usage"
-  [{:keys [summary options]
-    :as _cli-options}
-   current-task]
-  (when (:help options)
-    (->> [(str "Usage: bb " current-task " [options]") "" "Options:" summary]
-         (str/join \newline))))
-
-(comment
-  (parse-cli [] help-options)
-  ; {:options {}, :arguments [], :summary "  -h, --help", :errors nil}
-  (parse-cli ["-h"] help-options)
-  ; {:options {:help true}, :arguments [], :summary "  -h, --help", :errors nil}
-  (parse-cli ["-e"] help-options)
-  #_{:options {}
-     :arguments []
-     :summary "  -h, --help"
-     :errors ["Unknown option: \"-e\""]}
-  ;
 )

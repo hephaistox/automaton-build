@@ -1,48 +1,57 @@
 # automaton-build
-The project used by all other Hephaistox projects to build, publish, and update them (e.g. cicd, babashka tasks, files, and version management)
+Automaton build library streamlines the creation, development, testing, and publishing of the projects.
 
-## Project design decisions
-`automaton-build` has the following objectives:
-* being usable for all kinds of projects
-   * Description:
-      * shadow-cljs is not necessary or meaningful for all projects
-      * even if there are shadow-cljs, there may be no target build in that project (like automaton-web, automaton-core, ...)
-   * Rationale: 
-      * most of those features are the same for all projects, our one source of truth apply to it
-   * Consequences: 
-      * Each project has full control on what's the list of tasks, their name, comments, 
-      * We can simply reuse tasks
-* project flexibility
-  * Description:
-     * Even if all projects could comply to the standard tasks, it is flexible to add its own, or change the existing ones
-  * Rationale:
-     * even if most of the time all projects are identical, we may have some specificites due to certain technologies, 
-     * or some specificies for some customers,
-  * Consequences :
-      * `build_config.edn` is different for each app, and contains main differentiators
-      * the code of each task could be wrapped or rewritten
-* bb.edn are as simple as possible, so update, copy of them is quite simple
-  * Description:
-    * to have only the description of the tasks to use
-  * Rationale:
-    * as few code there is in bb.edn, as it is easy to copy paste a new version in it,
-  * Consequences:
-    * nearly all code is stored in automaton_build
+<img src="docs/img/automaton_duck.png" width=130 alt="automaton picture"> 
 
-## How to use the project
-* Adding tasks in a project consists in is
-   * task selection 
-     * reuse a task in a project is simple, just pick a function with `opts` parameter in tasks directories
-     * and add that entry in the `bb.edn` file
-   * parameters updating in `build_config.edn`
+> If every tool, when ordered, or even of its own accord, could do the work that befits it, just as the creations of Daedalus moved of themselves, or the tripods of Hephaestus went of their own accord to their sacred work, if the shuttle would weave and the plectrum touch the lyre without a hand to guide them, master-craftsmen would have no need of assistants and masters no need of slaves ~ Aristotle, Politics 1253b
 
-## Creates a new tasks
-* First prepare all the building blocks in the appropriate namespaces
-* Then, a task should be created in the `tasks` directory, in an existing namespace or a new one, the grouping should be done logically so that the tasks are easy to find, 
-* By default, tasks are added without the `:clj` options, meaning that everything is run in babashka, you'll need to change it to `:clj` to execute it in clojure mode if
-   * the dependencies are not compatible with babashka
-   * so the function should be changed to a namespace with a `_clj` suffix, so that the babashka functions are not polluted with the dependency
-* Consider to add this task in `la` for testing
+## Motivation
+While working with multiple projects in the organization, many things are repetitive, like running repl, formatting and linting the code, versioning, CICD etc. This library aims to simplify and automate this work. 
+
+## Quick start
+To integrate automaton-build into your project
+1. Create `bb.edn` file at the root of your project with the following content:
+
+``` clojure
+{:deps {org.clojars.hephaistox/automaton-build #:mvn{:version "1.0.2"}} 
+:tasks {-base-deps {:doc "Dependencies for a task using bb"
+                    :extra-deps {org.clojure/tools.cli {:mvn/version "1.1.230"}}}
+        :requires [[automaton-build.tasks.common :as tasks-common]]}}
+```
+Which will:
+* Add this library (automaton-build) dependency to enable its features.
+* Add the `-base-deps` task. Which will be used to declare whatever is common to all tasks. It starts with `-` so it is not shown in the task list.
+* Add the `requires` that enables `tasks-common` namespace for all tasks so you don't have to repeat it.
+
+2. Add your custom tasks or use pre-defined ones from the `automaton-build.tasks` directory.
+
+Example task for starting REPL:
+```clojure
+ repl {:depends [-base-deps]
+       :requires [[automaton-build.tasks.2 :as tasks-2]]
+       :extra-deps {djblue/portal {:mvn/version "0.52.2"}}
+       :doc "Launch repl"
+       :enter (tasks-common/enter tasks-2/cli-opts (current-task))
+       :task (tasks-2/start-repl [:common-test :env-development-repl :build])}
+```
+
+## Tasks configuration
+Some tasks may require additional configuration. Set up a `project.edn` file in your project root to customize task behavior. 
+For an example refer to the forbidden-words report task [automaton-build.tasks.tasks.3](src/bb/automaton_build/tasks/3.clj) and [project.edn file](project.edn) 
+
+## Compatibility of dependencies
+To use external dependency (`:extra-deps` alias), dependency needs to compile to the GraalVM or be included in Babashka.
+[For a list of compatible libraries see the Babashka documentation](https://github.com/babashka/babashka/blob/master/doc/projects.md)
+
+In case the library is not supported, but has CLI capabilities, you can include it as an alias in the project `deps.edn` and just call cmd with "clojure -M/X:alias". 
+[Example of it can be found in documentation task that uses codox library](src/bb/automaton_build/tasks/doc.clj)
+
+## See documentation
+This library is heavily based on the usage of [babashka tasks](https://book.babashka.org/#_tasks_api). 
+
+If you're interested in more detail about the approach we took while developing this library look at [design decisions document](docs/design_decision.md)
+
+[For detailed API documentation click here](https://hephaistox.github.io/automaton-build/latest).
 
 License information can be found in [LICENSE file](LICENSE.md)
-Copyright © 2020-2024 Anthony Caumond, Mateusz Mazurczak
+Copyright © 2020-2024 Hephaistox

@@ -12,12 +12,14 @@
   [zprint documentation](https://github.com/kkinnear/zprint/blob/main/doc/using/project.md#use-zprint-with-different-formatting-for-different-projects)"
   #":search-config\?\s*true")
 
-(def ^:private zprint-file "~/.zprintrc")
+(defn read-home-setup
+  "Returns the file desc of the `.zprintrc` file of the global (inter user) configuration."
+  []
+  (build-file/read-file (build-file/expand-home-str "~/.zprintrc")))
 
 (defn is-zprint-using-project-setup?
-  []
-  (some->> (build-file/read-file zprint-file)
-           (re-find use-local-zprint-config-parameter)))
+  [zprint-content]
+  (re-find use-local-zprint-config-parameter zprint-content))
 
 (defn format-file-cmd
   "Format the `filename` clojure file with zprint."

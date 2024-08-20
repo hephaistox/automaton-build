@@ -5,7 +5,20 @@
    [clojure.edn             :as edn]))
 
 (defn read-edn
-  "Read file which name is `edn-filename`."
+  "Read file which name is `edn-filename`.
+
+  Returns:
+
+  * `filename`
+  * `raw-content` if file can be read.
+  * `invalid?` to `true` whatever why.
+  * `exception` if something wrong happened.
+  * `edn` if the translation."
   [edn-filename]
-  (-> (build-file/read-file edn-filename)
-      edn/read-string))
+  (let [{:keys [raw-content invalid?]
+         :as res}
+        (build-file/read-file edn-filename)]
+    (if invalid?
+      res
+      (try (assoc res :edn (edn/read-string raw-content))
+           (catch Exception e (assoc res :exception e :invalid? true))))))

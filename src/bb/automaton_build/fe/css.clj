@@ -1,5 +1,7 @@
 (ns automaton-build.fe.css
-  "Load the file css."
+  "Load the file css.
+
+  Proxy to [tailwindcss](https://tailwindcss.com/docs/installation)."
   (:require
    [automaton-build.os.file :as build-file]))
 
