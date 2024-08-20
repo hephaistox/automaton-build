@@ -48,6 +48,8 @@
                           target-container-dir)
   (when (build-cmds/execute-and-trace ["docker"
                                        "build"
+                                       "--platform"
+                                       "linux/amd64"
                                        "-t"
                                        container-image-name
                                        "."
@@ -66,6 +68,8 @@
     "run"
     "-p"
     "8282:8080"
+    "--platform"
+    "linux/amd64"
     "-it"
     "--entrypoint"
     "/bin/bash"
