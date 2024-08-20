@@ -66,10 +66,10 @@
   (build-cmds/execute-and-trace-return-exit-codes
    ["docker"
     "run"
-    "--platform"
-    "linux/amd64"
     "-p"
     "8282:8080"
+    "--platform"
+    "linux/amd64"
     "-it"
     "--entrypoint"
     "/bin/bash"
