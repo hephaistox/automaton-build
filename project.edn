@@ -1,0 +1,5 @@
+{:app-name "automaton-build"
+ :code {:forbidden-words
+        ["TODO" "DONE" "NOTE" "FIXME" "tap>" "automaton-core" "automaton-web"]}
+ :publication {:base-branch "main"
+               :repo-url "git@github.com:hephaistox/automaton-build.git"}}

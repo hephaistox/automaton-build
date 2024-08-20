@@ -1,67 +1,119 @@
 (ns automaton-build.os.cmds
   "Execute commands."
-  (:refer-clojure :exclude [print])
   (:require
-   [automaton-build.os.file :as build-file]
-   [babashka.process        :as    p
-                            :refer [shell]]
-   [clojure.java.io         :as io]
-   [clojure.string          :as str]))
+   [automaton-build.os.filename :as build-filename]
+   [babashka.process            :as    p
+                                :refer [shell]]
+   [clojure.java.io             :as io]
+   [clojure.string              :as str]))
 
 (defn to-str [cmd] (str/join " " cmd))
 
 (def schema [:sequential :string])
 
-(defn blocking-cmd
-  "Returns a map with execution blocking-cmd of the blocking command `cmd` execution.
+(defn clj-parameterize
+  "Turns `par` into a parameter understood by a clojure `cli`."
+  [par]
+  (cond
+    (string? par) (str "'\"" par "\"'")
+    :else par))
+
+(defn defaulting-dir
+  [dir]
+  (-> (if (str/blank? dir) "." dir)
+      build-filename/absolutize))
+
+(defn blocking-cmd-str
+  "Returns a map with execution blocking-cmd of the blocking command `cmd-str` execution.
   Use this flavor when you need to wait for the end of the execution and have the `exit` code and outputs (`out` and `err`)."
-  [cmd]
-  (try (let [cmd (-> cmd
-                     to-str
-                     build-file/expand-home-str)
-             res (->> cmd
-                      (shell {:out :string
-                              :continue true
-                              :err :string}))]
-         {:cmd cmd
+  [cmd-str dir]
+  (try (let [dir (defaulting-dir dir)
+             res (when-not (str/blank? cmd-str)
+                   (->> cmd-str
+                        (shell (cond-> {:out :string
+                                        :continue true
+                                        :err :string}
+                                 dir (assoc :dir dir)))))]
+         {:cmd-str cmd-str
           :out (:out res)
+          :dir dir
           :exit (:exit res)
           :err (:err res)})
        (catch Exception e
-         {:cmd cmd
+         {:cmd-str cmd-str
+          :dir dir
           :exit -1
           :e e
-          :err (ex-cause e)})))
+          :err (or (ex-message e) "Unexpected exception")})))
 
-(comment
-  (def res1 (blocking-cmd ["non-existing"]))
-  (def res1 (blocking-cmd ["ls"]))
-  res1
-  {:cmd ["ls"]
-   :out "README.md\nautomaton..."
-   :exit 0
-   :err ""}
-  (def res (blocking-cmd ["npm" "audit"]))
-  res
-  {:cmd ["npm" "audit"]
-   :out "# npm audit report\n\nbraces..."
-   :exit 1
-   :err ""})
+(defn blocking-cmd
+  "Returns a map with execution blocking-cmd of the blocking command `cmd` execution.
+  Use this flavor when you need to wait for the end of the execution and have the `exit` code and outputs (`out` and `err`)."
+  [cmd dir]
+  (blocking-cmd-str (to-str cmd) dir))
+
+(defn force-dirs
+  "Update a chain so all element of the chain are executed in the same `dir`"
+  [cmd-chain dir]
+  (mapv #(assoc % 1 dir) cmd-chain))
+
+(defn success
+  "Returns `true` if the result is a success"
+  [result]
+  (= 0 (:exit result)))
+
+(defn chain-cmds
+  "Execute all commands in the chain, stops at the first failing one."
+  [cmd-chain]
+  (loop [cmd-chain cmd-chain
+         result []]
+    (let [rest-cmd-chains (rest cmd-chain)
+          chain-link (first cmd-chain)]
+      (if-not chain-link
+        result
+        (let [{:keys [dir cmd]} {:dir (second chain-link)
+                                 :cmd (first chain-link)}
+              {:keys [dir exit]
+               :as res}
+              (blocking-cmd cmd dir)
+              chain-link-res (assoc res :cmd cmd :dir dir)]
+          (if (zero? exit)
+            (recur rest-cmd-chains (conj result chain-link-res))
+            (-> result
+                (concat [chain-link-res] (mapv chain-link-res rest-cmd-chains))
+                vec)))))))
+
+(defn first-failing
+  "Returns the result of the first failing result of a command, or the last succesful one."
+  [chain-res]
+  (if-let [failing-res (->> chain-res
+                            (remove success)
+                            first)]
+    failing-res
+    (last chain-res)))
+
+(defn create-process-str
+  "Create a process executed in directory `dir` and based on command string `cmd-str`.
+
+  Returns a process."
+  [cmd-str dir]
+  (->> cmd-str
+       (p/process {:shutdown p/destroy-tree
+                   :dir (defaulting-dir dir)})))
 
 (defn create-process
-  "Create a process based on command `cmd`, return a process."
-  [cmd]
-  (->> cmd
-       to-str
-       build-file/expand-home-str
-       (p/process {:shutdown p/destroy-tree})))
+  "Create a process executed in directory `dir` and based on command string `cmd-str`.
+
+  Returns a process."
+  [cmd dir]
+  (create-process-str (to-str cmd) dir))
 
 (defn kill "Kill the running process `proc`." [proc] (p/destroy-tree proc))
 
 (defn log-stream
   "Apply `logger-fn` to each line of the stream called `stream-kw` of the `proc`. When the `proc` is not alive.
   `refresh-delay` pauses between two attempts of refreshing the log.
-  If an error occur, print it with `error-fn`"
+  If an error occur, use `error-fn` to display it."
   [proc stream-kw on-line-fn on-end-fn refresh-delay error-fn]
   (let [refresh-delay (if (number? refresh-delay)
                         refresh-delay
@@ -81,44 +133,3 @@
     (on-end-fn)))
 
 (defn exec [process] (when process (deref process)))
-
-(comment
-  (def tmp (build-file/create-temp-file "test"))
-  (def p (create-process ["npx" "tailwindcss" "-o" tmp "--watch"]))
-  (future (log-stream p
-                      :out
-                      #(println "out:" %)
-                      #(println "log is killed.")
-                      100
-                      println))
-  (future (log-stream p
-                      :err
-                      #(println "err:" %)
-                      #(println "err log is killed.")
-                      100
-                      println))
-  @p
-  p
-  (kill p)
-  (def p2
-    (create-process ["npx"
-                     "shadow-cljs"
-                     "watch"
-                     "ltest"
-                     "landing-app"
-                     "browser-test"
-                     "portfolio"]))
-  (future (log-stream p2
-                      :out
-                      #(println "out:" %)
-                      #(println "log is killed.")
-                      100
-                      println))
-  (future (log-stream p2
-                      :err
-                      #(println "err:" %)
-                      #(println "err log is killed.")
-                      100
-                      println))
-  ;
-)

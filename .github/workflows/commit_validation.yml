@@ -1,6 +1,10 @@
 name: Commit validation
 run-name: ${{ github.event.head_commit.message }} pushed by ${{ github.actor }}, to test and lint - $${{ github.sha }}
-on: [push]
+on:
+  push:
+     branches:
+        - '*'                     # matches all branches
+        - '!gh-pages-dont-change' # except the one for pages
 jobs:
   run-bb:
     runs-on: ubuntu-latest
@@ -12,4 +16,4 @@ jobs:
           # this is to fix GIT not liking owner of the checkout dir, See https://github.com/actions/runner/issues/2033
           chown -R $(id -u):$(id -g) $PWD
       - name: Base image
-        uses: docker://hephaistox/gha-automaton-build:2.0.0-15-la
+        uses: docker://hephaistox/gha-automaton-build:2.0.1-4-la

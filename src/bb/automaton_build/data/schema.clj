@@ -1,6 +1,7 @@
 (ns automaton-build.data.schema
   "Validate the data against the schema.
-  Is a proxy for malli."
+
+  Proxy to [malli](https://github.com/metosin/malli)."
   (:require
    [clojure.pprint  :as pp]
    [malli.core      :as malli]
@@ -16,10 +17,10 @@
   "Returns a vector of string of humanized messages for `data` compliance to `schema`.
   Returns `nil` if no error is found."
   [schema data]
-  (with-out-str (-> schema
-                    (malli/explain data)
-                    (malli-error/humanize)
-                    pp/pprint)))
+  (let [h (some-> schema
+                  (malli/explain data)
+                  (malli-error/humanize))]
+    (when h (with-out-str (pp/pprint h)))))
 
 (defn add-default-values
   "Returns `data` augmented with the default values, as defined in the `schema`."
@@ -29,9 +30,9 @@
                 (malli-transform/default-value-transformer
                  {::malli-transform/add-optional-keys true})))
 
-(comment
-  (humanize :string 12)
-  ;->  ["should be a string"]
-  (humanize :string "12")
-  ;-> nil
-)
+(defn validate-with-defaults
+  "Returns `true` if `data` is compliant to the `schema`, knowing its defaults."
+  [schema data]
+  (->> data
+       (add-default-values schema)
+       (valid? schema)))
