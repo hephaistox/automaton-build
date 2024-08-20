@@ -68,6 +68,8 @@
     "run"
     "-p"
     "8282:8080"
+    "--platform"
+    "linux/amd64"
     "-it"
     "--entrypoint"
     "/bin/bash"
