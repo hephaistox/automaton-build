@@ -16,10 +16,12 @@
    [automaton-build.os.file                  :as build-file]
    [automaton-build.os.user                  :as build-user]
    [automaton-build.project.config           :as build-project-config]
+   [automaton-build.tasks.deps-version       :as tasks-deps-version]
    [automaton-build.tasks.impl.headers.cmds  :refer [blocking-cmd success]]
    [automaton-build.tasks.impl.headers.files :as    build-headers-files
                                              :refer [print-edn-errors
                                                      print-file-errors]]
+   [clojure.pprint                           :as pp]
    [clojure.string                           :as str]))
 
 (def cli-opts
@@ -148,6 +150,22 @@
               "docker is started."
               "docker is not started."))
 
+(defn outdated-deps
+  [app-dir]
+  (let [project-desc (build-headers-files/project-config app-dir)
+        excluded-deps (get-in project-desc [:edn :deps :excluded-libs])
+        deps-report (tasks-deps-version/outdated-deps-report app-dir
+                                                             excluded-deps)]
+    (case (:status deps-report)
+      :done {:message "All dependencies are up-to-date!"
+             :status :ok}
+      :found {:message "You have outdated deps, run `bb update-deps`"
+              :details (with-out-str (pp/print-table
+                                      [:name :current-version :version]
+                                      (:deps deps-report)))}
+      {:message "Dependency version check has failed"
+       :details (pr-str deps-report)})))
+
 (def registry
   [{:check-name "project.edn"
     :fn-to-call project-config}
@@ -170,7 +188,9 @@
    {:check-name "git-installed"
     :fn-to-call git-installed}
    {:check-name "npm"
-    :fn-to-call npm-audit}])
+    :fn-to-call npm-audit}
+   {:check-name "outdated-deps"
+    :fn-to-call outdated-deps}])
 
 (defn run
   "Execute all tests."

@@ -12,6 +12,9 @@
    [:code {:optional true}
     [:map {:closed true}
      [:forbidden-words [:vector :string]]]]
+   [:deps {:optional true}
+    [:map {:closed true}
+     [:excluded-libs [:vector :map]]]]
    [:monorepo
     [:map-of
      :keyword
