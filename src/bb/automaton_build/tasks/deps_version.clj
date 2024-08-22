@@ -25,13 +25,14 @@
 (defn- wrap-outdated-report
   [{:keys [exit deps]
     :as rep}]
-  (if (= 0 exit)
-    (if (empty? deps)
-      {:status :up-to-date}
-      {:status :outdated
-       :deps deps})
-    {:status :error
-     :err rep}))
+  (let [deps (remove nil? deps)]
+    (if (= 0 exit)
+      (if (empty? deps)
+        {:status :up-to-date}
+        {:status :outdated
+         :deps deps})
+      {:status :error
+       :err rep})))
 
 (defn outdated-maven-report
   "Returns outdated maven deps for `app-dir`, if all deps are up-to-date returns nil, otherwise returns map with :error"
@@ -74,18 +75,15 @@
   [app-dir excluded-deps]
   (let [maven-report (outdated-maven-report app-dir)
         npm-report (outdated-npm-report app-dir)
-        reports [maven-report npm-report]]
+        reports (remove nil? [maven-report npm-report])
+        deps (build-dependencies/exclude-deps (distinct (flatten reports))
+                                              excluded-deps)]
     (if (some #(some? (:error %)) reports)
-      (if (:error maven-report) maven-report npm-report)
-      (if (every? nil? reports)
+      (first reports)
+      (if (or (empty? reports) (empty? deps))
         {:status :done}
-        (let [deps (build-dependencies/exclude-deps
-                    (distinct (concat maven-report npm-report))
-                    excluded-deps)]
-          (if (empty? deps)
-            {:status :done}
-            {:status :found
-             :deps deps}))))))
+        {:status :found
+         :deps deps}))))
 
 (defn- clear-table-cli
   [table-height]

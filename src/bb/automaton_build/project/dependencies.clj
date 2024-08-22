@@ -58,10 +58,10 @@
 
 (defn exclude-deps
   "Returns `deps` without those that name is in `excluded-libs-names` and hephaistox deps pre-release versions."
-  [deps excluded-deps-names]
+  [deps excluded-deps]
   (remove (fn [dep]
             (some #(or (= (:name %) (:name dep)) (hephaistox-pre-release? dep))
-                  excluded-deps-names))
+                  excluded-deps))
           deps))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
@@ -77,6 +77,9 @@
    Similar to `update-dep!` fn, but more performant in case of multiple deps to update."
   [dir deps]
   (let [{:keys [clj-dep npm]} (group-by #(:type %) deps)
-        res [(build-project-clj/update-deps! dir clj-dep)
-             (build-project-npm/update-npm-deps! dir npm)]]
+        clj-deps-res (when (and clj-dep (seq clj-dep))
+                       (build-project-clj/update-deps! dir clj-dep))
+        npm-deps-res (when (and npm (seq npm))
+                       (build-project-npm/update-npm-deps! dir npm))
+        res [clj-deps-res npm-deps-res]]
     (when-not (every? #(nil? %) res) (some #(when (:error %) %) res))))

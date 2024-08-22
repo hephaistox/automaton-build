@@ -2,6 +2,7 @@
   (:require
    [automaton-build.os.cmds     :refer [blocking-cmd]]
    [automaton-build.os.filename :as build-filename]
+   [cheshire.core               :as json]
    [clojure.string              :as str]))
 
 (defn update-dep!
@@ -41,26 +42,24 @@
    Example line
   node_modules/sentry:@sentry/browser@7.119.0:@sentry/browser@8.26.0:@sentry/browser@8.26.0:clojure
   Which follows pattern path:current-package:wanted-version:latest-version:depended-by"
-  [dir res]
+  [dir [lib-name values]]
   (let [file-path (build-filename/create-file-path dir "package.json")
-        [_path current-version _wanted-version max-version _depended-by]
-        (str/split res #":")]
-    (when (not= current-version max-version)
-      (let [[lib-name version] (str/split max-version #"@(?!.*@)" 2)
-            [_ cur-version] (str/split current-version #"@(?!.*@)" 2)]
-        {:file file-path
-         :type :npm
-         :name lib-name
-         :current-version cur-version
-         :version version}))))
+        cur-version (get values "current")
+        version (get values "latest")]
+    {:file file-path
+     :type :npm
+     :name lib-name
+     :current-version cur-version
+     :version version}))
 
 (defn outdated-npm-deps
   "Returns map with `:deps` and list of dependencies. In case of an error returns map with `:err`"
   [dir]
-  (if-let [check-err (npm-install-check dir)]
-    check-err
-    (let [res (blocking-cmd ["npm" "outdated" "--prefix" "." "-parseable"] dir)]
-      (case (:exit res)
-        0 (assoc res :deps [])
-        1 (assoc res :deps (str/split (:out res) #"\n") :exit 0)
-        (assoc res :msg "NPM outdated deps search failed")))))
+  (try (if-let [check-err (npm-install-check dir)]
+         check-err
+         (let [res (blocking-cmd ["npm" "outdated" "--prefix" "." "-json"] dir)]
+           (case (:exit res)
+             0 (assoc res :deps [])
+             1 (assoc res :deps (json/parse-string (:out res)) :exit 0)
+             (assoc res :msg "NPM outdated deps search failed"))))
+       (catch Exception e {:err e})))
