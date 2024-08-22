@@ -199,6 +199,7 @@
   []
   (build-echo-common/current-time-str))
 
+(def clear-prev-line (str build-text/move-oneup build-text/clear-eol))
 
 (defn build-writter [] (build-echo-common/build-writter))
 

@@ -4,13 +4,13 @@
   <packaging>jar</packaging>
   <groupId>org.clojars.hephaistox</groupId>
   <artifactId>automaton-build</artifactId>
-  <version>2.0.1</version>
+  <version>2.0.2</version>
   <name>automaton-build</name>
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.11.3</version>
+      <version>1.11.4</version>
     </dependency>
     <dependency>
       <groupId>clj-htmltopdf</groupId>
@@ -20,7 +20,7 @@
     <dependency>
       <groupId>djblue</groupId>
       <artifactId>portal</artifactId>
-      <version>0.53.0</version>
+      <version>0.57.2</version>
     </dependency>
     <dependency>
       <groupId>markdown-clj</groupId>
@@ -40,12 +40,12 @@
     <dependency>
       <groupId>metosin</groupId>
       <artifactId>malli</artifactId>
-      <version>0.14.0</version>
+      <version>0.16.1</version>
     </dependency>
     <dependency>
       <groupId>cheshire</groupId>
       <artifactId>cheshire</artifactId>
-      <version>5.12.0</version>
+      <version>5.13.0</version>
     </dependency>
     <dependency>
       <groupId>slipset</groupId>
@@ -66,12 +66,12 @@
     <dependency>
       <groupId>dev.weavejester</groupId>
       <artifactId>medley</artifactId>
-      <version>1.7.0</version>
+      <version>1.8.1</version>
     </dependency>
     <dependency>
       <groupId>com.github.liquidz</groupId>
       <artifactId>antq</artifactId>
-      <version>2.8.1201</version>
+      <version>2.9.1217</version>
     </dependency>
     <dependency>
       <groupId>codox</groupId>
@@ -81,12 +81,12 @@
     <dependency>
       <groupId>io.github.clojure</groupId>
       <artifactId>tools.build</artifactId>
-      <version>0.10.0</version>
+      <version>0.10.5</version>
     </dependency>
     <dependency>
       <groupId>babashka</groupId>
       <artifactId>fs</artifactId>
-      <version>0.5.20</version>
+      <version>0.5.22</version>
     </dependency>
   </dependencies>
   <build>
