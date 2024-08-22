@@ -4,6 +4,8 @@
    [automaton-build.os.file :as build-file]
    [clojure.edn             :as edn]))
 
+(defn str->edn [raw-content] (edn/read-string raw-content))
+
 (defn read-edn
   "Read file which name is `edn-filename`.
 
@@ -20,5 +22,5 @@
         (build-file/read-file edn-filename)]
     (if invalid?
       res
-      (try (assoc res :edn (edn/read-string raw-content))
+      (try (assoc res :edn (str->edn raw-content))
            (catch Exception e (assoc res :exception e :invalid? true))))))
