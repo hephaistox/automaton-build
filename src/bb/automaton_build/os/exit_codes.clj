@@ -7,6 +7,8 @@
 
 (def misuse "2: Misuse of shell built-ins (according to Bash documentation)" 2)
 
+(def invalid-state "3: State is not consistent with the command" 3)
+
 (def cannot-execute "126: Command invoked cannot execute" 126)
 
 (def command-not-found "127: Command not found" 127)

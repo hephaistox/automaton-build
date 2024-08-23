@@ -15,10 +15,19 @@
    [:deps {:optional true}
     [:map {:closed true}
      [:excluded-libs [:vector :map]]]]
+   [:versions {:optional true}
+    [:map {:closed true}
+     [:bb :string]
+     [:clj :string]
+     [:jdk :string]
+     [:npm :string]]]
    [:monorepo
     [:map-of
      :keyword
      [:map {:closed true}
+      [:gha
+       [:map {:closed true}
+        [:version :string]]]
       [:apps
        [:vector
         [:map {:closed true}

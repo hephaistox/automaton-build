@@ -23,6 +23,12 @@
   (-> (if (str/blank? dir) "." dir)
       build-filename/absolutize))
 
+(defn simple-shell
+  "Simple shell.
+  Use this one when you need to leverage standard input/output for the command called."
+  [cmd args]
+  (shell cmd args))
+
 (defn blocking-cmd-str
   "Returns a map with execution blocking-cmd of the blocking command `cmd-str` execution.
   Use this flavor when you need to wait for the end of the execution and have the `exit` code and outputs (`out` and `err`)."
