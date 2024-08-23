@@ -125,16 +125,21 @@
                                "ended, err listener is killed.")))
                  refresh-delay
                  errorln))
-        (build-commands/exec proc)
-        ;; Without this pause, some messages are lost
-        (Thread/sleep 100)
-        {:dir dir
-         :cmd-str cmd-str
-         :proc proc})
+        (let [res (build-commands/exec proc)]
+          ;; Without this pause, some messages are lost
+          (Thread/sleep 100)
+          (merge res
+                 {:dir dir
+                  :cmd-str cmd-str
+                  :proc proc})))
       (catch Exception e
         {:e e
          :dir dir
          :cmd-str cmd-str}))))
+
+(defn simple-shell
+  ([cmd] (simple-shell cmd {}))
+  ([cmd args] (build-commands/simple-shell cmd args)))
 
 (defn chain-cmds
   "Execute a chain of commands, echo the errors of the last command if if happens, with the `non-zero-exit-message`.

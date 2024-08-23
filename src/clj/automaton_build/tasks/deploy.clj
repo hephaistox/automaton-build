@@ -1,20 +1,17 @@
 (ns automaton-build.tasks.deploy
   "Compile, deploy to gha, push to base branch and publish jar."
   (:require
-   [automaton-build.app.versioning              :as build-app-versioning]
-   [automaton-build.cicd.cfg-mgt                :as build-cfg-mgt]
-   [automaton-build.cicd.version                :as build-version]
-   [automaton-build.log                         :as build-log]
-   [automaton-build.os.exit-codes               :as build-exit-codes]
-   [automaton-build.os.files                    :as build-files]
-   [automaton-build.os.terminal-msg             :as build-terminal-msg]
-   [automaton-build.tasks.build-jar             :as build-tasks-build-jar]
-   [automaton-build.tasks.gha-container-publish
-    :as build-tasks-gha-container-publish]
-   [automaton-build.tasks.git-push-base-branch
-    :as build-tasks-git-push-base-branch]
-   [automaton-build.tasks.publish-jar           :as build-tasks-publish-jar]
-   [automaton-build.utils.keyword               :as build-utils-keyword]))
+   [automaton-build.app.versioning             :as build-app-versioning]
+   [automaton-build.cicd.cfg-mgt               :as build-cfg-mgt]
+   [automaton-build.log                        :as build-log]
+   [automaton-build.os.exit-codes              :as build-exit-codes]
+   [automaton-build.os.files                   :as build-files]
+   [automaton-build.os.terminal-msg            :as build-terminal-msg]
+   [automaton-build.tasks.build-jar            :as build-tasks-build-jar]
+   [automaton-build.tasks.git-push-base-branch :as
+                                               build-tasks-git-push-base-branch]
+   [automaton-build.tasks.publish-jar          :as build-tasks-publish-jar]
+   [automaton-build.utils.keyword              :as build-utils-keyword]))
 
 (defn- base-branch-push-disallowed
   [publication]
@@ -88,13 +85,12 @@
 
    The process of deployment is:
    1. Compile jar
-   2. Publish new GHA docker image (if applies)
-   3. Push changes to app target branch for that environment
-   4. Deploy app
+   2. Push changes to app target branch for that environment
+   3. Deploy app
 
   It's done currently not as a workflow, only because workflow can't be used in another workflow and we have a logic we want to preserve here"
   [task-map
-   {:keys [app-name publication app-dir gha force environment]
+   {:keys [app-name publication app-dir force environment]
     :as app}]
   (let [environment (-> environment
                         build-utils-keyword/trim-colon
@@ -110,22 +106,7 @@
       (let [app (ensure-no-cache app)]
         (build-log/info-format "Deployment process started for `%s`" app-name)
         (if (= build-exit-codes/ok (build-tasks-build-jar/exec task-map app))
-          (if gha
-            (if (= build-exit-codes/ok
-                   (build-tasks-gha-container-publish/exec
-                    task-map
-                    (assoc app
-                           :tag
-                           (build-version/current-version (:app-dir app)))))
-              (deployment* task-map app)
-              (do (build-log/warn-format
-                   "GHA deploy of %s failed - deploy aborted"
-                   app-name)
-                  build-exit-codes/catch-all))
-            (do (build-log/debug-format
-                 "Gha missing for `%s`, gha-container-publish is skipped"
-                 app-name)
-                (deployment* task-map app)))
+          (deployment* task-map app)
           (do (build-log/warn-format "Compilation of %s failed - deploy aborted"
                                      app-name)
               build-exit-codes/catch-all))))))
