@@ -204,3 +204,13 @@
    [["git" "remote" "add" "origin" ssh-url]]
    [["git" "add" "."]]
    [["git" "push" "--force" "--set-upstream" "origin" branch]]])
+
+(defn clean-state
+  "Returns a command to detect clean state"
+  []
+  ["git" "status" "-s"])
+
+(defn clean-state-analyze
+  "Check if the returned value of clean state "
+  [res]
+  (and (= 0 (:exit res)) (str/blank? (:out res))))

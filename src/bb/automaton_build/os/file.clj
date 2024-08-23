@@ -39,10 +39,11 @@
   (when (and (is-existing-path? dirname) (fs/directory? dirname)) dirname))
 
 (defn write-file
-  "Write the text file `filename` with its `content`."
+  "Write the text file `filename` with its `content`.
+
+  Returns the filename if succesful, `nil` otherwise."
   [filename content]
-  (spit filename content)
-  filename)
+  (try (spit filename content) filename (catch Exception _ nil)))
 
 (defn read-file
   "Read the file named `filename`.

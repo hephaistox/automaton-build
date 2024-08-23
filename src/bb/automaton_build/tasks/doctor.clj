@@ -6,16 +6,22 @@
    [automaton-build.doc.mermaid-bb           :as build-mermaid-bb]
    [automaton-build.echo.headers             :refer [h1
                                                      h1-error
+                                                     h1-error!
                                                      h1-valid
                                                      h1-valid!
+                                                     h2
+                                                     h2-error
                                                      h2-error!
+                                                     h2-valid
                                                      h2-valid!
                                                      normalln
                                                      uri-str]]
    [automaton-build.os.cli-opts              :as build-cli-opts]
+   [automaton-build.os.exit-codes            :as build-exit-codes]
    [automaton-build.os.file                  :as build-file]
    [automaton-build.os.user                  :as build-user]
    [automaton-build.project.config           :as build-project-config]
+   [automaton-build.project.map              :as build-project-map]
    [automaton-build.tasks.deps-version       :as tasks-deps-version]
    [automaton-build.tasks.impl.headers.cmds  :refer [blocking-cmd success]]
    [automaton-build.tasks.impl.headers.files :as    build-headers-files
@@ -166,11 +172,109 @@
       {:message "Dependency version check has failed"
        :details (pr-str deps-report)})))
 
+(defn- message-version-alignments
+  "Display message and return `true` if versions are matching."
+  ([tool-name expected-version actual-version]
+   (message-version-alignments tool-name expected-version actual-version nil))
+  ([tool-name expected-version actual-version gha-image-version]
+   (if (and (= expected-version actual-version)
+            (or (nil? gha-image-version)
+                (= expected-version gha-image-version)))
+     (h2-valid tool-name
+               "version"
+               expected-version
+               "aligned in yml, dockerfile and expectation")
+     (do (h2-error tool-name "version" expected-version "not aligned")
+         (normalln "Expect version" expected-version)
+         (when (some? gha-image-version)
+           (when-not (= expected-version gha-image-version)
+             (normalln "but gha image is" gha-image-version)))
+         (when-not (= expected-version actual-version)
+           (normalln "but locally installed is" actual-version))))
+   (and (= expected-version actual-version)
+        (or (nil? gha-image-version) (= expected-version gha-image-version)))))
+
+(defn- bb-version-check
+  [versions Dockerfile]
+  (h2 "Check bb version")
+  (let [res (blocking-cmd ["bb" "--version"]
+                          "."
+                          "Impossible to retrieve bb version"
+                          verbose)]
+    (message-version-alignments "bb"
+                                (:bb versions)
+                                (second (re-find #"v(.*)$" (:out res)))
+                                (second (re-find #"(?m)BB_VERSION=(.*)$"
+                                                 Dockerfile)))))
+
+(defn- clojure-version-check
+  [versions Dockerfile]
+  (h2 "Check clojure version")
+  (let [res (blocking-cmd ["clojure" "--version"]
+                          "."
+                          "Impossible to retrieve clojure version"
+                          verbose)]
+    (message-version-alignments "clojure"
+                                (:clj versions)
+                                (second (re-find #"version (.*)$" (:out res)))
+                                (second (re-find #"(?m)CLJ_VERSION=(.*)$"
+                                                 Dockerfile)))))
+
+(defn- java-version-check
+  [versions Dockerfile]
+  (h2-valid! "Check java version")
+  (let [res (blocking-cmd ["java" "--version"]
+                          "."
+                          "Impossible to retrieve java version"
+                          verbose)]
+    (normalln "java expects" (:jdk versions))
+    (normalln "locally" (second (re-find #"(?m)openjdk (.*) .*$" (:out res))))
+    (normalln "gha" (second (re-find #"(?m)JDK_VERSION=(.*)$" Dockerfile)))))
+
+(defn- npm-version-check
+  [versions]
+  (h2 "Check npm version")
+  (let [res (blocking-cmd ["npm" "--version"]
+                          "."
+                          "Impossible to retrieve npm version"
+                          verbose)]
+    (message-version-alignments "npm"
+                                (:npm versions)
+                                (second (re-find #"(.*)$" (:out res))))))
+
+(defn version
+  [app-dir]
+  (let [monorepo-project-map (-> (build-project-map/create-project-map app-dir)
+                                 build-project-map/add-project-config)
+        Dockerfile-pm (build-file/read-file
+                       "container_images/gha_image/Dockerfile")
+        Dockerfile (:raw-content Dockerfile-pm)
+        versions (get-in monorepo-project-map
+                         [:project-config-filedesc :edn :versions])]
+    (when (:invalid? Dockerfile-pm)
+      (h1-error! "gha-image dockerfile has not been found")
+      (System/exit build-exit-codes/invalid-state))
+    (when (:invalid? monorepo-project-map)
+      (h1-error! "Monorepo project.edn has not been found")
+      (System/exit build-exit-codes/invalid-state))
+    (if (some some?
+              (map :exit
+                   [(bb-version-check versions Dockerfile)
+                    (clojure-version-check versions Dockerfile)
+                    (java-version-check versions Dockerfile)
+                    (npm-version-check versions)]))
+      {:message "Dependency version check has failed"
+       :details nil}
+      {:message "Dependency version is ok"
+       :details nil})))
+
 (def registry
   [{:check-name "project.edn"
     :fn-to-call project-config}
    {:check-name "docker-present"
     :fn-to-call docker-present}
+   {:check-name "version"
+    :fn-to-call version}
    {:check-name "docker-on"
     :fn-to-call docker-on}
    {:check-name "group-id"
