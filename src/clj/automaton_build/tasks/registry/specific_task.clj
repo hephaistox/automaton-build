@@ -12,8 +12,7 @@
 (defn read-specific-tasks
   "Read the map of tasks definitions specific for that customer map"
   [app-dir]
-  (let [filename
-        (str (if (str/blank? app-dir) "." app-dir) "/" specific-task-registry)]
+  (let [filename (str (if (str/blank? app-dir) "." app-dir) "/" specific-task-registry)]
     (when (fs/exists? filename)
       (some-> filename
               slurp

@@ -15,9 +15,7 @@ with at least two lines in it"
 (deftest exclude-files-test
   (testing "The core map is returned"
     (is (map? (build-filerepo-raw/exclude-files text-file-repo #{})))
-    (is (= 1
-           (count (build-filerepo-raw/exclude-files text-file-repo
-                                                    #{"build_config.edn"}))))))
+    (is (= 1 (count (build-filerepo-raw/exclude-files text-file-repo #{"build_config.edn"}))))))
 
 (deftest file-repo-map-test
   (testing "The core map is returned"
@@ -26,9 +24,7 @@ with at least two lines in it"
 (deftest file-repo-test
   (testing "The core map is returned"
     (is (= 1
-           (->> (build-filerepo-raw/filter-repo text-file-repo
-                                                #(str/ends-with? (first %)
-                                                                 "bb.edn"))
+           (->> (build-filerepo-raw/filter-repo text-file-repo #(str/ends-with? (first %) "bb.edn"))
                 build-filerepo-raw/file-repo-map
                 count)))))
 

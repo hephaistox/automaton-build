@@ -28,5 +28,4 @@
                set)))))
 
 (deftest not-mandatory-test
-  (testing "Find not mandatory tasks"
-    (is (= 1 (count (sut/not-mandatory stub))))))
+  (testing "Find not mandatory tasks" (is (= 1 (count (sut/not-mandatory stub))))))

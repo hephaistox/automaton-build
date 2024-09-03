@@ -23,10 +23,7 @@
   [root]
   (clj-build-api/set-project-root! root))
 
-(defn jar
-  "Create jar file containing contents of class-dir."
-  [params]
-  (clj-build-api/jar params))
+(defn jar "Create jar file containing contents of class-dir." [params] (clj-build-api/jar params))
 
 (defn uber
   "Create uberjar file. An uberjar is a self-contained jar file containing

@@ -20,9 +20,7 @@
   (let [shadow-cmd "shadow-cljs"
         npx-cmd "npx"]
     (when (build-npm/npx-installed? dir)
-      (every? string?
-              (build-cmds/execute-get-string
-               [npx-cmd shadow-cmd "-h" {:dir dir}])))))
+      (every? string? (build-cmds/execute-get-string [npx-cmd shadow-cmd "-h" {:dir dir}])))))
 
 (def shadow-installed?
   "Is shadow installed on that project?
@@ -37,9 +35,8 @@
 (defn npm-update
   "Install the packages defined in `package.json` and version in `package-lock.json`"
   [dir]
-  (build-cmd/log-if-fail (concat (build-npm/npm-update-cmd)
-                                 (build-npm/npm-audit-fix-cmd)
-                                 [{:dir dir}])))
+  (build-cmd/log-if-fail
+   (concat (build-npm/npm-update-cmd) (build-npm/npm-audit-fix-cmd) [{:dir dir}])))
 
 (defn is-shadow-project?
   "Returns true if the project is shadow"

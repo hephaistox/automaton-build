@@ -9,11 +9,8 @@
           :invalid? true}
          (dissoc (sut/read-edn "non-existing-file") :exception))
       "Non existing file is skipped.")
-  (is (and (build-file/is-existing-file? "README.md")
-           (:invalid? (sut/read-edn "README.md")))
+  (is (and (build-file/is-existing-file? "README.md") (:invalid? (sut/read-edn "README.md")))
       "Non edn file is skipped")
   (is (= [:filename :dir :raw-content :edn] (keys (sut/read-edn "deps.edn"))))
-  (is (= [:filename :dir :raw-content :exception :invalid?]
-         (keys (sut/read-edn "README.md"))))
-  (is (= [:filename :exception :invalid?]
-         (keys (sut/read-edn "non-existing-file")))))
+  (is (= [:filename :dir :raw-content :exception :invalid?] (keys (sut/read-edn "README.md"))))
+  (is (= [:filename :exception :invalid?] (keys (sut/read-edn "non-existing-file")))))

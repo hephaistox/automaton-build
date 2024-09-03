@@ -1,10 +1,8 @@
 (ns automaton-build.tasks.launcher.pf-dispatcher
   (:require
    [automaton-build.log                               :as build-log]
-   [automaton-build.tasks.launcher.launch-on-clj-env  :as
-                                                      build-launch-on-clj-env]
-   [automaton-build.tasks.launcher.launch-on-same-env
-    :as build-launch-on-same-env]))
+   [automaton-build.tasks.launcher.launch-on-clj-env  :as build-launch-on-clj-env]
+   [automaton-build.tasks.launcher.launch-on-same-env :as build-launch-on-same-env]))
 
 (defonce ^:private current-pf (atom :bb))
 
@@ -25,8 +23,5 @@
   (let [start-a-new-clj? (and (= :bb @current-pf) (= :clj pf))]
     (when (= :clj pf) (reset! current-pf :clj))
     (if start-a-new-clj?
-      (build-launch-on-clj-env/switch-to-clj task-map
-                                             app-data
-                                             task-cli-opts
-                                             cli-args)
+      (build-launch-on-clj-env/switch-to-clj task-map app-data task-cli-opts cli-args)
       (build-launch-on-same-env/same-env task-map app-data))))

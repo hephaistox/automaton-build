@@ -27,8 +27,8 @@
   [schema data]
   (malli/decode schema
                 data
-                (malli-transform/default-value-transformer
-                 {::malli-transform/add-optional-keys true})))
+                (malli-transform/default-value-transformer {::malli-transform/add-optional-keys
+                                                            true})))
 
 (defn validate-with-defaults
   "Returns `true` if `data` is compliant to the `schema`, knowing its defaults."

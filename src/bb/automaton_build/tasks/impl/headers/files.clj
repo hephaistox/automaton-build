@@ -1,10 +1,7 @@
 (ns automaton-build.tasks.impl.headers.files
   "Read files with headers log."
   (:require
-   [automaton-build.echo.headers            :refer [errorln
-                                                    exceptionln
-                                                    normalln
-                                                    uri-str]]
+   [automaton-build.echo.headers            :refer [errorln exceptionln normalln uri-str]]
    [automaton-build.os.edn-utils-bb         :as build-edn]
    [automaton-build.os.file                 :as build-file]
    [automaton-build.os.filename             :as build-filename]
@@ -38,9 +35,8 @@
               (str/join ", "
                         (map pr-str
                              (remove nil?
-                                     (map
-                                      (fn [subproject] (:app-name subproject))
-                                      (:subprojects monorepo-project-map))))))))
+                                     (map (fn [subproject] (:app-name subproject))
+                                          (:subprojects monorepo-project-map))))))))
 
 (defn print-file-errors
   "Print errors for a text file not being loaded.
@@ -50,9 +46,7 @@
     :as _file-desc}]
   (when invalid?
     (errorln "File" filename " is not loaded.")
-    (when exception
-      (normalln "This exception has raised")
-      (exceptionln exception)))
+    (when exception (normalln "This exception has raised") (exceptionln exception)))
   invalid?)
 
 (defn read-file
@@ -82,8 +76,7 @@
 (defn search-files
   "Search files in `root-dir`"
   ([root-dir filters] (build-file/search-files root-dir filters))
-  ([root-dir filters options]
-   (build-file/search-files root-dir filters options)))
+  ([root-dir filters options] (build-file/search-files root-dir filters options)))
 
 (defn copy-files
   "Copy files from `src-dir` to `dst-dir` applying the `filters`."

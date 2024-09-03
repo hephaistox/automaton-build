@@ -34,5 +34,5 @@
   [schema data]
   (malli/decode schema
                 data
-                (malli-transform/default-value-transformer
-                 {::malli-transform/add-optional-keys true})))
+                (malli-transform/default-value-transformer {::malli-transform/add-optional-keys
+                                                            true})))

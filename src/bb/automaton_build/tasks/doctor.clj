@@ -25,8 +25,7 @@
    [automaton-build.tasks.deps-version       :as tasks-deps-version]
    [automaton-build.tasks.impl.headers.cmds  :refer [blocking-cmd success]]
    [automaton-build.tasks.impl.headers.files :as    build-headers-files
-                                             :refer [print-edn-errors
-                                                     print-file-errors]]
+                                             :refer [print-edn-errors print-file-errors]]
    [clojure.pprint                           :as pp]
    [clojure.string                           :as str]))
 
@@ -51,38 +50,26 @@
   [app-dir]
   (let [project-desc (build-headers-files/project-config app-dir)
         {:keys [filename edn]} project-desc
-        defaulted-edn
-        (build-data-schema/add-default-values build-project-config/schema edn)]
+        defaulted-edn (build-data-schema/add-default-values build-project-config/schema edn)]
     (when-not (print-edn-errors project-desc)
       (if (build-data-schema/valid? build-project-config/schema defaulted-edn)
-        {:message (str (uri-str filename)
-                       "'s file content is not a valid `edn`.")
+        {:message (str (uri-str filename) "'s file content is not a valid `edn`.")
          :status :ok}
         {:message (str (uri-str filename) " not conform to `schema`.")
-         :details (build-data-schema/humanize build-project-config/schema
-                                              edn)}))))
+         :details (build-data-schema/humanize build-project-config/schema edn)}))))
 
 (defn npm-audit
   "Check `npm` is well installed."
   [app-dir]
-  (doctor-cmd ["npm" "audit"]
-              app-dir
-              "npm is valid"
-              "npm audit returns errors:"))
+  (doctor-cmd ["npm" "audit"] app-dir "npm is valid" "npm audit returns errors:"))
 
 (defn user-id
   [app-dir]
-  (doctor-cmd (build-user/user-id-cmd)
-              app-dir
-              "user is found"
-              "user is not found"))
+  (doctor-cmd (build-user/user-id-cmd) app-dir "user is found" "user is not found"))
 
 (defn group-id
   [app-dir]
-  (doctor-cmd (build-user/user-id-cmd)
-              app-dir
-              "group is found"
-              "group is not found"))
+  (doctor-cmd (build-user/user-id-cmd) app-dir "group is found" "group is not found"))
 
 (defn mermaid-installed
   "Check mermaid is installed."
@@ -108,11 +95,8 @@
        (build-file/write-file
         "erDiagram\nCUSTOMER ||--o{ ORDER : places\nORDER ||--|{ LINE-ITEM : contains\nCUSTOMER }|..|{ DELIVERY-ADDRESS : uses"))
      tmp-dir (build-file/create-temp-dir)
-     {:keys [output-file cmd]} (build-mermaid-bb/mermaid-build-image-cmd
-                                mermaid-filename
-                                user-id
-                                group-id
-                                tmp-dir)
+     {:keys [output-file cmd]}
+     (build-mermaid-bb/mermaid-build-image-cmd mermaid-filename user-id group-id tmp-dir)
      res (blocking-cmd cmd app-dir "Should not appear" false)]
     (if (build-file/is-existing-file? output-file)
       {:message "mmdc is valid"
@@ -123,10 +107,7 @@
 (defn git-installed
   "Git tooling is installed."
   [app-dir]
-  (doctor-cmd ["git" "-v"]
-              app-dir
-              "Git is properly installed."
-              "Don't find remote git repo."))
+  (doctor-cmd ["git" "-v"] app-dir "Git is properly installed." "Don't find remote git repo."))
 
 (defn zprint
   [app-dir]
@@ -151,24 +132,19 @@
 
 (defn docker-on
   [_app-dir]
-  (doctor-cmd ["docker" "run" "hello-world"]
-              "."
-              "docker is started."
-              "docker is not started."))
+  (doctor-cmd ["docker" "run" "hello-world"] "." "docker is started." "docker is not started."))
 
 (defn outdated-deps
   [app-dir]
   (let [project-desc (build-headers-files/project-config app-dir)
         excluded-deps (get-in project-desc [:edn :deps :excluded-libs])
-        deps-report (tasks-deps-version/outdated-deps-report app-dir
-                                                             excluded-deps)]
+        deps-report (tasks-deps-version/outdated-deps-report app-dir excluded-deps)]
     (case (:status deps-report)
       :done {:message "All dependencies are up-to-date!"
              :status :ok}
       :found {:message "You have outdated deps, run `bb update-deps`"
-              :details (with-out-str (pp/print-table
-                                      [:name :current-version :version]
-                                      (:deps deps-report)))}
+              :details (with-out-str (pp/print-table [:name :current-version :version]
+                                                     (:deps deps-report)))}
       {:message "Dependency version check has failed"
        :details (pr-str deps-report)})))
 
@@ -178,12 +154,8 @@
    (message-version-alignments tool-name expected-version actual-version nil))
   ([tool-name expected-version actual-version gha-image-version]
    (if (and (= expected-version actual-version)
-            (or (nil? gha-image-version)
-                (= expected-version gha-image-version)))
-     (h2-valid tool-name
-               "version"
-               expected-version
-               "aligned in yml, dockerfile and expectation")
+            (or (nil? gha-image-version) (= expected-version gha-image-version)))
+     (h2-valid tool-name "version" expected-version "aligned in yml, dockerfile and expectation")
      (do (h2-error tool-name "version" expected-version "not aligned")
          (normalln "Expect version" expected-version)
          (when (some? gha-image-version)
@@ -197,36 +169,26 @@
 (defn- bb-version-check
   [versions Dockerfile]
   (h2 "Check bb version")
-  (let [res (blocking-cmd ["bb" "--version"]
-                          "."
-                          "Impossible to retrieve bb version"
-                          verbose)]
+  (let [res (blocking-cmd ["bb" "--version"] "." "Impossible to retrieve bb version" verbose)]
     (message-version-alignments "bb"
                                 (:bb versions)
                                 (second (re-find #"v(.*)$" (:out res)))
-                                (second (re-find #"(?m)BB_VERSION=(.*)$"
-                                                 Dockerfile)))))
+                                (second (re-find #"(?m)BB_VERSION=(.*)$" Dockerfile)))))
 
 (defn- clojure-version-check
   [versions Dockerfile]
   (h2 "Check clojure version")
-  (let [res (blocking-cmd ["clojure" "--version"]
-                          "."
-                          "Impossible to retrieve clojure version"
-                          verbose)]
+  (let [res
+        (blocking-cmd ["clojure" "--version"] "." "Impossible to retrieve clojure version" verbose)]
     (message-version-alignments "clojure"
                                 (:clj versions)
                                 (second (re-find #"version (.*)$" (:out res)))
-                                (second (re-find #"(?m)CLJ_VERSION=(.*)$"
-                                                 Dockerfile)))))
+                                (second (re-find #"(?m)CLJ_VERSION=(.*)$" Dockerfile)))))
 
 (defn- java-version-check
   [versions Dockerfile]
   (h2-valid! "Check java version")
-  (let [res (blocking-cmd ["java" "--version"]
-                          "."
-                          "Impossible to retrieve java version"
-                          verbose)]
+  (let [res (blocking-cmd ["java" "--version"] "." "Impossible to retrieve java version" verbose)]
     (normalln "java expects" (:jdk versions))
     (normalln "locally" (second (re-find #"(?m)openjdk (.*) .*$" (:out res))))
     (normalln "gha" (second (re-find #"(?m)JDK_VERSION=(.*)$" Dockerfile)))))
@@ -234,23 +196,16 @@
 (defn- npm-version-check
   [versions]
   (h2 "Check npm version")
-  (let [res (blocking-cmd ["npm" "--version"]
-                          "."
-                          "Impossible to retrieve npm version"
-                          verbose)]
-    (message-version-alignments "npm"
-                                (:npm versions)
-                                (second (re-find #"(.*)$" (:out res))))))
+  (let [res (blocking-cmd ["npm" "--version"] "." "Impossible to retrieve npm version" verbose)]
+    (message-version-alignments "npm" (:npm versions) (second (re-find #"(.*)$" (:out res))))))
 
 (defn version
   [app-dir]
   (let [monorepo-project-map (-> (build-project-map/create-project-map app-dir)
                                  build-project-map/add-project-config)
-        Dockerfile-pm (build-file/read-file
-                       "container_images/gha_image/Dockerfile")
+        Dockerfile-pm (build-file/read-file "container_images/gha_image/Dockerfile")
         Dockerfile (:raw-content Dockerfile-pm)
-        versions (get-in monorepo-project-map
-                         [:project-config-filedesc :edn :versions])]
+        versions (get-in monorepo-project-map [:project-config-filedesc :edn :versions])]
     (when (:invalid? Dockerfile-pm)
       (h1-error! "gha-image dockerfile has not been found")
       (System/exit build-exit-codes/invalid-state))
@@ -302,27 +257,23 @@
   (try (normalln "Check monorepo setup.")
        (normalln)
        (let [app-dir ""
-             synthesis
-             (->> registry
-                  (mapv (fn [{:keys [check-name fn-to-call]}]
-                          (h1 "Check" check-name)
-                          (let [s (new java.io.StringWriter)
-                                {:keys [message details status]}
-                                (when (fn? fn-to-call)
-                                  (binding [*out* s] (fn-to-call app-dir)))]
-                            (if (= :ok status)
-                              (h1-valid "Check" check-name)
-                              (do (h1-error "Failed check" (str check-name ":"))
-                                  (normalln message)))
-                            (when-not (str/blank? details) (normalln details))
-                            (let [s (str s)]
-                              (when-not (str/blank? s) (println s)))
-                            {check-name (= :ok status)})))
-                  (apply merge))]
+             synthesis (->> registry
+                            (mapv (fn [{:keys [check-name fn-to-call]}]
+                                    (h1 "Check" check-name)
+                                    (let [s (new java.io.StringWriter)
+                                          {:keys [message details status]}
+                                          (when (fn? fn-to-call)
+                                            (binding [*out* s] (fn-to-call app-dir)))]
+                                      (if (= :ok status)
+                                        (h1-valid "Check" check-name)
+                                        (do (h1-error "Failed check" (str check-name ":"))
+                                            (normalln message)))
+                                      (when-not (str/blank? details) (normalln details))
+                                      (let [s (str s)] (when-not (str/blank? s) (println s)))
+                                      {check-name (= :ok status)})))
+                            (apply merge))]
          (normalln)
          (h1-valid! "Synthesis:")
          (doseq [[check-name check-status] synthesis]
            (if check-status (h2-valid! check-name) (h2-error! check-name))))
-       (catch Exception e
-         (println "Unexpected error during doctor:")
-         (println (pr-str e)))))
+       (catch Exception e (println "Unexpected error during doctor:") (println (pr-str e)))))

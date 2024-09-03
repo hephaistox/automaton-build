@@ -6,7 +6,5 @@
 
 (defn save-debug-info
   ([filename content header]
-   (build-edn-utils/spit-edn (build-files/create-file-path "tmp" filename)
-                             content
-                             header))
+   (build-edn-utils/spit-edn (build-files/create-file-path "tmp" filename) content header))
   ([filename content] (save-debug-info filename content nil)))

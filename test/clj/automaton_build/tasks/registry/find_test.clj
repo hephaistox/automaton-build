@@ -31,11 +31,8 @@
            (-> (sut/task-selection stub ['clean])
                first
                :name))))
-  (testing "Not found symbol"
-    (is (empty? (sut/task-selection stub ['not-existing-task])))))
+  (testing "Not found symbol" (is (empty? (sut/task-selection stub ['not-existing-task])))))
 
 (deftest task-map-test
-  (testing "Check normal task found"
-    (is (= 'fn-1 (:task-fn (sut/task-map stub "clean")))))
-  (testing "An hidden task is found"
-    (is (= 'fn-2 (:task-fn (sut/task-map stub "clean-hard"))))))
+  (testing "Check normal task found" (is (= 'fn-1 (:task-fn (sut/task-map stub "clean")))))
+  (testing "An hidden task is found" (is (= 'fn-2 (:task-fn (sut/task-map stub "clean-hard"))))))

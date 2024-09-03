@@ -53,9 +53,7 @@
   "Creates a path with the list of parameters.
   Removes the empty strings, add needed separators, including the trailing ones"
   [& dirs]
-  (if (empty? dirs)
-    "."
-    (str (apply create-file-path dirs) directory-separator)))
+  (if (empty? dirs) "." (str (apply create-file-path dirs) directory-separator)))
 
 (defn relativize
   "Turn the `path` into a relative directory starting from `root-dir`"
@@ -80,8 +78,7 @@
   "Extract the directory path to the `filename`."
   [filename]
   (when-not (str/blank? filename)
-    (if (or (fs/directory? filename)
-            (= directory-separator (str (last filename))))
+    (if (or (fs/directory? filename) (= directory-separator (str (last filename))))
       filename
       (let [filepath (->> filename
                           fs/components
@@ -89,13 +86,9 @@
                           (mapv str))]
         (cond
           (= [] filepath) ""
-          (is-absolute? filename)
-          (apply create-dir-path directory-separator filepath)
+          (is-absolute? filename) (apply create-dir-path directory-separator filepath)
           :else (apply create-dir-path filepath))))))
 
 (defn parent "Returns the parent of `path`." [path] (fs/parent path))
 
-(defn filename
-  "Returns the filename of a path."
-  [full-path]
-  (fs/file-name full-path))
+(defn filename "Returns the filename of a path." [full-path] (fs/file-name full-path))

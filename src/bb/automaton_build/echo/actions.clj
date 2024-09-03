@@ -64,17 +64,8 @@
   (pure-printing prefixs texts))
 
 ;; Formatting helpers functions.
-(defn pprint-str
-  "Pretty print `data`"
-  [data]
-  (build-echo-common/pprint-str data))
+(defn pprint-str "Pretty print `data`" [data] (build-echo-common/pprint-str data))
 
-(defn uri-str
-  "Returns the string of the `uri`."
-  [uri]
-  (build-echo-common/uri-str uri))
+(defn uri-str "Returns the string of the `uri`." [uri] (build-echo-common/uri-str uri))
 
-(defn current-time-str
-  "Returns current time string."
-  []
-  (build-echo-common/current-time-str))
+(defn current-time-str "Returns current time string." [] (build-echo-common/current-time-str))

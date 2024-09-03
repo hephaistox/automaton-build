@@ -39,20 +39,17 @@
          nb-nodes (->> graph-to-process
                        nodes-fn
                        count)]
-    (let [[nodes-with-no-successor updated-graph] (graph-impl/remove-graph-layer
-                                                   nodes-fn
-                                                   edges-fn
-                                                   dest-in-edge
-                                                   remove-nodes
-                                                   graph-to-process)
+    (let [[nodes-with-no-successor updated-graph] (graph-impl/remove-graph-layer nodes-fn
+                                                                                 edges-fn
+                                                                                 dest-in-edge
+                                                                                 remove-nodes
+                                                                                 graph-to-process)
           topologically-sorted-graph
           (apply conj topologically-sorted-nodes nodes-with-no-successor)]
       (cond
         (or (empty? nodes-with-no-successor) (neg? nb-nodes))
         (do (build-log/error "Cycle found in the graph")
             (build-log/debug-data {:graph graph-to-process
-                                   :edges-with-no-successor
-                                   nodes-with-no-successor}))
+                                   :edges-with-no-successor nodes-with-no-successor}))
         (empty? updated-graph) topologically-sorted-graph
-        :else
-        (recur updated-graph topologically-sorted-graph (dec nb-nodes))))))
+        :else (recur updated-graph topologically-sorted-graph (dec nb-nodes))))))

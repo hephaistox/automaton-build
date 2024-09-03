@@ -13,5 +13,4 @@
                             first)]
     (if (zero? exit-code)
       (do (build-terminal-msg/println-msg res) build-exit-codes/ok)
-      (do (build-log/warn "Container list failed, check if docker is turned on")
-          exit-code))))
+      (do (build-log/warn "Container list failed, check if docker is turned on") exit-code))))

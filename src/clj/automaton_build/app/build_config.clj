@@ -52,8 +52,7 @@
         [:map
          [:name {:default "CC BY-NC 4.0"}
           :string]
-         [:url {:default
-                "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
+         [:url {:default "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
           :string]]]
        [:target-jar-filename {:default "target/%s/%s.jar"}
         :string]
@@ -68,8 +67,7 @@
           [:map
            [:clever-uri {:optional true}
             :string]
-           [:exclude-aliases {:default #{:env-development-repl
-                                         :env-development-test :common-test}}
+           [:exclude-aliases {:default #{:env-development-repl :env-development-test :common-test}}
             [:set :keyword]]
            [:push-branch {:default "main"}
             :string]]]
@@ -77,8 +75,7 @@
           [:map
            [:clever-uri {:optional true}
             :string]
-           [:exclude-aliases {:default #{:env-development-repl
-                                         :env-development-test :common-test}}
+           [:exclude-aliases {:default #{:env-development-repl :env-development-test :common-test}}
             [:set :keyword]]
            [:push-branch {:default "la"}
             :string]]]]]
@@ -88,8 +85,7 @@
           [:vector :keyword]]
          [:deploy-alias {:optional true}
           :keyword]
-         [:compiled-styles-css {:default
-                                "resources/public/css/compiled/styles.css"}
+         [:compiled-styles-css {:default "resources/public/css/compiled/styles.css"}
           :string]
          [:css {:optional true}
           [:map {:closed true}
@@ -124,16 +120,12 @@
   * `root-dir`
   Returns the list of directories with `build_config.edn` in it"
   [root-dir]
-  (->> (build-files/search-files root-dir
-                                 (str "{"
-                                      build-config-filename
-                                      ",*/"
-                                      build-config-filename
-                                      ",*/*/"
-                                      build-config-filename
-                                      "}"))
-       flatten
-       (filterv (comp not nil?))))
+  (->>
+    (build-files/search-files
+     root-dir
+     (str "{" build-config-filename ",*/" build-config-filename ",*/*/" build-config-filename "}"))
+    flatten
+    (filterv (comp not nil?))))
 
 (defn create-build-config-schema
   [task-schema]
@@ -144,14 +136,10 @@
 (defn build-config-default-values
   [task-schema build-config]
   (let [schema (create-build-config-schema task-schema)
-        config-with-default-values
-        (build-schema/add-default-values schema build-config)]
+        config-with-default-values (build-schema/add-default-values schema build-config)]
     (build-log-files/save-debug-info
      "build_tmp_config.edn"
      config-with-default-values
-     (format "This is the `%s` content completed with default values"
-             build-config-filename))
-    (build-schema/valid? schema
-                         config-with-default-values
-                         build-config-filename)
+     (format "This is the `%s` content completed with default values" build-config-filename))
+    (build-schema/valid? schema config-with-default-values build-config-filename)
     config-with-default-values))

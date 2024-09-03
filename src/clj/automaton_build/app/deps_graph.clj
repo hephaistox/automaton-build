@@ -15,8 +15,7 @@
 (defn find-current-app
   [sorted-apps-graph]
   (->> sorted-apps-graph
-       (filterv (fn [{:keys [app-dir]}]
-                  (build-files/compare-paths "." app-dir)))
+       (filterv (fn [{:keys [app-dir]}] (build-files/compare-paths "." app-dir)))
        first))
 
 (defn app-by-name

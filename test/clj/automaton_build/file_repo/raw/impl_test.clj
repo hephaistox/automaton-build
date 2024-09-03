@@ -22,9 +22,7 @@
 
 (deftest exclude-files-test
   (testing "Exlude all files"
-    (is (empty? (sut/exclude-files raw-file-repo-map
-                                   #{"foo.clj" "bar.cljc" "foo.edn"})))))
+    (is (empty? (sut/exclude-files raw-file-repo-map #{"foo.clj" "bar.cljc" "foo.edn"})))))
 
 (deftest repo-map-test
-  (testing "Able to read files"
-    (is (= 2 (count (sut/repo-map ["deps.edn" "build_config.edn"]))))))
+  (testing "Able to read files" (is (= 2 (count (sut/repo-map ["deps.edn" "build_config.edn"]))))))

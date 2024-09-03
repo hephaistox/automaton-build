@@ -10,6 +10,5 @@
   * `filename` is the name of the md file to store`
   * `content` is the string to spit"
   [filename content]
-  (let [formatted-content
-        (if (sequential? content) (str/join "\n" content) (str content))]
+  (let [formatted-content (if (sequential? content) (str/join "\n" content) (str content))]
     (build-files/spit-file filename formatted-content)))

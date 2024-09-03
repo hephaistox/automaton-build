@@ -17,8 +17,7 @@
 
 (defn load-js-config
   [filepath]
-  (when (build-files/is-existing-file? filepath)
-    (build-files/read-file filepath)))
+  (when (build-files/is-existing-file? filepath) (build-files/read-file filepath)))
 
 (defn write-js-config
   [filepath content header]

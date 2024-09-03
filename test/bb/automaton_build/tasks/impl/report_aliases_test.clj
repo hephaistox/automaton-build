@@ -16,16 +16,13 @@
                     sut/alias-list)))))
 
 (deftest scan-alias-project-test
-  (is (do (with-out-str (sut/scan-alias-project* (-> (build-edn/read-edn
-                                                      "deps.edn")
+  (is (do (with-out-str (sut/scan-alias-project* (-> (build-edn/read-edn "deps.edn")
                                                      sut/project-files)
                                                  false))
           true)
       "The alias scan is done without exception."))
 
 (deftest scan-alias-test
-  (is (do (with-out-str (sut/scan-alias {:subprojects [{:deps
-                                                        (build-edn/read-edn
-                                                         "deps.edn")}]}
+  (is (do (with-out-str (sut/scan-alias {:subprojects [{:deps (build-edn/read-edn "deps.edn")}]}
                                         true))
           true)))

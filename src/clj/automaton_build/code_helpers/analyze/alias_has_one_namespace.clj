@@ -10,8 +10,7 @@
 (defn- search-alias-with-multiple-namespaces
   [matches]
   (->> matches
-       (group-by (fn [[_filename namespace alias :as _match]] [alias
-                                                               namespace]))
+       (group-by (fn [[_filename namespace alias :as _match]] [alias namespace]))
        (mapv (fn [[k-alias-ns match]] [k-alias-ns (mapv first match)]))
        (group-by ffirst)
        (filter (fn [[_k-alias-ns alias-ns-match]] (> (count alias-ns-match) 1)))
@@ -29,13 +28,9 @@
   (let [matches (-> clj-repo
                     (build-filerepo-text/filecontent-to-match alias-pattern))]
     (->> matches
-         (map (fn [[filename [_whole-match namespace alias _refer?]]] [filename
-                                                                       namespace
-                                                                       alias]))
+         (map (fn [[filename [_whole-match namespace alias _refer?]]] [filename namespace alias]))
          (filter (fn [[_filename namespace alias]]
-                   (not (or (= "sut" alias)
-                            (nil? alias)
-                            (= "clojure.deftest" namespace)))))
+                   (not (or (= "sut" alias) (nil? alias) (= "clojure.deftest" namespace)))))
          search-alias-with-multiple-namespaces)))
 
 (defn save-report
@@ -47,7 +42,6 @@
 
 (defn assert-empty
   [matches filename]
-  (build-analyze-utils/assert-empty
-   matches
-   filename
-   "Some aliases are not consistent over your codebase"))
+  (build-analyze-utils/assert-empty matches
+                                    filename
+                                    "Some aliases are not consistent over your codebase"))

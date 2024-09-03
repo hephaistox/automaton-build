@@ -28,25 +28,19 @@
   [clj-repo]
   (build-log/info "Comments analysis")
   (let [matches (-> clj-repo
-                    (build-filerepo-text/filecontent-to-match comments-pattern
-                                                              [:comments]))]
+                    (build-filerepo-text/filecontent-to-match comments-pattern [:comments]))]
     (->> matches
-         (map (fn [[filename [whole-match comment]]] [comment
-                                                      filename
-                                                      whole-match]))
+         (map (fn [[filename [whole-match comment]]] [comment filename whole-match]))
          vec)))
 
 (defn save-report
   [matches filename]
-  (build-analyze-utils/save-report
-   matches
-   (format "List of forbidden comments")
-   filename
-   (fn [[comment filename match]]
-     (format "%s -> [%s] -> %s" comment filename match))))
+  (build-analyze-utils/save-report matches
+                                   (format "List of forbidden comments")
+                                   filename
+                                   (fn [[comment filename match]]
+                                     (format "%s -> [%s] -> %s" comment filename match))))
 
 (defn assert-empty
   [matches filename]
-  (build-analyze-utils/assert-empty matches
-                                    filename
-                                    (format "Some forbidden words are found")))
+  (build-analyze-utils/assert-empty matches filename (format "Some forbidden words are found")))

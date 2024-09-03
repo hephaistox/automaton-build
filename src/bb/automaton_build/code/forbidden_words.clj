@@ -25,8 +25,7 @@
   [regexp file-content]
   (when regexp
     (let [file-lines (str/split-lines file-content)]
-      (when-not (re-find #":heph-ignore\s*\{[^\}]*:forbidden-words"
-                         (first file-lines))
+      (when-not (re-find #":heph-ignore\s*\{[^\}]*:forbidden-words" (first file-lines))
         (->> file-lines
              (map (fn [line] (re-find regexp line)))
              (filter (comp not empty?))

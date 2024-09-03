@@ -20,10 +20,7 @@
 
 (defn kill [process] (build-commands/kill process))
 
-(defn success
-  "Returns `true` if the result is a success"
-  [result]
-  (build-commands/success result))
+(defn success "Returns `true` if the result is a success" [result] (build-commands/success result))
 
 (defn clj-parameterize
   "Turns `par` into a parameter understood by a clojure `cli`."
@@ -90,37 +87,32 @@
   (let [dir (build-commands/defaulting-dir dir)
         cmd-str (build-commands/to-str cmd)]
     (when verbose? (print-exec-cmd-str prefixs cmd-str dir))
-    (try
-      (let [proc (build-commands/create-process cmd dir)]
-        (future (build-commands/log-stream
-                 proc
-                 :out
-                 (fn [l] (when (out-filter-fn l) (normalln prefixs l)))
-                 (fn []
-                   (when verbose?
-                     (normalln "Execution of"
-                               (cmd-str cmd)
-                               "ended, out listener is killed.")))
-                 refresh-delay
-                 (partial errorln prefixs)))
-        (future (build-commands/log-stream
-                 proc
-                 :err
-                 (fn [l] (when (err-filter-fn l) (normalln prefixs l)))
-                 (fn []
-                   (when verbose?
-                     (normalln "Execution of"
-                               (cmd-str cmd)
-                               "ended, err listener is killed.")))
-                 refresh-delay
-                 (partial errorln prefixs)))
-        (build-commands/exec proc)
-        ;; Without this pause, some messages are lost
-        (Thread/sleep 100)
-        {:dir dir
-         :cmd-str cmd-str
-         :proc proc})
-      (catch Exception e
-        {:e e
-         :dir dir
-         :cmd-str cmd-str}))))
+    (try (let [proc (build-commands/create-process cmd dir)]
+           (future (build-commands/log-stream
+                    proc
+                    :out
+                    (fn [l] (when (out-filter-fn l) (normalln prefixs l)))
+                    (fn []
+                      (when verbose?
+                        (normalln "Execution of" (cmd-str cmd) "ended, out listener is killed.")))
+                    refresh-delay
+                    (partial errorln prefixs)))
+           (future (build-commands/log-stream
+                    proc
+                    :err
+                    (fn [l] (when (err-filter-fn l) (normalln prefixs l)))
+                    (fn []
+                      (when verbose?
+                        (normalln "Execution of" (cmd-str cmd) "ended, err listener is killed.")))
+                    refresh-delay
+                    (partial errorln prefixs)))
+           (build-commands/exec proc)
+           ;; Without this pause, some messages are lost
+           (Thread/sleep 100)
+           {:dir dir
+            :cmd-str cmd-str
+            :proc proc})
+         (catch Exception e
+           {:e e
+            :dir dir
+            :cmd-str cmd-str}))))

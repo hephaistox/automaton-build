@@ -19,10 +19,7 @@
 
 (defn kill [process] (build-commands/kill process))
 
-(defn success
-  "Returns `true` if the result is a success"
-  [result]
-  (build-commands/success result))
+(defn success "Returns `true` if the result is a success" [result] (build-commands/success result))
 
 (defn clj-parameterize
   "Turns `par` into a parameter understood by a clojure `cli`."
@@ -37,10 +34,7 @@
   (build-commands/first-failing chain-res))
 
 ;; Printing comamnds
-(defn print-cmd-str
-  "Print the command string `cmd-str`."
-  [cmd-str]
-  (normalln (echoed-cmd cmd-str)))
+(defn print-cmd-str "Print the command string `cmd-str`." [cmd-str] (normalln (echoed-cmd cmd-str)))
 
 (defn print-exec-cmd-str
   "Print a message telling the execution of the command string `cmd-str` in directory `dir`."
@@ -101,41 +95,36 @@
   (let [cmd-str (build-commands/to-str cmd)
         dir (build-commands/defaulting-dir dir)]
     (when verbose? (print-exec-cmd-str cmd-str dir))
-    (try
-      (let [proc (build-commands/create-process cmd dir)]
-        (future (build-commands/log-stream
-                 proc
-                 :out
-                 (fn [l] (when (out-filter-fn l) (normalln l)))
-                 (fn []
-                   (when verbose?
-                     (normalln "Execution of"
-                               (cmd-str cmd)
-                               "ended, out listener is killed.")))
-                 refresh-delay
-                 errorln))
-        (future (build-commands/log-stream
-                 proc
-                 :err
-                 (fn [l] (when (err-filter-fn l) (normalln l)))
-                 (fn []
-                   (when verbose?
-                     (normalln "Execution of"
-                               (cmd-str cmd)
-                               "ended, err listener is killed.")))
-                 refresh-delay
-                 errorln))
-        (let [res (build-commands/exec proc)]
-          ;; Without this pause, some messages are lost
-          (Thread/sleep 100)
-          (merge res
-                 {:dir dir
-                  :cmd-str cmd-str
-                  :proc proc})))
-      (catch Exception e
-        {:e e
-         :dir dir
-         :cmd-str cmd-str}))))
+    (try (let [proc (build-commands/create-process cmd dir)]
+           (future (build-commands/log-stream
+                    proc
+                    :out
+                    (fn [l] (when (out-filter-fn l) (normalln l)))
+                    (fn []
+                      (when verbose?
+                        (normalln "Execution of" (cmd-str cmd) "ended, out listener is killed.")))
+                    refresh-delay
+                    errorln))
+           (future (build-commands/log-stream
+                    proc
+                    :err
+                    (fn [l] (when (err-filter-fn l) (normalln l)))
+                    (fn []
+                      (when verbose?
+                        (normalln "Execution of" (cmd-str cmd) "ended, err listener is killed.")))
+                    refresh-delay
+                    errorln))
+           (let [res (build-commands/exec proc)]
+             ;; Without this pause, some messages are lost
+             (Thread/sleep 100)
+             (merge res
+                    {:dir dir
+                     :cmd-str cmd-str
+                     :proc proc})))
+         (catch Exception e
+           {:e e
+            :dir dir
+            :cmd-str cmd-str}))))
 
 (defn simple-shell
   ([cmd] (simple-shell cmd {}))
@@ -152,8 +141,6 @@
                           build-commands/first-failing)]
     (when verbose?
       (doseq [chain-link cmd-chain]
-        (print-exec-cmd-str (build-commands/to-str (first chain-link))
-                            (second chain-link))))
-    (when non-zero-exit-message
-      (print-errors-if-cmd-failed first-failing non-zero-exit-message))
+        (print-exec-cmd-str (build-commands/to-str (first chain-link)) (second chain-link))))
+    (when non-zero-exit-message (print-errors-if-cmd-failed first-failing non-zero-exit-message))
     chain-res))

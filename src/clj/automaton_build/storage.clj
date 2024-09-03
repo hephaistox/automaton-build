@@ -21,14 +21,12 @@
   * `datomic-dir-setup` where datomic binary are extracted
   * `datomic-transactor-bin-path` the sub directory where the transactor binary is in the datomic dir"
   [datomic-dir-setup datomic-transactor-bin-path]
-  (let [transactor-filename (build-files/create-dir-path
-                             datomic-dir-setup
-                             datomic-transactor-bin-path)
+  (let [transactor-filename (build-files/create-dir-path datomic-dir-setup
+                                                         datomic-transactor-bin-path)
         res (build-files/is-existing-file? transactor-filename)]
     (if res
       (build-log/debug-format "Transactor found in %s" transactor-filename)
-      (build-log/debug-format "Transfactor not found in %s."
-                              transactor-filename))
+      (build-log/debug-format "Transfactor not found in %s." transactor-filename))
     res))
 
 (defn- datomic-dir-setup
@@ -62,9 +60,7 @@
    force?]
   (if (str/blank? datomic-ver)
     (build-log/warn "Datomic-ver should be not nil")
-    (let [datomic-dir (-> (datomic-dir-setup datomic-root-dir
-                                             datomic-dir-pattern
-                                             datomic-ver)
+    (let [datomic-dir (-> (datomic-dir-setup datomic-root-dir datomic-dir-pattern datomic-ver)
                           build-files/expand-home)
           datomic-download-url (format datomic-url-pattern datomic-ver)
           datomic-archive-file "datomic.zip"
@@ -73,29 +69,22 @@
       (if (is-datomic-transactor? datomic-dir datomic-transactor-bin-path)
         (do (build-log/info "Setup skipped, as transactor already installed")
             build-exit-codes/cannot-execute)
-        (do (build-log/info-format "Datomic is being downloaded from `%s`"
-                                   datomic-download-url)
-            (when (build-cmds/execute-and-trace
-                   ["curl"
-                    "-SL"
-                    datomic-download-url
-                    "-o"
-                    datomic-archive-file
-                    {:dir tmp-dir
-                     :error-to-std? true}]
-                   ["unzip" datomic-archive-file {:dir tmp-dir}])
-              (build-log/debug-format "datomic is installing in dir `%s`"
-                                      datomic-dir)
-              (if (zero? (-> (build-cmds/execute-with-exit-code
-                              ["mv"
-                               (format "datomic-pro-%s" datomic-ver)
-                               datomic-dir
-                               {:dir tmp-dir}])
-                             ffirst))
-                (do (build-log/info "Datomic downloaded sucessfully!")
-                    build-exit-codes/ok)
-                (do (build-log/info "Datomic download failed")
-                    build-exit-codes/catch-all))))))))
+        (do (build-log/info-format "Datomic is being downloaded from `%s`" datomic-download-url)
+            (when (build-cmds/execute-and-trace ["curl"
+                                                 "-SL"
+                                                 datomic-download-url
+                                                 "-o"
+                                                 datomic-archive-file
+                                                 {:dir tmp-dir
+                                                  :error-to-std? true}]
+                                                ["unzip" datomic-archive-file {:dir tmp-dir}])
+              (build-log/debug-format "datomic is installing in dir `%s`" datomic-dir)
+              (if (zero? (->
+                           (build-cmds/execute-with-exit-code
+                            ["mv" (format "datomic-pro-%s" datomic-ver) datomic-dir {:dir tmp-dir}])
+                           ffirst))
+                (do (build-log/info "Datomic downloaded sucessfully!") build-exit-codes/ok)
+                (do (build-log/info "Datomic download failed") build-exit-codes/catch-all))))))))
 
 (defn- run-datomic*
   "Starts datomic transactor in the `datomic-dir`.
@@ -122,12 +111,7 @@
   * `datomic-transactor-bin-path` relative path to `datomic-dir` for the transactor binary
   * `datomic-ver` version of the datomic archive, (e.g. `1.0.7021`)"
   [datomic-root-dir datomic-dir-pattern datomic-transactor-bin-path datomic-ver]
-  (let [datomic-dir
-        (datomic-dir datomic-root-dir datomic-dir-pattern datomic-ver)]
+  (let [datomic-dir (datomic-dir datomic-root-dir datomic-dir-pattern datomic-ver)]
     (if (is-datomic-transactor? datomic-dir datomic-transactor-bin-path)
-      (run-datomic* datomic-root-dir
-                    datomic-dir-pattern
-                    datomic-transactor-bin-path
-                    datomic-ver)
-      (build-log/warn
-       "Datomic transactor not found, please run storage-install first."))))
+      (run-datomic* datomic-root-dir datomic-dir-pattern datomic-transactor-bin-path datomic-ver)
+      (build-log/warn "Datomic transactor not found, please run storage-install first."))))
