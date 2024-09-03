@@ -6,19 +6,16 @@
 
 (deftest coll-to-alternate-in-regexp-test
   (is (= "^.*(automaton[-_]foobar|automaton[-_]foobar).*$"
-         (str (sut/coll-to-alternate-in-regexp [#"automaton[-_]foobar"
-                                                #"automaton[-_]foobar"])))
+         (str (sut/coll-to-alternate-in-regexp [#"automaton[-_]foobar" #"automaton[-_]foobar"])))
       "One word is transformed")
-  (is (= "^.*(TO-DO|foo.*bar).*$"
-         (str (sut/coll-to-alternate-in-regexp ["TO-DO" #"foo.*bar"])))
+  (is (= "^.*(TO-DO|foo.*bar).*$" (str (sut/coll-to-alternate-in-regexp ["TO-DO" #"foo.*bar"])))
       "Strings and regexp are accepted."))
 
 (deftest forbidden-words-matches-test
   (is (empty? (sut/forbidden-words-matches #"(TO-DO|foo.*bar)" ""))
       "Returns `nil` if no match happens.")
-  (is (sut/forbidden-words-matches
-       (sut/coll-to-alternate-in-regexp ["TO-DO" #"foo.*bar"])
-       "not in the returned value.\nhey, this is foo.XX.bar\n a"))
+  (is (sut/forbidden-words-matches (sut/coll-to-alternate-in-regexp ["TO-DO" #"foo.*bar"])
+                                   "not in the returned value.\nhey, this is foo.XX.bar\n a"))
   (is
    (nil?
     (sut/forbidden-words-matches

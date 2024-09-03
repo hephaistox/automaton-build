@@ -10,7 +10,6 @@
   * `task-name`
   * `e` exception to display"
   [task-name e]
-  (build-terminal-msg/println-msg (format "Error during execution of `%s`, %s`"
-                                          task-name
-                                          (pr-str (or (ex-message e) e))))
+  (build-terminal-msg/println-msg
+   (format "Error during execution of `%s`, %s`" task-name (pr-str (or (ex-message e) e))))
   (build-print-or-spit/exception (build-cicd-server/is-cicd?) e))

@@ -1,17 +1,9 @@
 (ns automaton-build.tasks.impl.headers.vcs
   (:require
    [automaton-build.code.vcs                :as build-vcs]
-   [automaton-build.echo.headers            :refer [errorln
-                                                    h2
-                                                    h2-error
-                                                    h2-error!
-                                                    h2-valid
-                                                    uri-str]]
+   [automaton-build.echo.headers            :refer [errorln h2 h2-error h2-error! h2-valid uri-str]]
    [automaton-build.os.file                 :as build-file]
-   [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd
-                                                    chain-cmds
-                                                    force-dirs
-                                                    success]]
+   [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd chain-cmds force-dirs success]]
    [clojure.string                          :as str]))
 
 (defn remote-branches

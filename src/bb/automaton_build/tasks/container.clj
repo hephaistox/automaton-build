@@ -19,10 +19,8 @@
    [automaton-build.os.filename             :as build-filename]
    [automaton-build.project.impl.gh-yml     :as build-gh-yml]
    [automaton-build.project.map             :as build-project-map]
-   [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd
-                                                    long-living-cmd
-                                                    simple-shell
-                                                    success]]
+   [automaton-build.tasks.impl.headers.cmds :refer
+                                            [blocking-cmd long-living-cmd simple-shell success]]
    [clojure.string                          :as str]))
 
 ;; ********************************************************************************
@@ -71,10 +69,7 @@
   "List containers"
   [app-dir]
   (h1 "List container images")
-  (let [res (blocking-cmd [docker-cli-name "images"]
-                          app-dir
-                          "Docker images failed"
-                          verbose?)]
+  (let [res (blocking-cmd [docker-cli-name "images"] app-dir "Docker images failed" verbose?)]
     (when (success res)
       (h1-valid "List container images")
       (->> res
@@ -123,11 +118,9 @@
             (h2 "Remove container" container-id)
             (let [res (blocking-cmd [docker-cli-name "rm" container-id]
                                     app-dir
-                                    (str "Impossible to remove container"
-                                         container-id)
+                                    (str "Impossible to remove container" container-id)
                                     verbose?)]
-              (when (success res)
-                (h2-valid "Sucessfully removed container" container-id)))))))))
+              (when (success res) (h2-valid "Sucessfully removed container" container-id)))))))))
 
 (defn containers-image
   [app-dir]
@@ -145,13 +138,11 @@
           (h2-valid! "No image to remove")
           (doseq [image-id image-ids]
             (h2 "Remove image" image-id)
-            (let [res (blocking-cmd
-                       [docker-cli-name "rmi" (if stop? "-f" "") image-id]
-                       app-dir
-                       (str "Impossible to remove image" image-id)
-                       verbose?)]
-              (when (success res)
-                (h2-valid "Sucessfully removed image" image-id)))))))))
+            (let [res (blocking-cmd [docker-cli-name "rmi" (if stop? "-f" "") image-id]
+                                    app-dir
+                                    (str "Impossible to remove image" image-id)
+                                    verbose?)]
+              (when (success res) (h2-valid "Sucessfully removed image" image-id)))))))))
 
 
 (defn container-interactive
@@ -192,45 +183,35 @@
 
 (defn container-push
   [container-image-name account version]
-  (h1-valid! "Push container" container-image-name
-             "in account" account
-             "for version" version)
-  (let [container-hub-uri
-        (format "%s/%s:%s" account container-image-name version)
-        res (blocking-cmd
-             [docker-cli-name "tag" container-image-name container-hub-uri]
-             "."
-             "Tagging of the image has failed."
-             verbose?)]
+  (h1-valid! "Push container" container-image-name "in account" account "for version" version)
+  (let [container-hub-uri (format "%s/%s:%s" account container-image-name version)
+        res (blocking-cmd [docker-cli-name "tag" container-image-name container-hub-uri]
+                          "."
+                          "Tagging of the image has failed."
+                          verbose?)]
     (when (success res)
-      (let [pushing-res (long-living-cmd
-                         [docker-cli-name "push" container-hub-uri]
-                         "."
-                         100
-                         verbose?
-                         (constantly true)
-                         (constantly true))]
+      (let [pushing-res (long-living-cmd [docker-cli-name "push" container-hub-uri]
+                                         "."
+                                         100
+                                         verbose?
+                                         (constantly true)
+                                         (constantly true))]
         (println "pushing-res" pushing-res)
-        (when-not (= 0 (:exit pushing-res))
-          (h1-error! "Failed to push the container"))))
+        (when-not (= 0 (:exit pushing-res)) (h1-error! "Failed to push the container"))))
     (format "%s/%s" account container-image-name)))
 
 (defn- update-workflow
   "Update all workflow yml files."
   [monorepo-project-map monorepo workflow container-name version]
-  (let [app-dirs (->> (get-in
-                       monorepo-project-map
-                       [:project-config-filedesc :edn :monorepo monorepo :apps])
+  (let [app-dirs (->> (get-in monorepo-project-map
+                              [:project-config-filedesc :edn :monorepo monorepo :apps])
                       (mapv :app-dir))]
     (doseq [app-dir (conj app-dirs "..")]
-      (h2 "Update container" container-name
-          "in workflow" workflow
-          "to version " version)
+      (h2 "Update container" container-name "in workflow" workflow "to version " version)
       (let [workflow-file (build-gh-yml/workflow-yml app-dir workflow)
             updated-wf (-> workflow-file
                            build-file/read-file
-                           (build-gh-yml/update-gha-version container-name
-                                                            version))]
+                           (build-gh-yml/update-gha-version container-name version))]
         (if-not (build-file/write-file workflow-file updated-wf)
           (h2-error "Can't write update yaml in" workflow-file)
           (h2-valid "Updated container" container-name
@@ -262,8 +243,7 @@
         version (->> (concat [:project-config-filedesc :edn :monorepo]
                              [monorepo-name :gha :version])
                      (get-in monorepo-project-map))
-        _ (when-not (docker-connected)
-            (System/exit build-exit-codes/invalid-state))
+        _ (when-not (docker-connected) (System/exit build-exit-codes/invalid-state))
         list (get-in cli-opts-monorepo [:options :list])
         clear (get-in cli-opts-monorepo [:options :clear])
         clear-image (get-in cli-opts-monorepo [:options :clear-image])
@@ -274,13 +254,9 @@
     (when stop? (containers-stop app-dir))
     (when clear (containers-clear app-dir))
     (when clear-image (containers-image app-dir))
-    (when-let [container interactive]
-      (container-interactive app-dir app-dir container))
+    (when-let [container interactive] (container-interactive app-dir app-dir container))
     (when build-gha
-      (when-not (= 0
-                   (:exit (container-build container-dir
-                                           container-name
-                                           amd-64-built?)))
+      (when-not (= 0 (:exit (container-build container-dir container-name amd-64-built?)))
         (h1-error! "Failed container build."))
       (when verbose? (normalln "Build container in" (uri-str container-dir))))
     (when push
@@ -292,8 +268,7 @@
             (System/exit build-exit-codes/invalid-state))
         (h1-valid "Vcs is clean"))
       (when (nil? version)
-        (h1-error!
-         "Tag is missing in [:monorepo monorepo-name :gha :version], pushed is aborted.")
+        (h1-error! "Tag is missing in [:monorepo monorepo-name :gha :version], pushed is aborted.")
         (System/exit build-exit-codes/invalid-argument))
       (let [container-name (->> version
                                 (container-push container-name "hephaistox"))]

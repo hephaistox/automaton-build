@@ -12,12 +12,10 @@
   (build-log/debug "Launch clj compilation")
   (try (build-log/trace-format "Jar is built `%s`" target-jar-path)
        (build-compiler-jar/compile-jar class-dir target-jar-path project-dir)
-       (build-log/info-format "Compilation ending successfully: `%s`"
-                              target-jar-path)
+       (build-log/info-format "Compilation ending successfully: `%s`" target-jar-path)
        target-jar-path
        (catch Exception e
-         (build-log/error-exception (ex-info "Compilation failed"
-                                             {:exception e}))
+         (build-log/error-exception (ex-info "Compilation failed" {:exception e}))
          nil)))
 
 (defn compile-uber-jar
@@ -30,14 +28,9 @@
     (build-log/trace-format "Copy files from `%s` to `%s`" app-paths class-dir)
     (try (when (build-files/copy-files-or-dir app-paths class-dir)
            (build-log/trace-format "Jar is built `%s`" target-jar-path)
-           (build-compiler-jar/compile-uber-jar class-dir
-                                                target-jar-path
-                                                jar-main
-                                                project-dir)
-           (build-log/info-format "Compilation ending successfully: `%s`"
-                                  target-jar-path)
+           (build-compiler-jar/compile-uber-jar class-dir target-jar-path jar-main project-dir)
+           (build-log/info-format "Compilation ending successfully: `%s`" target-jar-path)
            target-jar-path)
          (catch Exception e
-           (build-log/error-exception (ex-info "Compilation failed"
-                                               {:exception e}))
+           (build-log/error-exception (ex-info "Compilation failed" {:exception e}))
            nil))))

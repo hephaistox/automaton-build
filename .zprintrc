@@ -11,4 +11,5 @@
        :force-nl? true}
  :pair {:force-nl? true}
  :pair-fn {:hang? false}
- :comment {:wrap? false}}
+ :comment {:wrap? false}
+ :width 100}

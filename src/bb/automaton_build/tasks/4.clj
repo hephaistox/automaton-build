@@ -48,9 +48,7 @@
                       (-> (build-cljs/install-cmd)
                           (blocking-cmd project-dir "" verbose)))
         install-success (success install-res)]
-    (if install-success
-      (h2-valid "npm install ok")
-      (h2-error "npm install has failed"))
+    (if install-success (h2-valid "npm install ok") (h2-error "npm install has failed"))
     (print-writter s)
     (when verbose (normalln (:out install-res)))
     install-success))
@@ -80,9 +78,7 @@
                         (-> (build-cljs/karma-test-cmd)
                             (blocking-cmd project-dir "" verbose)))
         cljs-test-success (success cljs-test-res)]
-    (if cljs-test-success
-      (h2-valid "karma test ok")
-      (h2-error "karma has failed"))
+    (if cljs-test-success (h2-valid "karma test ok") (h2-error "karma has failed"))
     (print-writter s)
     (when verbose (normalln (:out cljs-test-res)))
     cljs-test-success))
@@ -96,13 +92,10 @@
   (let [s (build-writter)]
     (h1 "Test clj")
     (let [clj-res (binding [*out* s]
-                    (->
-                      ["clojure" (apply str "-M" test-aliases)]
-                      (blocking-cmd project-dir "Error during tests" verbose)))
+                    (-> ["clojure" (apply str "-M" test-aliases)]
+                        (blocking-cmd project-dir "Error during tests" verbose)))
           clj-success (success clj-res)]
-      (if-not (success clj-res)
-        (errorln "clj tests have failed.")
-        (h1-valid "clj test ok."))
+      (if-not (success clj-res) (errorln "clj tests have failed.") (h1-valid "clj test ok."))
       (print-writter s)
       (when verbose (normalln (:out clj-res)))
       clj-success)))
@@ -112,8 +105,7 @@
   [project-dir]
   (h1-valid! "Test cljs")
   (let [install-success (npm-install project-dir)
-        cljs-compilation-success (when install-success
-                                   (cljs-compilation project-dir))
+        cljs-compilation-success (when install-success (cljs-compilation project-dir))
         karma-success (when cljs-compilation-success (karma-test project-dir))]
     (and install-success cljs-compilation-success karma-success)))
 
@@ -125,9 +117,7 @@
         res (binding [*out* s]
               (-> (build-formatter/format-clj-cmd)
                   (blocking-cmd project-dir "" verbose)))]
-    (if (success res)
-      (h1-valid "Format project files.")
-      (h1-error "Format project files."))
+    (if (success res) (h1-valid "Format project files.") (h1-error "Format project files."))
     (print-writter s)
     (when verbose (normalln (:out res)))
     (success res)))
@@ -142,48 +132,39 @@
         monorepo-project-map (-> (build-project-map/create-project-map app-dir)
                                  build-project-map/add-project-config
                                  build-project-map/add-deps-edn
-                                 (build-apps/add-monorepo-subprojects
-                                  monorepo-name)
+                                 (build-apps/add-monorepo-subprojects monorepo-name)
                                  (build-apps/apply-to-subprojects
                                   build-project-map/add-project-config
                                   build-project-map/add-deps-edn))
         format-status (format-files app-dir)
-        report-aliases-status
-        (build-tasks-report-aliases/scan-alias monorepo-project-map verbose)
+        report-aliases-status (build-tasks-report-aliases/scan-alias monorepo-project-map verbose)
         fw-status (build-tasks-reports-fw/report-monorepo monorepo-project-map)
         linter-status (build-linter/lint (:deps monorepo-project-map) verbose)
         clj-status (clj-test app-dir test-aliases)
         cljs-status (cljs-test app-dir)
         commit-status (when commit-msg
-                        (build-tasks-commit/commit
-                         (:dir monorepo-project-map)
-                         (str commit-msg
-                              (if (->> [format-status
-                                        report-aliases-status
-                                        fw-status
-                                        linter-status
-                                        clj-status
-                                        cljs-status]
-                                       (remove nil?)
-                                       (every? true?))
-                                "- wf-4 OK"
-                                "- wf-4 KO"))
-                         verbose))]
+                        (build-tasks-commit/commit (:dir monorepo-project-map)
+                                                   (str commit-msg
+                                                        (if (->> [format-status
+                                                                  report-aliases-status
+                                                                  fw-status
+                                                                  linter-status
+                                                                  clj-status
+                                                                  cljs-status]
+                                                                 (remove nil?)
+                                                                 (every? true?))
+                                                          "- wf-4 OK"
+                                                          "- wf-4 KO"))
+                                                   verbose))]
     (normalln)
     (normalln)
     (h1-valid! "Synthesis:")
-    (if format-status
-      (h1-valid! "Formatting is ok.")
-      (h1-error! "Formatting has failed."))
+    (if format-status (h1-valid! "Formatting is ok.") (h1-error! "Formatting has failed."))
     (build-tasks-report-aliases/synthesis report-aliases-status)
     (build-tasks-reports-fw/synthesis fw-status)
     (build-linter/synthesis linter-status)
-    (if clj-status
-      (h1-valid! "Clj test ok.")
-      (h1-error! "Clj test has failed."))
-    (if cljs-status
-      (h1-valid! "Cljs test ok.")
-      (h1-error! "Cljs test has failed."))
+    (if clj-status (h1-valid! "Clj test ok.") (h1-error! "Clj test has failed."))
+    (if cljs-status (h1-valid! "Cljs test ok.") (h1-error! "Cljs test has failed."))
     (and format-status
          report-aliases-status
          fw-status

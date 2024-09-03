@@ -1,5 +1,4 @@
-(ns automaton-build.html.redirect
-  "Creates an html page to redirect to another page.")
+(ns automaton-build.html.redirect "Creates an html page to redirect to another page.")
 
 (defn page
   "Redirect page in the `url`."

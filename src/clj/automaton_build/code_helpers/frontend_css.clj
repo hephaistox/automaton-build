@@ -47,8 +47,7 @@
    * `dir` the frontend root directory"
   [dir css-file compiled-styles-css]
   (let [npm-install (build-npm/npm-install-cmd dir)
-        tailwindcss (tailwind-config-watch-command css-file
-                                                   compiled-styles-css)]
+        tailwindcss (tailwind-config-watch-command css-file compiled-styles-css)]
     (build-cmds/execute-and-trace npm-install
                                   (conj tailwindcss
                                         {:dir dir

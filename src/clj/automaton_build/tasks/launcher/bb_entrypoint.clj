@@ -3,12 +3,9 @@
   (:require
    [automaton-build.log                                   :as build-log]
    [automaton-build.os.exit-codes                         :as build-exit-codes]
-   [automaton-build.tasks.launcher.cli-task-agnostic-opts
-    :as build-cli-task-agnostic-opts]
-   [automaton-build.tasks.launcher.print-exception        :as
-                                                          build-print-exception]
-   [automaton-build.tasks.launcher.task-execute           :as
-                                                          build-tasks-execute]
+   [automaton-build.tasks.launcher.cli-task-agnostic-opts :as build-cli-task-agnostic-opts]
+   [automaton-build.tasks.launcher.print-exception        :as build-print-exception]
+   [automaton-build.tasks.launcher.task-execute           :as build-tasks-execute]
    [clojure.pprint                                        :as pp]))
 
 (defn -main
@@ -30,9 +27,7 @@
   * `cli-args` collection of strings as passed to the cli at startup"
   [[task-name & cli-args]]
   (try
-    (prefer-method pp/simple-dispatch
-                   clojure.lang.IPersistentMap
-                   clojure.lang.IDeref)
+    (prefer-method pp/simple-dispatch clojure.lang.IPersistentMap clojure.lang.IDeref)
     ;; No automaton code should happen before common-opts, as it is initializing logs
     (if (build-cli-task-agnostic-opts/common-opts! cli-args task-name)
       build-exit-codes/ok
@@ -42,14 +37,10 @@
             (build-log/fatal
              "The task name is missing, please use `bb heph-task task` where task is the name of the task to call")
             build-exit-codes/invalid-argument)
-          (let [exit-code
-                (build-tasks-execute/task-execute app-dir task-name cli-args)]
+          (let [exit-code (build-tasks-execute/task-execute app-dir task-name cli-args)]
             (cond
-              (zero? exit-code)
-              (do (build-log/debug "Task finished successfully.") exit-code)
-              (int? exit-code) (do (build-log/debug-format
-                                    "Task finished with code %s"
-                                    exit-code)
+              (zero? exit-code) (do (build-log/debug "Task finished successfully.") exit-code)
+              (int? exit-code) (do (build-log/debug-format "Task finished with code %s" exit-code)
                                    exit-code)
               :else
               (do
@@ -61,9 +52,7 @@
       (build-print-exception/print-exception task-name e)
       build-exit-codes/catch-all)))
 
-(def ^:private detailed-log
-  "If on, that switch turned on the detailed traces"
-  false)
+(def ^:private detailed-log "If on, that switch turned on the detailed traces" false)
 
 (defn- call-main
   "Utilitary function for text below"

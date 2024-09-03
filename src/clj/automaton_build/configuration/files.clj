@@ -10,8 +10,7 @@
   build-conf-prot/Conf
     (read-conf-param [_this key-path] (get-in config-map key-path)))
 
-(def ^:private default-config-files
-  ["env/development/config.edn" "env/common_config.edn"])
+(def ^:private default-config-files ["env/development/config.edn" "env/common_config.edn"])
 
 (defn- property->config-files
   "Turn java property into sequence of config file paths"
@@ -23,9 +22,7 @@
 (defn ensure-config-files
   "This is done in case the project does not have access to jvm-opts. E.g. when tasks are from bb.edn"
   [config-files]
-  (if-not (and (nil? config-files) (empty? config-files))
-    config-files
-    default-config-files))
+  (if-not (and (nil? config-files) (empty? config-files)) config-files default-config-files))
 
 (defn make-files-conf
   "Create the simple configuration"

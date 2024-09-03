@@ -29,15 +29,9 @@
   "Creates a map where key is app library reference and value is it's local directory"
   [base-dir app]
   (let [k (get-in app [:publication :as-lib])
-        v {:local/root (build-files/relativize (:app-dir app)
-                                               (build-files/absolutize
-                                                base-dir))}]
+        v {:local/root (build-files/relativize (:app-dir app) (build-files/absolutize base-dir))}]
     (when k {k v})))
 
-(defn get-build-css-filename
-  [app css-key]
-  (get-in app [:publication :frontend :css css-key]))
+(defn get-build-css-filename [app css-key] (get-in app [:publication :frontend :css css-key]))
 
-(defn get-tailwind-config
-  [app]
-  (get-in app [:publication :frontend :css :tailwind-config]))
+(defn get-tailwind-config [app] (get-in app [:publication :frontend :css :tailwind-config]))

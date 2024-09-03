@@ -38,8 +38,7 @@
   (->> project-file-descs
        (mapcat (fn [project-file-desc]
                  (->> (build-code-reports/search-aliases project-file-desc)
-                      (remove (fn [{:keys [alias]}]
-                                (contains? #{"sut" nil} alias))))))
+                      (remove (fn [{:keys [alias]}] (contains? #{"sut" nil} alias))))))
        vec))
 
 ;; ********************************************************************************
@@ -53,22 +52,19 @@
   Returns `true` if all aliases are consistent."
   [project-file-descs verbose]
   (h1 "Search for alias inconsistencies.")
-  (let [cleaned-project-file-descs
-        (remove (comp build-code-reports/is-ignored-file? :raw-content)
-                project-file-descs)
+  (let [cleaned-project-file-descs (remove (comp build-code-reports/is-ignored-file? :raw-content)
+                                           project-file-descs)
         s (build-writter)
         res (binding [*out* s]
               (let [matches (alias-list cleaned-project-file-descs)
-                    clj-files-wo-aliases
-                    (set/difference (set (mapv :filename
-                                               cleaned-project-file-descs))
-                                    (set (mapv :filename matches)))]
+                    clj-files-wo-aliases (set/difference (set (mapv :filename
+                                                                    cleaned-project-file-descs))
+                                                         (set (mapv :filename matches)))]
                 (when verbose
                   (normalln "found"
                             (count project-file-descs)
                             "files,"
-                            (- (count project-file-descs)
-                               (count cleaned-project-file-descs))
+                            (- (count project-file-descs) (count cleaned-project-file-descs))
                             "ignored and found"
                             (count matches)
                             "matches, "
@@ -80,9 +76,7 @@
                      (-> (build-code-reports/ns-inconsistent-aliases matches)
                          (build-tasks-reports/save-report!
                           "docs/reports/alias-inconsistent-ns.edn")))))]
-    (if res
-      (h1-valid "Alias are consistent.")
-      (h1-error "Alias inconsistency found."))
+    (if res (h1-valid "Alias are consistent.") (h1-error "Alias inconsistency found."))
     (print-writter s)
     res))
 

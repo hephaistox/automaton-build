@@ -4,15 +4,10 @@
    [clojure.test        :refer [deftest is testing]]))
 
 (deftest log-level-to-ix-test
-  (testing "Compare accepted log levels"
-    (is (sut/compare-log-levels :trace :debug)))
-  (testing "Compare non accepted log levels"
-    (is (not (sut/compare-log-levels :debug :trace))))
-  (testing "Less than two arguments is ok"
-    (sut/compare-log-levels :debug)
-    (sut/compare-log-levels))
-  (testing "Less than two arguments is ok"
-    (sut/compare-log-levels :trace :warning :fatal)))
+  (testing "Compare accepted log levels" (is (sut/compare-log-levels :trace :debug)))
+  (testing "Compare non accepted log levels" (is (not (sut/compare-log-levels :debug :trace))))
+  (testing "Less than two arguments is ok" (sut/compare-log-levels :debug) (sut/compare-log-levels))
+  (testing "Less than two arguments is ok" (sut/compare-log-levels :trace :warning :fatal)))
 
 (deftest trace-test
   (with-redefs [sut/min-level (atom :info)]
@@ -24,5 +19,4 @@
       (is (sut/compare-log-levels @sut/min-level :trace))
       (comment ;; That test can't work during `bb ltest` as logging is
                ;; skipped with `hephaistox-in-test` java property
-        (is (re-find #"\s*--> message"
-                     (with-out-str (sut/trace "message"))))))))
+        (is (re-find #"\s*--> message" (with-out-str (sut/trace "message"))))))))

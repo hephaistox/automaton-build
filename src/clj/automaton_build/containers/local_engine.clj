@@ -33,9 +33,8 @@
   [container-image-name account]
   (let [container-hub-uri (str/join "/" [account container-image-name])]
     (build-log/debug "Push the container `" container-image-name "`")
-    (build-cmds/execute-and-trace
-     ["docker" "tag" container-image-name container-hub-uri {:dir "."}]
-     ["docker" "push" container-hub-uri {:dir "."}])))
+    (build-cmds/execute-and-trace ["docker" "tag" container-image-name container-hub-uri {:dir "."}]
+                                  ["docker" "push" container-hub-uri {:dir "."}])))
 
 (defn build-container-image
   "Builds the container image
@@ -91,26 +90,22 @@
                                   first)
         containers (str/split-lines cmd-res)]
     (if (= 1 return-code)
-      (build-log/fatal
-       "Impossible to execute docker simple images, is docker running?")
+      (build-log/fatal "Impossible to execute docker simple images, is docker running?")
       (do (build-log/trace "containers:" containers)
           (if (= [""] containers)
             (build-log/trace "no container to remove")
             (doseq [container containers]
               (build-log/trace "Remove container id: " container)
-              (build-cmds/execute-and-trace
-               ["docker" "stop" container {:dir "."}]
-               ["docker" "rm" container {:dir "."}])))
-          (let [images (-> (build-cmds/execute-get-string
-                            ["docker" "images" "-q" {:dir "."}])
+              (build-cmds/execute-and-trace ["docker" "stop" container {:dir "."}]
+                                            ["docker" "rm" container {:dir "."}])))
+          (let [images (-> (build-cmds/execute-get-string ["docker" "images" "-q" {:dir "."}])
                            first
                            str/split-lines)]
             (build-log/trace "images: " images)
             (if (= [""] images)
               (build-log/trace "no image to remove")
               (doseq [image images]
-                (build-cmds/execute-and-trace
-                 ["docker" "rmi" "--force" image {:dir "."}]))))))))
+                (build-cmds/execute-and-trace ["docker" "rmi" "--force" image {:dir "."}]))))))))
 
 (defn build-and-push-image
   "Build the container image called `image-to-build`
@@ -126,21 +121,13 @@
   * `assembled-container-dir` the temporary directory where the assembly of that container is stored
   * `files` is list of other files to pick and add to the container image
   * `publish?` do the publication if true, skip otherwise"
-  [image-to-build
-   remote-repo-account
-   image-src-dir
-   assembled-container-dir
-   files
-   publish?]
+  [image-to-build remote-repo-account image-src-dir assembled-container-dir files publish?]
   (when (container-installed?)
-    (build-log/trace-format
-     "Build in `%s` directory and push `%s` to remote repo"
-     assembled-container-dir
-     image-to-build)
+    (build-log/trace-format "Build in `%s` directory and push `%s` to remote repo"
+                            assembled-container-dir
+                            image-to-build)
     (let [files (keep build-files/is-existing-file? files)]
       (when (and (build-files/copy-files-or-dir (concat [image-src-dir] files)
                                                 assembled-container-dir)
                  (build-container-image image-to-build assembled-container-dir))
-        (if publish?
-          (push-container image-to-build remote-repo-account)
-          true)))))
+        (if publish? (push-container image-to-build remote-repo-account) true)))))

@@ -32,9 +32,8 @@
   ([reader filename content header]
    (let [previous-content (some-> filename
                                   reader)
-         content-with-header (if (str/blank? (str header))
-                               content
-                               (str (with-out-str (println header)) content))
+         content-with-header
+         (if (str/blank? (str header)) content (str (with-out-str (println header)) content))
          new-content (if (and (string? previous-content)
                               (string? header)
                               (.contains (str previous-content) (str header)))

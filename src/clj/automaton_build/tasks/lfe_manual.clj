@@ -14,6 +14,4 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   [_task-map {:keys [force]}]
-  (if (lfe-tests-successful? force)
-    build-exit-codes/ok
-    build-exit-codes/catch-all))
+  (if (lfe-tests-successful? force) build-exit-codes/ok build-exit-codes/catch-all))

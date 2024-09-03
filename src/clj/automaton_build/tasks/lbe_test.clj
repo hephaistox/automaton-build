@@ -9,7 +9,6 @@
   All that tests should be runnable on github action
   `rlwrap` is not on the container image, so `clojure` should be used instead of `clj`"
   [_task-map {:keys [test-aliases]}]
-  (if-not (build-cmds/execute-and-trace ["clojure"
-                                         (apply str "-M" test-aliases)])
+  (if-not (build-cmds/execute-and-trace ["clojure" (apply str "-M" test-aliases)])
     build-exit-codes/catch-all
     build-exit-codes/ok))

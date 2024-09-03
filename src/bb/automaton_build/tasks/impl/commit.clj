@@ -14,8 +14,7 @@
                                                     print-writter]]
    [automaton-build.fe.css]
    [automaton-build.os.cmds                 :as build-commands]
-   [automaton-build.tasks.impl.headers.cmds :refer
-                                            [chain-cmds force-dirs success]]
+   [automaton-build.tasks.impl.headers.cmds :refer [chain-cmds force-dirs success]]
    [automaton-build.tasks.impl.headers.vcs  :as build-headers-vcs]))
 
 (defn commit
@@ -39,9 +38,7 @@
             (cond
               nothing-to-commit (normalln "Skipped as no changes found.")
               (not (zero? exit)) (errorln "Unexpected error.")
-              :else (normalln "Commit"
-                              (build-headers-vcs/latest-commit-sha)
-                              "has been created"))
+              :else (normalln "Commit" (build-headers-vcs/latest-commit-sha) "has been created"))
             (success commit-res)))]
     (if commit-status (h1-valid "Commit ok") (h1-error "Commit has failed."))
     (print-writter s)

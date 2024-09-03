@@ -14,14 +14,11 @@
    [automaton-build.utils.string       :as build-string]
    [clojure.pprint                     :as pp]))
 
-(def size-command
-  "Size of the command line to be managed, measured on mcbook pro"
-  243)
+(def size-command "Size of the command line to be managed, measured on mcbook pro" 243)
 
 (def ^:private log-levels [:trace :debug :info :warning :error :fatal])
 
-(def ^:private log-level-to-idx
-  (into {} (map-indexed (fn [idx itm] [itm idx]) log-levels)))
+(def ^:private log-level-to-idx (into {} (map-indexed (fn [idx itm] [itm idx]) log-levels)))
 
 (defn compare-log-levels
   "Is the log-level greater than the reference
@@ -42,8 +39,7 @@
   "Helper function to print the log message"
   [level & messages]
   (when-not (build-java-properties/get-java-property "hephaistox-in-test")
-    `(let [prefix# (str (.format (java.text.SimpleDateFormat. "HH:mm:ss:SSS")
-                                 (java.util.Date.))
+    `(let [prefix# (str (.format (java.text.SimpleDateFormat. "HH:mm:ss:SSS") (java.util.Date.))
                         " "
                         ~level
                         "-"
@@ -58,21 +54,13 @@
                                            suffix#
                                            (constantly nil))))))
 
-(defn set-min-level!
-  "Set the minimum level"
-  [min-level*]
-  (reset! min-level min-level*))
+(defn set-min-level! "Set the minimum level" [min-level*] (reset! min-level min-level*))
 
-(defn set-details?
-  "If true, the console will limit to the size"
-  [b]
-  (reset! details? b))
+(defn set-details? "If true, the console will limit to the size" [b] (reset! details? b))
 
 (defn print-log-parameters
   []
-  (print-message
-   "I"
-   (format "Log `%s` (%s)" @min-level (if @details? "Overflow" "Ellipsis"))))
+  (print-message "I" (format "Log `%s` (%s)" @min-level (if @details? "Overflow" "Ellipsis"))))
 
 (defn min-level-kw [] @min-level)
 
@@ -178,10 +166,9 @@
   `(let [printable# (compare-log-levels @min-level :trace)]
      (when printable#
        (print-message "T" ~msg)
-       (print-message "T"
-                      (apply hash-map
-                             (interleave (map symbol [~@variables])
-                                         (map var-get [~@variables])))))))
+       (print-message
+        "T"
+        (apply hash-map (interleave (map symbol [~@variables]) (map var-get [~@variables])))))))
 
 (defmacro trace-map
   [msg & variables]

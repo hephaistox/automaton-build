@@ -11,6 +11,5 @@
     :as _app}
    _bb-edn-args]
   (let [aliases (get-in build-config [:lconnect :aliases])]
-    (build-log/info-format "Starting repl with aliases `%s`"
-                           (apply str aliases))
+    (build-log/info-format "Starting repl with aliases `%s`" (apply str aliases))
     (build-cmds/execute-and-trace ["clojure" (apply str "-M" aliases)])))

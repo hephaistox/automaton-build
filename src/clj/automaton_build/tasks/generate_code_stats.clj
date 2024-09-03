@@ -24,6 +24,5 @@
   [_task-map app-data]
   (let [res (generate-code-stats app-data)]
     (if-not (nil? res)
-      (do (build-log/error "Code stats generation has failed")
-          build-exit-codes/catch-all)
+      (do (build-log/error "Code stats generation has failed") build-exit-codes/catch-all)
       build-exit-codes/ok)))

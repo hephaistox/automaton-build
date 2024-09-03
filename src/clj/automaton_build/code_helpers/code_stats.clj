@@ -37,10 +37,9 @@
         clj-src-nb-lines (- clj-total-nb-lines clj-test-nb-lines)]
     {:clj-test-nb-lines clj-test-nb-lines
      :clj-total-nb-lines clj-total-nb-lines
-     :ratio-in-pct
-     (if (zero? clj-src-nb-lines)
-       0
-       (/ (Math/floor (* 10000 (/ clj-test-nb-lines clj-src-nb-lines))) 100))}))
+     :ratio-in-pct (if (zero? clj-src-nb-lines)
+                     0
+                     (/ (Math/floor (* 10000 (/ clj-test-nb-lines clj-src-nb-lines))) 100))}))
 
 (defn stats-to-md
   "Create markdown from stats
@@ -48,9 +47,8 @@
   * `filename` md file that will be generated
   * `line-numbers` result of `line-numbers`"
   [filename line-numbers]
-  (build-log/debug "Generate statistics documentation for the monorepo in "
-                   filename)
-  (build-markdown/create-md
-   filename
-   (concat ["# That statistics counts number of line of code"]
-           (sort (map (fn [[k v]] (str "* " (name k) " - " v)) line-numbers)))))
+  (build-log/debug "Generate statistics documentation for the monorepo in " filename)
+  (build-markdown/create-md filename
+                            (concat ["# That statistics counts number of line of code"]
+                                    (sort (map (fn [[k v]] (str "* " (name k) " - " v))
+                                               line-numbers)))))

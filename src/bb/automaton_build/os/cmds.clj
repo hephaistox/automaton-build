@@ -63,10 +63,7 @@
   [cmd-chain dir]
   (mapv #(assoc % 1 dir) cmd-chain))
 
-(defn success
-  "Returns `true` if the result is a success"
-  [result]
-  (= 0 (:exit result)))
+(defn success "Returns `true` if the result is a success" [result] (= 0 (:exit result)))
 
 (defn chain-cmds
   "Execute all commands in the chain, stops at the first failing one."
@@ -121,12 +118,10 @@
   `refresh-delay` pauses between two attempts of refreshing the log.
   If an error occur, use `error-fn` to display it."
   [proc stream-kw on-line-fn on-end-fn refresh-delay error-fn]
-  (let [refresh-delay (if (number? refresh-delay)
-                        refresh-delay
-                        (do (error-fn
-                             "unexpected error: refresh-delay is not a number:"
-                             refresh-delay)
-                            100))
+  (let [refresh-delay
+        (if (number? refresh-delay)
+          refresh-delay
+          (do (error-fn "unexpected error: refresh-delay is not a number:" refresh-delay) 100))
         stream (get proc stream-kw)]
     (with-open [rdr (io/reader stream)]
       (binding [*in* rdr]

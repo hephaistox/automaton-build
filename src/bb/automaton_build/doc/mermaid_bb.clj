@@ -19,8 +19,7 @@
   `user-id` and `group-id` are necessary to execute the command. "
   [mermaid-filepath user-id group-id target-dir]
   (let [mermaid-filename (build-filename/filename mermaid-filepath)
-        image-filename (build-filename/change-extension mermaid-filename
-                                                        ".png")]
+        image-filename (build-filename/change-extension mermaid-filename ".png")]
     {:output-file (build-filename/create-file-path target-dir image-filename)
      :cmd ["docker"
            "run"
@@ -67,8 +66,7 @@
                filename
                "-o"
                (build-filename/change-extension filename image-extension)]
-     :target-path (build-filename/change-extension mermaid-filename
-                                                   image-extension)}))
+     :target-path (build-filename/change-extension mermaid-filename image-extension)}))
 
 (defn ls-mermaid
   "List all mermaid files searched recursively in `app-dir`."
@@ -82,7 +80,5 @@
   (->> mermaid-files
        (mapv str)
        (filterv (fn [file]
-                  (let [file-out
-                        (build-filename/change-extension file image-extension)]
-                    (and (build-file/is-existing-file? file)
-                         (need-to-update? file file-out)))))))
+                  (let [file-out (build-filename/change-extension file image-extension)]
+                    (and (build-file/is-existing-file? file) (need-to-update? file file-out)))))))

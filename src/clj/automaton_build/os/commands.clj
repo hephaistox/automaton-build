@@ -30,8 +30,7 @@
   * `error-to-std?` if true, sends the error output stream to the standard stream - usefull for tools writing expected messages on error stream
   * `background?` if that indicator is set, the log is not blocking"
   [proc error-to-std? background?]
-  (future
-   (log-a-stream (fn [& args] (build-log/trace-data args)) proc (:out proc)))
+  (future (log-a-stream (fn [& args] (build-log/trace-data args)) proc (:out proc)))
   (let [log-fn #(log-a-stream (if error-to-std?
                                 (fn [& args] (build-log/trace-data args))
                                 (fn [& args] (build-log/error-data args)))
@@ -47,30 +46,29 @@
   * `trace?` if true, the output and error streams are linked to log
   * `string?` if true, the output and error streams are returned as a string"
   [command trace? string?]
-  (try
-    (let [last-command-elt (last command)
-          [command opts] (if (map? last-command-elt)
-                           [(vec (butlast command))
-                            (merge build-cmd-str/default-opts last-command-elt)]
-                           [command build-cmd-str/default-opts])
-          {:keys [background? error-to-std?]} opts
-          updated-opts (-> opts
-                           (dissoc :background? :error-to-std?)
-                           (merge (when string?
-                                    {:out :string
-                                     :err :string}))
-                           (update :dir #(if (str/blank? %) "." %)))
-          _ (build-log/trace-format "Execute `%s` with options = `%s`"
-                                    (str/join " " command)
-                                    (pr-str updated-opts))
-          process (apply babashka-process/process updated-opts command)]
-      (when trace? (log-during-execution process error-to-std? background?))
-      (cond
-        background? [0 "background process"]
-        :else (let [{:keys [exit out err]} @process] [exit (str out err)])))
-    (catch Exception e
-      (build-log/error-exception e)
-      [-1 (str "Unexpected error during execution of this command" command)])))
+  (try (let [last-command-elt (last command)
+             [command opts] (if (map? last-command-elt)
+                              [(vec (butlast command))
+                               (merge build-cmd-str/default-opts last-command-elt)]
+                              [command build-cmd-str/default-opts])
+             {:keys [background? error-to-std?]} opts
+             updated-opts (-> opts
+                              (dissoc :background? :error-to-std?)
+                              (merge (when string?
+                                       {:out :string
+                                        :err :string}))
+                              (update :dir #(if (str/blank? %) "." %)))
+             _ (build-log/trace-format "Execute `%s` with options = `%s`"
+                                       (str/join " " command)
+                                       (pr-str updated-opts))
+             process (apply babashka-process/process updated-opts command)]
+         (when trace? (log-during-execution process error-to-std? background?))
+         (cond
+           background? [0 "background process"]
+           :else (let [{:keys [exit out err]} @process] [exit (str out err)])))
+       (catch Exception e
+         (build-log/error-exception e)
+         [-1 (str "Unexpected error during execution of this command" command)])))
 
 (defn execute-with-exit-code
   "Execute the commands, returns a vector with, for each command, a pair of exit code and message

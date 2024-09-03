@@ -8,16 +8,11 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   [_task-map {:keys [storage-datomic]}]
-  (let [{:keys [datomic-root-dir
-                datomic-dir-pattern
-                datomic-ver
-                datomic-transactor-bin-path]}
+  (let [{:keys [datomic-root-dir datomic-dir-pattern datomic-ver datomic-transactor-bin-path]}
         storage-datomic]
-    (build-log/info-format "Storage is getting started (datomic v%s)"
-                           datomic-ver)
+    (build-log/info-format "Storage is getting started (datomic v%s)" datomic-ver)
     (if (str/blank? datomic-ver)
-      (do (build-log/debug
-           "Parameter datomic-ver is missing, storage execution is skipped")
+      (do (build-log/debug "Parameter datomic-ver is missing, storage execution is skipped")
           build-exit-codes/ok)
       (if-not (build-storage/run datomic-root-dir
                                  datomic-dir-pattern

@@ -21,7 +21,4 @@
        (map (fn [[k v]] [(build-utils-keyword/keywordize k) v]))
        (into {})))
 
-(defn make-env-conf
-  "Create the simple configuration"
-  []
-  (->EnvConf (read-system-env)))
+(defn make-env-conf "Create the simple configuration" [] (->EnvConf (read-system-env)))

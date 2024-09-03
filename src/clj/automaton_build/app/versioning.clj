@@ -15,11 +15,9 @@
   "Checks that deploy the right environment is targeted for version change.
    Covers case that project branch version will be different because there was deploy to la and than to  production."
   [app-dir environment]
-  (let [current-version-production? (production? (build-version/current-version
-                                                  app-dir))]
+  (let [current-version-production? (production? (build-version/current-version app-dir))]
     (if (or (and current-version-production? (= :production environment))
-            (and (not current-version-production?)
-                 (not= :production environment)))
+            (and (not current-version-production?) (not= :production environment)))
       true
       false)))
 
@@ -27,14 +25,9 @@
   "Checks if current version in `app-dir` is the same as in `target-branch`"
   [app-dir app-name repo target-branch environment]
   (let [tmp-dir (build-files/create-temp-dir)]
-    (build-cfg-mgt/clone-file repo
-                              app-name
-                              tmp-dir
-                              target-branch
-                              (build-version/version-file))
+    (build-cfg-mgt/clone-file repo app-name tmp-dir target-branch (build-version/version-file))
     (and (correct-environment? app-dir environment)
-         (not= (build-version/current-version
-                (build-files/create-dir-path tmp-dir app-name))
+         (not= (build-version/current-version (build-files/create-dir-path tmp-dir app-name))
                (build-version/current-version app-dir)))))
 
 (defn- generate-new-test-env-version
@@ -63,14 +56,12 @@
    else adds optional qualifier based on targeted-env"
   ([version app-name target-env changes]
    (if (production? version)
-     (let [new-version
-           (build-version/generate-new-version version app-name changes)]
+     (let [new-version (build-version/generate-new-version version app-name changes)]
        (if (= version new-version)
          version
          (build-version/add-optional-qualifier new-version target-env)))
      (generate-new-test-env-version version)))
-  ([version app-name target-env]
-   (generate-test-env-version version app-name target-env nil)))
+  ([version app-name target-env] (generate-test-env-version version app-name target-env nil)))
 
 
 (defn generate-new-app-version

@@ -21,21 +21,13 @@
 
 (defn build-config-data
   "Gathers all data from build-config configurations, which contains data on tasks (specific-task-registry, tasks.registry.common), defaults from build-config-schema and data from build_config.edn"
-  [raw-build-config
-   task-name
-   mandatory-tasks
-   tasks-schema
-   build-config-task-kws
-   shared]
-  (let [build-config
-        (->> (build-config-tasks/update-build-config-tasks raw-build-config
-                                                           mandatory-tasks)
-             (build-build-config/build-config-default-values tasks-schema))
-        build-config-task-data
-        (or (build-config-task-data build-config build-config-task-kws) {})
+  [raw-build-config task-name mandatory-tasks tasks-schema build-config-task-kws shared]
+  (let [build-config (->> (build-config-tasks/update-build-config-tasks raw-build-config
+                                                                        mandatory-tasks)
+                          (build-build-config/build-config-default-values tasks-schema))
+        build-config-task-data (or (build-config-task-data build-config build-config-task-kws) {})
         build-config-shared-data (-> (get build-config :task-shared)
-                                     (build-utils-map/select-keys*
-                                      (map keyword shared)))]
+                                     (build-utils-map/select-keys* (map keyword shared)))]
     (when (nil? build-config-task-data)
       (build-log/warn-format
        "`build-config.edn` does not contain any value for a mandatory task [:tasks %s]"
@@ -60,34 +52,22 @@
      :deps-edn (build-deps-edn/slurp app-dir)}))
 
 (defn task-app-data
-  ([app-dir task-name cli-args]
-   (task-app-data app-dir task-name cli-args nil nil))
+  ([app-dir task-name cli-args] (task-app-data app-dir task-name cli-args nil nil))
   ([app-dir task-name cli-args task-map* cli-opts*]
-   (let [{:keys [app-dir
-                 app-name
-                 raw-build-config
-                 bb-edn
-                 deps-edn
-                 shadow-cljs
-                 package-json]
+   (let [{:keys [app-dir app-name raw-build-config bb-edn deps-edn shadow-cljs package-json]
           :as _app}
          (app-data app-dir)
          {:keys [task-map task-registry tasks-schema mandatory-tasks]
           :as tasks}
          (->> (build-config-tasks/tasks-names raw-build-config)
               (build-launcher-task/build app-dir task-name))
-         {:keys [build-config-task-kws shared task-cli-opts-kws]} (or task-map*
-                                                                      task-map)
+         {:keys [build-config-task-kws shared task-cli-opts-kws]} (or task-map* task-map)
          {:keys [options]
           :as cli-opts}
-         (or cli-opts*
-             (build-tasks-cli-opts/cli-opts task-cli-opts-kws cli-args))]
-     (if (or (not (build-tasks-cli-opts/are-cli-opts-valid?
-                   cli-opts
-                   "That arguments are not compatible"))
-             (not (build-tasks-cli-opts/mandatory-option-present?
-                   cli-opts
-                   task-cli-opts-kws))
+         (or cli-opts* (build-tasks-cli-opts/cli-opts task-cli-opts-kws cli-args))]
+     (if (or (not (build-tasks-cli-opts/are-cli-opts-valid? cli-opts
+                                                            "That arguments are not compatible"))
+             (not (build-tasks-cli-opts/mandatory-option-present? cli-opts task-cli-opts-kws))
              (empty? tasks))
        (do (build-log/warn "Can't continnue creating app-data") nil)
        (let [build-config-data (build-config-data raw-build-config

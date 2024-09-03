@@ -8,9 +8,7 @@
 (defn- spit-workflow*
   [filename file-content searched-pattern tag]
   (let [new-content (str/replace file-content searched-pattern (str "$1" tag))]
-    (when-not (nil? new-content)
-      (build-files/spit-file filename new-content)
-      true)))
+    (when-not (nil? new-content) (build-files/spit-file filename new-content) true)))
 
 (defn- searched-pattern
   [container-name]
@@ -29,9 +27,8 @@
     (let [searched-pattern (searched-pattern container-name)
           search-result (re-find searched-pattern file-content)]
       (last search-result))
-    (do (build-log/warn-format
-         "File %s doesn't exist, unable to show the container tag in it"
-         filename)
+    (do (build-log/warn-format "File %s doesn't exist, unable to show the container tag in it"
+                               filename)
         false)))
 
 (defn spit-workflow
@@ -46,13 +43,11 @@
     (let [searched-pattern (searched-pattern container-name)]
       (if (re-find searched-pattern file-content)
         (spit-workflow* filename file-content searched-pattern tag)
-        (do (build-log/warn-format
-             "Not able to update `%s`, the pattern `%s` has not been found"
-             filename
-             searched-pattern)
+        (do (build-log/warn-format "Not able to update `%s`, the pattern `%s` has not been found"
+                                   filename
+                                   searched-pattern)
             false)))
-    (build-log/warn-format
-     "File %s doesn't exist, workflow update is skipped")))
+    (build-log/warn-format "File %s doesn't exist, workflow update is skipped")))
 
 (defn show-tag-in-workflows
   "Print in log the current workflow tag
