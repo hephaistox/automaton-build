@@ -8,16 +8,14 @@
    [automaton-build.os.files                   :as build-files]
    [automaton-build.os.terminal-msg            :as build-terminal-msg]
    [automaton-build.tasks.build-jar            :as build-tasks-build-jar]
-   [automaton-build.tasks.git-push-base-branch :as
-                                               build-tasks-git-push-base-branch]
+   [automaton-build.tasks.git-push-base-branch :as build-tasks-git-push-base-branch]
    [automaton-build.tasks.publish-jar          :as build-tasks-publish-jar]
    [automaton-build.utils.keyword              :as build-utils-keyword]))
 
 (defn- base-branch-push-disallowed
   [publication]
   (let [current-branch (build-cfg-mgt/current-branch ".")
-        base-branches (map #(get-in publication [:env % :push-branch])
-                           (keys (:env publication)))]
+        base-branches (map #(get-in publication [:env % :push-branch]) (keys (:env publication)))]
     (if (some #(= current-branch %) base-branches)
       (do
         (build-terminal-msg/println-msg
@@ -39,10 +37,8 @@
     :as app}]
   (if (build-tasks-git-push-base-branch/exec task-map app)
     (if (= build-exit-codes/ok (build-tasks-publish-jar/exec task-map app))
-      (do (build-log/info-format "Deploy of %s successful" app-name)
-          build-exit-codes/ok)
-      (do (build-log/warn-format "Deploy step of %s failed" app-name)
-          build-exit-codes/catch-all))
+      (do (build-log/info-format "Deploy of %s successful" app-name) build-exit-codes/ok)
+      (do (build-log/warn-format "Deploy step of %s failed" app-name) build-exit-codes/catch-all))
     (do (build-log/warn-format "Pushing %s failed - deploy aborted" app-name)
         build-exit-codes/catch-all)))
 
@@ -64,20 +60,13 @@
   [publication environment app-dir app-name]
   (if-let [repo (:repo publication)]
     (let [target-branch (get-in publication [:env environment :push-branch])]
-      (if (build-app-versioning/version-changed? app-dir
-                                                 app-name
-                                                 repo
-                                                 target-branch
-                                                 environment)
+      (if (build-app-versioning/version-changed? app-dir app-name repo target-branch environment)
         true
-        (do (build-log/debug-format
-             "`%s` version file between local version and `%s` didn't change"
-             app-name
-             target-branch)
+        (do (build-log/debug-format "`%s` version file between local version and `%s` didn't change"
+                                    app-name
+                                    target-branch)
             false)))
-    (do (build-log/debug-format "`%s` does not have a git repo so it's skipped"
-                                app-name)
-        false)))
+    (do (build-log/debug-format "`%s` does not have a git repo so it's skipped" app-name) false)))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
@@ -97,16 +86,13 @@
                         build-utils-keyword/keywordize)]
     (if (or (base-branch-push-disallowed publication)
             (state-should-be-clean app-dir)
-            (and (not force)
-                 (not (deploy? publication environment app-dir app-name))))
-      (do (build-log/info-format
-           "Deployment skipped for `%s` as initial conditions are not met"
-           app-name)
+            (and (not force) (not (deploy? publication environment app-dir app-name))))
+      (do (build-log/info-format "Deployment skipped for `%s` as initial conditions are not met"
+                                 app-name)
           build-exit-codes/ok)
       (let [app (ensure-no-cache app)]
         (build-log/info-format "Deployment process started for `%s`" app-name)
         (if (= build-exit-codes/ok (build-tasks-build-jar/exec task-map app))
           (deployment* task-map app)
-          (do (build-log/warn-format "Compilation of %s failed - deploy aborted"
-                                     app-name)
+          (do (build-log/warn-format "Compilation of %s failed - deploy aborted" app-name)
               build-exit-codes/catch-all))))))

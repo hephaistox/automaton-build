@@ -34,10 +34,8 @@
   (when (or (not (fn? valid-fn)) (not (valid-fn (:arguments cli-opts))))
     (println "Arguments are not valid.")
     (println)
-    (println (build-cli-opts/print-usage-with-arguments cli-opts
-                                                        (:name current-task)
-                                                        doc-str
-                                                        message))
+    (println
+     (build-cli-opts/print-usage-with-arguments cli-opts (:name current-task) doc-str message))
     (build-exit-codes/exit build-exit-codes/invalid-argument))
   (when-let [message (build-cli-opts/error-msg cli-opts)]
     (println message)

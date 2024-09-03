@@ -23,27 +23,24 @@
   [deps-file-desc verbose?]
   (h1 "Linter")
   (let [dir (:app-dir deps-file-desc)
-        linter-status
-        (let [paths-to-lint (->> deps-file-desc
-                                 :edn
-                                 build-deps/get-src
-                                 (keep build-file/is-existing-dir?))]
-          (if (empty? paths-to-lint)
-            (do (normalln "Nothing to lint.") nil)
-            (let [s (build-writter)
-                  lint-cmd (build-code-lint/lint-cmd verbose? paths-to-lint)
-                  {:keys [out err exit]}
-                  (binding [*out* s] (blocking-cmd lint-cmd dir "" verbose?))]
-              (cond
-                (zero? exit) (h1-valid "Linter ok")
-                (re-find #"linting took \d*ms, errors: \d*, warnings: \d*"
-                         (str out))
-                (do (h1-error "Linter found errors \n") (normalln err out))
-                :else (do (errorln "Failed during linting.")
-                          (normalln out)
-                          (normalln)))
-              (print-writter s)
-              (zero? exit))))]
+        linter-status (let [paths-to-lint (->> deps-file-desc
+                                               :edn
+                                               build-deps/get-src
+                                               (keep build-file/is-existing-dir?))]
+                        (if (empty? paths-to-lint)
+                          (do (normalln "Nothing to lint.") nil)
+                          (let [s (build-writter)
+                                lint-cmd (build-code-lint/lint-cmd verbose? paths-to-lint)
+                                {:keys [out err exit]} (binding [*out* s]
+                                                         (blocking-cmd lint-cmd dir "" verbose?))]
+                            (cond
+                              (zero? exit) (h1-valid "Linter ok")
+                              (re-find #"linting took \d*ms, errors: \d*, warnings: \d*" (str out))
+                              (do (h1-error "Linter found errors \n") (normalln err out))
+                              :else
+                              (do (errorln "Failed during linting.") (normalln out) (normalln)))
+                            (print-writter s)
+                            (zero? exit))))]
     linter-status))
 
 (defn synthesis

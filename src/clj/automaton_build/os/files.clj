@@ -44,9 +44,8 @@
             dir (-> dir
                     (str/replace (str directory-separator directory-separator)
                                  (str directory-separator))
-                    (str/replace
-                     (str directory-separator "." directory-separator)
-                     directory-separator))]
+                    (str/replace (str directory-separator "." directory-separator)
+                                 directory-separator))]
         (if (= old-dir dir) dir (recur dir))))))
 
 (defn create-file-path
@@ -70,8 +69,7 @@
   "Creates a path with the list of parameters.
   Removes the empty strings, add needed separators, including the trailing ones"
   [& dirs]
-  (let [dir (apply create-file-path dirs)]
-    (if (str/blank? dir) "" (str dir directory-separator))))
+  (let [dir (apply create-file-path dirs)] (if (str/blank? dir) "" (str dir directory-separator))))
 
 (defn create-absolute-dir-path
   "Creates an absolute path with the list of parameters.
@@ -92,10 +90,7 @@
   "Use the relative-name to create in file in the same directory than source-file"
   [source-file relative-name]
   (let [source-subdirs (fs/components source-file)
-        subdirs (mapv str
-                      (if (fs/directory? source-file)
-                        source-subdirs
-                        (butlast source-subdirs)))
+        subdirs (mapv str (if (fs/directory? source-file) source-subdirs (butlast source-subdirs)))
         new-name (conj subdirs relative-name)]
     (apply create-file-path new-name)))
 
@@ -113,8 +108,7 @@
   * `filename`"
   [filename]
   (when-not (str/blank? filename)
-    (if (or (fs/directory? filename)
-            (= directory-separator (str (last filename))))
+    (if (or (fs/directory? filename) (= directory-separator (str (last filename))))
       filename
       (let [filepath (->> filename
                           fs/components
@@ -122,8 +116,7 @@
                           (mapv str))]
         (cond
           (= [] filepath) ""
-          (is-absolute? filename)
-          (apply create-dir-path directory-separator filepath)
+          (is-absolute? filename) (apply create-dir-path directory-separator filepath)
           :else (apply create-dir-path filepath))))))
 
 ;; ***********************
@@ -146,15 +139,12 @@
 (defn- copy-files-or-dir-validate
   "Internal function to validate data for `copy-files-or-dir`"
   [files]
-  (if (and (sequential? files)
-           (every? #(or (string? %) (= java.net.URL (class %))) files))
+  (if (and (sequential? files) (every? #(or (string? %) (= java.net.URL (class %))) files))
     true
-    (do
-      (build-log/error-exception
-       (ex-info
-        "The `files` parameter should be a sequence of string or `java.net.URL`"
-        {:files files}))
-      false)))
+    (do (build-log/error-exception
+         (ex-info "The `files` parameter should be a sequence of string or `java.net.URL`"
+                  {:files files}))
+        false)))
 
 (defn copy-files-or-dir
   "Copy the files, even if they are directories to the target
@@ -164,35 +154,33 @@
   Non existing files or directory are skipped"
   [files target-dir]
   (when (copy-files-or-dir-validate files)
-    (try
-      (fs/create-dirs target-dir)
-      (doseq [file files]
-        (if (fs/exists? file)
-          (do (build-log/trace "Copy from " file " to " target-dir)
-              (if (fs/directory? file)
-                (do (build-log/trace-format "Copy directory `%s` to `%s`"
-                                            (absolutize file)
-                                            (absolutize target-dir))
-                    (fs/copy-tree file
-                                  target-dir
-                                  {:replace-existing true
-                                   :copy-attributes true}))
-                (do (build-log/trace-format "Copy file `%s` to `%s`"
-                                            (absolutize file)
-                                            (absolutize target-dir))
-                    (fs/copy file
-                             target-dir
-                             {:replace-existing true
-                              :copy-attributes true}))))
-          (build-log/debug-format "File `%s` was skipped as it is not existing"
-                                  file)))
-      true
-      (catch Exception e
-        (build-log/error-exception (ex-info "Unexpected exception during copy"
-                                            {:exception e
-                                             :files files
-                                             :target-dir target-dir}))
-        false))))
+    (try (fs/create-dirs target-dir)
+         (doseq [file files]
+           (if (fs/exists? file)
+             (do (build-log/trace "Copy from " file " to " target-dir)
+                 (if (fs/directory? file)
+                   (do (build-log/trace-format "Copy directory `%s` to `%s`"
+                                               (absolutize file)
+                                               (absolutize target-dir))
+                       (fs/copy-tree file
+                                     target-dir
+                                     {:replace-existing true
+                                      :copy-attributes true}))
+                   (do (build-log/trace-format "Copy file `%s` to `%s`"
+                                               (absolutize file)
+                                               (absolutize target-dir))
+                       (fs/copy file
+                                target-dir
+                                {:replace-existing true
+                                 :copy-attributes true}))))
+             (build-log/debug-format "File `%s` was skipped as it is not existing" file)))
+         true
+         (catch Exception e
+           (build-log/error-exception (ex-info "Unexpected exception during copy"
+                                               {:exception e
+                                                :files files
+                                                :target-dir target-dir}))
+           false))))
 
 (defn delete-files
   "Deletes the files which are given in the list.
@@ -201,16 +189,14 @@
   (doseq [file file-list]
     (when (fs/exists? file)
       (if (fs/directory? file)
-        (do (build-log/trace "Directory " (absolutize file) " is deleted")
-            (fs/delete-tree file))
+        (do (build-log/trace "Directory " (absolutize file) " is deleted") (fs/delete-tree file))
         (do (build-log/trace "File " (absolutize file) " is deleted")
             (fs/delete-if-exists file))))))
 
 (defn modified-since
   "Return true if anchor is older than one of the file in file-set"
   [anchor file-set]
-  (let [file-set (filter some? file-set)]
-    (when anchor (seq (fs/modified-since anchor file-set)))))
+  (let [file-set (filter some? file-set)] (when anchor (seq (fs/modified-since anchor file-set)))))
 
 (defn current-dir
   "Return current dir"
@@ -279,8 +265,7 @@
   (-> (filter (fn [filename]
                 (if (is-existing-file? filename)
                   filename
-                  (do (build-log/warn-format "File `%s` is filtered" filename)
-                      false)))
+                  (do (build-log/warn-format "File `%s` is filtered" filename) false)))
               filenames)
       vec))
 
@@ -296,21 +281,18 @@
   * `dir` directory to create"
   [dir]
   (if (is-existing-file? dir)
-    (build-log/warn-format
-     "Can't create a directory `%s` as a file already exists with that name"
-     (absolutize dir))
+    (build-log/warn-format "Can't create a directory `%s` as a file already exists with that name"
+                           (absolutize dir))
     (if (fs/exists? dir)
-      (build-log/debug-format
-       "Directory creation is skipped as the directory `%s` already exists"
-       dir)
+      (build-log/debug-format "Directory creation is skipped as the directory `%s` already exists"
+                              dir)
       (try (fs/create-dirs dir)
            dir
            (catch Exception e
-             (build-log/warn-exception
-              (ex-info (format "Directory creation has failed `%s`"
-                               (absolutize dir))
-                       {:dir dir}
-                       e)))))))
+             (build-log/warn-exception (ex-info (format "Directory creation has failed `%s`"
+                                                        (absolutize dir))
+                                                {:dir dir}
+                                                e)))))))
 
 (defn overwrite-dirs
   "Creates a directory, if directory extists removes it first."
@@ -335,12 +317,8 @@
                             :recursive true
                             :follow-links true}
                            options)))
-     (do (build-log/warn-format "Search aborted as `%s` is not a directory"
-                                root)
-         (build-log/trace-map "search parameters"
-                              :root root
-                              :pattern pattern
-                              :options options)
+     (do (build-log/warn-format "Search aborted as `%s` is not a directory" root)
+         (build-log/trace-map "search parameters" :root root :pattern pattern :options options)
          [])))
   ([root pattern] (search-files root pattern {})))
 
@@ -350,8 +328,7 @@
   * `target-filename` name of the file to change
   * `silently` (Optional, default= nil) if `:silently`, won't tell in the log"
   ([target-filename silently?]
-   (when-not (= :silently silently?)
-     (build-log/trace-format "Reading file `%s`" target-filename))
+   (when-not (= :silently silently?) (build-log/trace-format "Reading file `%s`" target-filename))
    (try (slurp (-> target-filename
                    fs/expand-home
                    str))
@@ -382,41 +359,33 @@
   * `compare-fn` (optional - default: compare-changes) function to compare changes when file exists in the target `filename`. Expects to return boolean to tell if `content` and target `filename` content is the same. Accepts three arguments, `filename`, `content`, `header`. The simplest implementation to skip comparing would be (fn [_filename _content _header] false).
   * `writer` (optional - default: spit) function to spit the file"
   ([filename content header compare-fn writer]
-   (try (build-log/trace-format "Writing file `%s`" filename)
-        (let [filename (absolutize filename)]
-          (when (nil? filename)
-            (throw (ex-info "Impossible to save the file due to empty filename"
-                            {:filename filename})))
-          (let [content-with-header (if (str/blank? (str header))
-                                      content
-                                      (str (with-out-str (println header))
-                                           content))]
-            (cond
-              (and (is-existing-file? filename)
-                   (compare-fn filename content header))
-              (do (build-log/trace-format
-                   "Spit of file `%s` skipped, as it is already up to date:"
-                   filename)
-                  false)
-              (some? content)
-              (do (build-log/trace-format
-                   "Spit of file `%s` is updating with new content."
-                   filename)
-                  (create-parent-dirs filename)
-                  (writer filename content-with-header)
-                  content)
-              :else (throw (ex-info "Content of a file is empty"
-                                    {:filename filename
-                                     :content content})))))
-        (catch Exception e
-          (build-log/error-data {:filename filename
-                                 :exception e
-                                 :content content}
-                                (format "Impossible to update the `%s` file."
-                                        filename))
-          nil)))
-  ([filename content header compare-fn]
-   (spit-file filename content header compare-fn spit))
+   (try
+     (build-log/trace-format "Writing file `%s`" filename)
+     (let [filename (absolutize filename)]
+       (when (nil? filename)
+         (throw (ex-info "Impossible to save the file due to empty filename" {:filename filename})))
+       (let [content-with-header
+             (if (str/blank? (str header)) content (str (with-out-str (println header)) content))]
+         (cond
+           (and (is-existing-file? filename) (compare-fn filename content header))
+           (do (build-log/trace-format "Spit of file `%s` skipped, as it is already up to date:"
+                                       filename)
+               false)
+           (some? content)
+           (do (build-log/trace-format "Spit of file `%s` is updating with new content." filename)
+               (create-parent-dirs filename)
+               (writer filename content-with-header)
+               content)
+           :else (throw (ex-info "Content of a file is empty"
+                                 {:filename filename
+                                  :content content})))))
+     (catch Exception e
+       (build-log/error-data {:filename filename
+                              :exception e
+                              :content content}
+                             (format "Impossible to update the `%s` file." filename))
+       nil)))
+  ([filename content header compare-fn] (spit-file filename content header compare-fn spit))
   ([filename content header]
    (spit-file filename
               content
@@ -453,10 +422,7 @@
                      (when (directory-exists? sub-dir-rpath) [sub-dir-rpath])))
           dirs)))
 
-(defn filename
-  "Return the file name without the path"
-  [path]
-  (fs/file-name path))
+(defn filename "Return the file name without the path" [path] (fs/file-name path))
 
 (defn sorted-absolutize-dirs
   "Create a proper list of absolutized deduped directories

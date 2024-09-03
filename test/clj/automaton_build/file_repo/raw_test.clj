@@ -13,8 +13,7 @@
       (is (= (sut/file-repo-map raw-file-repo) (sut/file-repo-map res))))))
 
 (deftest file-repo-map-test
-  (testing "file repo map actually returns the map"
-    (is (map? (sut/file-repo-map raw-file-repo)))))
+  (testing "file repo map actually returns the map" (is (map? (sut/file-repo-map raw-file-repo)))))
 
 (deftest filter-repo-test
   (testing "Refusing all files is ok"

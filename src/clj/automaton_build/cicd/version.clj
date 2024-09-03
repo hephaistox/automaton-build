@@ -20,9 +20,7 @@
    [automaton-build.os.terminal-msg :as build-terminal-msg]
    [clojure.string                  :as str]))
 
-(defn version-file
-  ([] "version.edn")
-  ([dir] (build-files/create-file-path dir (version-file))))
+(defn version-file ([] "version.edn") ([dir] (build-files/create-file-path dir (version-file))))
 
 (defn- slurp-version-file
   [app-dir]
@@ -35,10 +33,9 @@
 
 (defn- spit-version-file
   [app-dir content]
-  (build-edn-utils/spit-edn
-   (version-file app-dir)
-   content
-   "Last generated version, note a failed push consume a number"))
+  (build-edn-utils/spit-edn (version-file app-dir)
+                            content
+                            "Last generated version, note a failed push consume a number"))
 
 (defn save-version
   "Update app version file `version.edn` in `app-dir`. Captures requirement for the version to be consciously decided when saved
@@ -52,9 +49,7 @@
 (defn ask-version
   "Asks user what should be a new version following the non-breaking version system"
   ([project-name current-version changes]
-   (when changes
-     (build-terminal-msg/println-msg (format "To see what changed visit %s"
-                                             changes)))
+   (when changes (build-terminal-msg/println-msg (format "To see what changed visit %s" changes)))
    (ask-version project-name current-version))
   ([project-name current-version]
    (build-cli-input/question-loop
@@ -78,9 +73,7 @@
   [version]
   (str/split version #"-"))
 
-(defn add-optional-qualifier
-  [version qualifier]
-  (str/join "-" [version qualifier]))
+(defn add-optional-qualifier [version qualifier] (str/join "-" [version qualifier]))
 
 (defn- inc-str [num] (str (inc (read-string num))))
 

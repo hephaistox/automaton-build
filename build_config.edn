@@ -5,15 +5,10 @@
                              :env {:la {}
                                    :production {}}
                              :license {}
-                             :repo
-                             "git@github.com:hephaistox/automaton-build.git"}
+                             :repo "git@github.com:hephaistox/automaton-build.git"}
                :repl-aliases [:common-test :env-development-repl :build]
                :storage-datomic {}}
- :tasks {:clean {:dirs [".cpcache/"
-                        ".clj-kondo/.cache/"
-                        "tmp/"
-                        "target/"
-                        "node_modules/"
-                        ".shadow-cljs/builds/"]}
-         :reports {:forbiddenwords-words #{"automaton-core" "automaton-web"
-                                           "landing" "tap>"}}}}
+ :tasks
+ {:clean
+  {:dirs [".cpcache/" ".clj-kondo/.cache/" "tmp/" "target/" "node_modules/" ".shadow-cljs/builds/"]}
+  :reports {:forbiddenwords-words #{"automaton-core" "automaton-web" "landing" "tap>"}}}}

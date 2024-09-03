@@ -20,16 +20,11 @@
         paths (build-deps-edn/extract-paths deps-edn exclude-aliases)
         app-source-paths (->> paths
                               (filter #(re-matches #".*src.*" %))
-                              (filter #(not (re-matches #".*development.*"
-                                                        %))))]
+                              (filter #(not (re-matches #".*development.*" %))))]
     (build-log/info-format "Generation of pom-xml started for `%s`" app-name)
     (if (= deploy-to :clojars)
-      (if (nil? (build-pom-xml/generate-pom-xml as-lib
-                                                app-source-paths
-                                                app-dir
-                                                license))
+      (if (nil? (build-pom-xml/generate-pom-xml as-lib app-source-paths app-dir license))
         build-exit-codes/ok
         build-exit-codes/catch-all)
-      (do (build-log/debug
-           "Generation of pom.xml skipped as it's used only for libraries")
+      (do (build-log/debug "Generation of pom.xml skipped as it's used only for libraries")
           build-exit-codes/ok))))

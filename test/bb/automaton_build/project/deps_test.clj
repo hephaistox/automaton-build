@@ -3,8 +3,7 @@
    [automaton-build.project.deps :as sut]
    [clojure.test                 :refer [deftest is]]))
 
-(deftest deps-edn-test
-  (is (:edn (sut/deps-edn "")) "Current repl deps edn should be readable"))
+(deftest deps-edn-test (is (:edn (sut/deps-edn "")) "Current repl deps edn should be readable"))
 
 (deftest get-src-test
   (is (= ["a/src" "b/src" "c/src"]

@@ -13,21 +13,15 @@
   [_task-map
    {:keys [app-dir app-name gha account]
     :as _app}]
-  (build-log/info-format "Starting gha workflow files version update for %s"
-                         app-name)
+  (build-log/info-format "Starting gha workflow files version update for %s" app-name)
   (let [current-version (build-version/current-version app-dir)
         {:keys [workflows]} gha
-        container (build-github-action/make-github-action app-name
-                                                          ""
-                                                          app-dir
-                                                          account
-                                                          current-version)
+        container
+        (build-github-action/make-github-action app-name "" app-dir account current-version)
         workflow-paths (map #(build-files/create-dir-path app-dir %) workflows)
         container-name (build-containers/container-name container)]
     (if (->> (for [filename workflow-paths]
-               (build-workflow-yml/spit-workflow filename
-                                                 container-name
-                                                 current-version))
+               (build-workflow-yml/spit-workflow filename container-name current-version))
              (every? true?))
       build-exit-codes/ok
       build-exit-codes/catch-all)))

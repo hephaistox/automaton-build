@@ -22,12 +22,11 @@
   (if (or (build-cicd-server/is-cicd?)
           (not (some->> (build-files/read-file zprint-file)
                         (re-find use-local-zprint-config-parameter))))
-    (do
-      (build-log/warn-format
-       "Formatting aborted as the formatter setup must include `%s`\n Please add it to `%s` file"
-       use-local-zprint-config-parameter
-       zprint-file)
-      false)
+    (do (build-log/warn-format
+         "Formatting aborted as the formatter setup must include `%s`\n Please add it to `%s` file"
+         use-local-zprint-config-parameter
+         zprint-file)
+        false)
     true))
 
 (defn format-file
@@ -41,9 +40,7 @@
   (cond
     (not (is-formatter-setup)) nil
     (not (build-files/is-existing-file? filename))
-    (do (build-log/trace-format "Can't format file `%s` as it's not found"
-                                filename)
-        nil)
+    (do (build-log/trace-format "Can't format file `%s` as it's not found" filename) nil)
     (= :ok (build-cmd/log-if-fail ["zprint" "-w" filename])) nil
     :else (do (build-log/trace-format "Execution of zprint failed") true)))
 
@@ -55,16 +52,5 @@
   * `dir` directory where to find"
   [dir]
   (= :ok
-     (build-cmd/log-if-fail ["fd"
-                             "-e"
-                             "clj"
-                             "-e"
-                             "cljc"
-                             "-e"
-                             "cljs"
-                             "-e"
-                             "edn"
-                             "-x"
-                             "zprint"
-                             "-w"
-                             {:dir dir}])))
+     (build-cmd/log-if-fail
+      ["fd" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w" {:dir dir}])))

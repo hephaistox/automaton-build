@@ -7,20 +7,18 @@
    [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd]]
    [clojure.test                            :refer [deftest is]]))
 
-(def filename
-  (build-filename/create-file-path (build-file/create-temp-dir) "foo.mermaid"))
+(def filename (build-filename/create-file-path (build-file/create-temp-dir) "foo.mermaid"))
 (deftest mermaid-build-image-cmd-test
-  (let [filename (build-filename/create-file-path (build-file/create-temp-dir)
-                                                  "foo.mermaid")
+  (let [filename (build-filename/create-file-path (build-file/create-temp-dir) "foo.mermaid")
         _ (build-file/write-file filename "erDiagram\ne ||--|| f: z")
-        {:keys [output-file cmd]} (sut/mermaid-build-image-cmd
-                                   filename
-                                   (-> (build-user/user-id-cmd)
-                                       (blocking-cmd "" "" false)
-                                       build-user/id-analyze)
-                                   (-> (build-user/group-id-cmd)
-                                       (blocking-cmd "" "" false)
-                                       build-user/id-analyze)
-                                   (build-file/create-temp-dir "out-data"))]
+        {:keys [output-file cmd]} (sut/mermaid-build-image-cmd filename
+                                                               (-> (build-user/user-id-cmd)
+                                                                   (blocking-cmd "" "" false)
+                                                                   build-user/id-analyze)
+                                                               (-> (build-user/group-id-cmd)
+                                                                   (blocking-cmd "" "" false)
+                                                                   build-user/id-analyze)
+                                                               (build-file/create-temp-dir
+                                                                "out-data"))]
     (blocking-cmd cmd "." "Should not appear" false)
     (is (build-file/is-existing-file? output-file) "Is the file generated?")))

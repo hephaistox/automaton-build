@@ -6,10 +6,8 @@
    [clojure.test                :refer [deftest is testing]]))
 
 (deftest expand-home-str-test
-  (is (not (str/includes? (sut/expand-home-str "~/.gitconfig") "~"))
-      "Tilde is replaced.")
-  (is (= "env/test/file_found.edn"
-         (sut/expand-home-str "env/test/file_found.edn"))
+  (is (not (str/includes? (sut/expand-home-str "~/.gitconfig") "~")) "Tilde is replaced.")
+  (is (= "env/test/file_found.edn" (sut/expand-home-str "env/test/file_found.edn"))
       "No home is not replaced."))
 
 (deftest create-temp-file-test
@@ -24,19 +22,16 @@
   (is (sut/is-existing-path? "docs") "Known dir is existing")
   (is (sut/is-existing-path? "deps.edn") "Known files are existing")
   (is (nil? (sut/is-existing-path? "non-existing-dir")) "Non existing dir")
-  (is (nil? (sut/is-existing-path? "non-existing-file.edn"))
-      "Non existing file"))
+  (is (nil? (sut/is-existing-path? "non-existing-file.edn")) "Non existing file"))
 
 (deftest is-existing-file?-test
   (testing "Empty paths are considered has non existing"
     (is (nil? (sut/is-existing-file? "")))
     (is (nil? (sut/is-existing-file? nil))))
-  (is (not (sut/is-existing-file? "docs"))
-      "A dir is not known has an existing file.")
+  (is (not (sut/is-existing-file? "docs")) "A dir is not known has an existing file.")
   (is (sut/is-existing-file? "deps.edn") "Known files are existing")
   (is (nil? (sut/is-existing-file? "non-existing-dir")) "Non existing dir")
-  (is (nil? (sut/is-existing-file? "non-existing-file.edn"))
-      "Non existing file"))
+  (is (nil? (sut/is-existing-file? "non-existing-file.edn")) "Non existing file"))
 
 (deftest is-existing-dir?-test
   (testing "Empty dirs are considered has non existing"
@@ -45,8 +40,7 @@
   (is (sut/is-existing-dir? "docs") "Known dir is existing")
   (is (not (sut/is-existing-dir? "deps.edn")) "Known files are existing")
   (is (nil? (sut/is-existing-dir? "non-existing-dir")) "Non existing dir")
-  (is (nil? (sut/is-existing-dir? "non-existing-file.edn"))
-      "Non existing file"))
+  (is (nil? (sut/is-existing-dir? "non-existing-file.edn")) "Non existing file"))
 
 (def root-tmp (sut/create-temp-dir))
 (def d (build-filename/create-dir-path root-tmp "test"))
@@ -90,9 +84,7 @@ d
             :file? true}}
          (->> (sut/search-files d "**" {})
               sut/file-rich-list
-              (mapv
-               (fn [file-rich]
-                 (update file-rich :path #(build-filename/relativize % d))))
+              (mapv (fn [file-rich] (update file-rich :path #(build-filename/relativize % d))))
               set))
       "Rich file list contains files/dirs, and nesting."))
 
@@ -153,8 +145,7 @@ d
                      (update :path #(build-filename/relativize % root-tmp))
                      (update :src-dir #(build-filename/relativize % root-tmp))
                      (update :dst-dir #(build-filename/relativize % root-tmp))
-                     (update :target-dir-path
-                             #(build-filename/relativize % root-tmp)))))
+                     (update :target-dir-path #(build-filename/relativize % root-tmp)))))
          set))
    "Copy actions discriminate dir and files, and calculate target and relative paths properly.")
   (-> d
@@ -169,9 +160,8 @@ d
       "After the actual copy, all files are found in `d2`"))
 
 (deftest to-src-dst-test
-  (is (= #{["test/c/d" "test2/c/d"] ["test/b" "test2"]
-           ["test/c/d/e" "test2/c/d/e"] ["test/c" "test2/c"]
-           ["test/c/d/e/f" "test2/c/d/e"]}
+  (is (= #{["test/c/d" "test2/c/d"] ["test/b" "test2"] ["test/c/d/e" "test2/c/d/e"]
+           ["test/c" "test2/c"] ["test/c/d/e/f" "test2/c/d/e"]}
          (->> (-> d
                   (sut/search-files "**" {})
                   sut/file-rich-list

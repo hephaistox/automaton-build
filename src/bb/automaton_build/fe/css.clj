@@ -25,5 +25,4 @@
   [filename content]
   (build-file/write-file
    filename
-   (cons "/* This file is automatically updated by `automaton-build.fe.css` */"
-         content)))
+   (cons "/* This file is automatically updated by `automaton-build.fe.css` */" content)))

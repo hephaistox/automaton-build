@@ -16,8 +16,7 @@
     (is (= "" (sut/remove-last-character nil)))))
 
 (deftest remove-first-last-character-test
-  (testing "Remove first and last character"
-    (is (= "bb" (sut/remove-first-last-character "abba"))))
+  (testing "Remove first and last character" (is (= "bb" (sut/remove-first-last-character "abba"))))
   (testing "Remove first and last character on small or empty string is ok"
     (is (= ""
            (sut/remove-first-last-character "aa")
@@ -33,18 +32,14 @@
     (is (= "foobar" (sut/limit-length "foobar" 100)))
     (is (= "foobar" (sut/limit-length "foobar" 6))))
   (testing "Prefix and suffix are taken into account"
-    (is (= "aafoobarbb"
-           (sut/limit-length "foobar" 10 "aa" "bb" (constantly nil))))
-    (is (= "aafoobarbb"
-           (sut/limit-length "foobar" 1000 "aa" "bb" (constantly nil))))
-    (is (= "aafo...bb"
-           (sut/limit-length "foobar" 9 "aa" "bb" (constantly nil))))))
+    (is (= "aafoobarbb" (sut/limit-length "foobar" 10 "aa" "bb" (constantly nil))))
+    (is (= "aafoobarbb" (sut/limit-length "foobar" 1000 "aa" "bb" (constantly nil))))
+    (is (= "aafo...bb" (sut/limit-length "foobar" 9 "aa" "bb" (constantly nil))))))
 
 (deftest remove-trailing-character-test
   (testing "Remove trailing character if needed"
-    (is (= "foo"
-           (sut/remove-trailing-character "foo/" \/)
-           (sut/remove-trailing-character "foo" \/))))
+    (is
+     (= "foo" (sut/remove-trailing-character "foo/" \/) (sut/remove-trailing-character "foo" \/))))
   (testing "Empty strings are ok"
     (is (every? str/blank?
                 [(sut/remove-trailing-character "" \/)

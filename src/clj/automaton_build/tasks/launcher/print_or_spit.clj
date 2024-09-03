@@ -16,7 +16,6 @@
   (if spit?
     (let [file (fs/create-temp-file {:suffix ".edn"})]
       (when-let [msg (ex-message e)] (println msg))
-      (println (format "See details in `%s`"
-                       (.toString (.toAbsolutePath file))))
+      (println (format "See details in `%s`" (.toString (.toAbsolutePath file))))
       (spit (fs/file file) (prn-str e)))
     (println e)))

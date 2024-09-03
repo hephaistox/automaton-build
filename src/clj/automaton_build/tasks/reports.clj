@@ -1,26 +1,16 @@
 (ns automaton-build.tasks.reports
   (:require
-   [automaton-build.app-data                                     :as
-                                                                 build-app-data]
-   [automaton-build.code-helpers.analyze.alias-has-one-namespace
-    :as build-analyze-alias]
-   [automaton-build.code-helpers.analyze.comments
-    :as build-analyze-comments]
-   [automaton-build.code-helpers.analyze.css
-    :as build-analyze-css]
-   [automaton-build.code-helpers.analyze.forbidden-words
-    :as build-forbidden-words]
-   [automaton-build.code-helpers.analyze.namespace-has-one-alias
-    :as build-analyze-namespace]
-   [automaton-build.code-helpers.frontend-compiler
-    :as build-frontend-compiler]
-   [automaton-build.file-repo.clj-code                           :as
-                                                                 build-clj-code]
+   [automaton-build.app-data                                     :as build-app-data]
+   [automaton-build.code-helpers.analyze.alias-has-one-namespace :as build-analyze-alias]
+   [automaton-build.code-helpers.analyze.comments                :as build-analyze-comments]
+   [automaton-build.code-helpers.analyze.css                     :as build-analyze-css]
+   [automaton-build.code-helpers.analyze.forbidden-words         :as build-forbidden-words]
+   [automaton-build.code-helpers.analyze.namespace-has-one-alias :as build-analyze-namespace]
+   [automaton-build.code-helpers.frontend-compiler               :as build-frontend-compiler]
+   [automaton-build.file-repo.clj-code                           :as build-clj-code]
    [automaton-build.log                                          :as build-log]
-   [automaton-build.os.exit-codes
-    :as build-exit-codes]
-   [automaton-build.os.files                                     :as
-                                                                 build-files]))
+   [automaton-build.os.exit-codes                                :as build-exit-codes]
+   [automaton-build.os.files                                     :as build-files]))
 
 (defn- alias-report
   [{:keys [alias-outputfilename]} code-repo]
@@ -42,13 +32,10 @@
 
 (defn forbidden-words-report
   [{:keys [forbiddenwords-words forbiddenwords-outputfilename]} clj-repo]
-  (let [regexp (build-forbidden-words/coll-to-alternate-in-regexp
-                forbiddenwords-words)
+  (let [regexp (build-forbidden-words/coll-to-alternate-in-regexp forbiddenwords-words)
         matches (some-> regexp
-                        (build-forbidden-words/forbidden-words-matches
-                         clj-repo))]
-    (-> (build-forbidden-words/save-report matches
-                                           forbiddenwords-outputfilename)
+                        (build-forbidden-words/forbidden-words-matches clj-repo))]
+    (-> (build-forbidden-words/save-report matches forbiddenwords-outputfilename)
         (build-forbidden-words/assert-empty forbiddenwords-outputfilename))))
 
 (defn- namespace-report
@@ -59,9 +46,7 @@
 
 (defn- shadow-report
   [{:keys [shadow-report-outputfilename]} app-dir]
-  (build-frontend-compiler/create-size-optimization-report
-   app-dir
-   shadow-report-outputfilename))
+  (build-frontend-compiler/create-size-optimization-report app-dir shadow-report-outputfilename))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec

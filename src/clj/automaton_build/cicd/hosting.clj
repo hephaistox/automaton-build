@@ -11,8 +11,7 @@
   Params:
   * `cc-command` (Optional, default clever) name of the command for clever cloud"
   ([cc-command]
-   (zero? (ffirst (build-cmds/execute-with-exit-code
-                   [cc-command "version" {:dir "."}]))))
+   (zero? (ffirst (build-cmds/execute-with-exit-code [cc-command "version" {:dir "."}]))))
   ([] (hosting-installed?* "clever")))
 
 (def hosting-installed? "Check clever cloud is useable" hosting-installed?*)
@@ -32,13 +31,5 @@
   * `dir` directory where to execute"
   [app-name dir]
   (hosting-installed?)
-  (build-cmds/execute-and-trace ["clever"
-                                 "create"
-                                 "--type"
-                                 "docker"
-                                 "--org"
-                                 "Hephaistox"
-                                 "--region"
-                                 "par"
-                                 app-name
-                                 {:dir dir}]))
+  (build-cmds/execute-and-trace
+   ["clever" "create" "--type" "docker" "--org" "Hephaistox" "--region" "par" app-name {:dir dir}]))

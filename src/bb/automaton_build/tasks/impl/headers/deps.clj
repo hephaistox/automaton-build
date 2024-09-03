@@ -11,7 +11,5 @@
   (let [deps (build-deps/deps-edn app-dir)
         deps-edn (:edn deps)]
     (if (:invalid? deps)
-      (do
-        (errorln "No valid `deps.edn` found in directory " (uri-str app-dir) "")
-        nil)
+      (do (errorln "No valid `deps.edn` found in directory " (uri-str app-dir) "") nil)
       deps-edn)))

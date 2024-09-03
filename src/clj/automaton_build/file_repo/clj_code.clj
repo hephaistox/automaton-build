@@ -23,8 +23,7 @@
   "All extensions understood by a clojure reader"
   (get usage-to-extension :reader))
 
-(defonce ^:private glob-code-extensions
-  (format "**{%s}" (str/join "," all-reader-extensions)))
+(defonce ^:private glob-code-extensions (format "**{%s}" (str/join "," all-reader-extensions)))
 
 (defprotocol CodeRepo
   (filter-by-usage [this usage-kw]
@@ -44,12 +43,11 @@
       (build-raw-impl/filter-by-extension file-repo-map* extensions))
   CodeRepo
     (filter-by-usage [_ usage-kw]
-      (build-raw-impl/filter-repo-map
-       file-repo-map*
-       (fn [[filename _]]
-         (some some?
-               (map (partial build-files/match-extension? filename)
-                    (get usage-to-extension usage-kw)))))))
+      (build-raw-impl/filter-repo-map file-repo-map*
+                                      (fn [[filename _]]
+                                        (some some?
+                                              (map (partial build-files/match-extension? filename)
+                                                   (get usage-to-extension usage-kw)))))))
 
 (defn search-clj-filenames
   "Return the list of clojure code file names
@@ -60,12 +58,8 @@
 
 (defn- match
   [filenames extensions-kw]
-  (let [extensions (mapcat (fn [extension-kw]
-                             (get usage-to-extension extension-kw))
-                    extensions-kw)]
-    (filter (fn [filename]
-              (apply build-files/match-extension? filename extensions))
-            filenames)))
+  (let [extensions (mapcat (fn [extension-kw] (get usage-to-extension extension-kw)) extensions-kw)]
+    (filter (fn [filename] (apply build-files/match-extension? filename extensions)) filenames)))
 
 (defn map-files-content
   [files & usage-ids]
@@ -89,8 +83,7 @@
   * `usage-ids` (Optional, default to `reader`) list of usage accepted, according to usage-to-extension definition"
   [dirs & usage-ids]
   (let [usage-ids (or usage-ids [:reader])]
-    (-> (fn [dir]
-          (apply map-files-content (search-clj-filenames dir) usage-ids))
+    (-> (fn [dir] (apply map-files-content (search-clj-filenames dir) usage-ids))
         (mapcat dirs)
         ->CljCodeFileRepo)))
 

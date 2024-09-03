@@ -23,32 +23,22 @@
 (defn compile-frontend
   [app-dir deploy-alias css-files compiled-css-path]
   (if (and (build-compiler-shadow/is-shadow-project? app-dir) deploy-alias)
-    (let [combined-css-file (apply build-app-files-css/combine-css-files
-                                   css-files)]
+    (let [combined-css-file (apply build-app-files-css/combine-css-files css-files)]
       (build-frontend-compiler/compile-release deploy-alias app-dir)
-      (build-frontend-css/compile-release combined-css-file
-                                          compiled-css-path
-                                          app-dir)
+      (build-frontend-css/compile-release combined-css-file compiled-css-path app-dir)
       (build-log/info "Frontend compiled"))
     (build-log/info "Frontend compilation skipped")))
 
 (defn compile-backend
   [deploy-to app-dir paths class-dir jar-path jar-main env]
   (let [env (name env)
-        class-dir (build-files/absolutize (build-files/create-dir-path
-                                           app-dir
-                                           (format class-dir env)))]
+        class-dir (build-files/absolutize (build-files/create-dir-path app-dir
+                                                                       (format class-dir env)))]
     (prepare-compilation-files class-dir paths app-dir)
     (case deploy-to
       :clojars (build-compiler/compile-jar class-dir jar-path app-dir)
-      :cc (build-compiler/compile-uber-jar class-dir
-                                           jar-path
-                                           paths
-                                           app-dir
-                                           jar-main)
-      (do (build-log/info
-           "Backend compilation skipped as :deploy-to is missing")
-          true))))
+      :cc (build-compiler/compile-uber-jar class-dir jar-path paths app-dir jar-main)
+      (do (build-log/info "Backend compilation skipped as :deploy-to is missing") true))))
 
 #_{:clj-kondo/ignore [:redefined-var]}
 (defn compile
@@ -80,8 +70,5 @@
    compiled-styles-css]
   (build-log/debug "Start compilation")
   (let [paths (build-deps-edn/extract-paths deps-edn exclude-aliases)]
-    (compile-frontend app-dir
-                      deploy-alias
-                      [main-css custom-css]
-                      compiled-styles-css)
+    (compile-frontend app-dir deploy-alias [main-css custom-css] compiled-styles-css)
     (compile-backend deploy-to app-dir paths class-dir jar-path jar-main env)))

@@ -16,11 +16,10 @@
 
 (defn write-file
   [filename content]
-  (try (build-files/spit-file
-        filename
-        (json/generate-string content {:pretty true})
-        nil
-        (partial build-utils-comparators/compare-file-change read-file))
+  (try (build-files/spit-file filename
+                              (json/generate-string content {:pretty true})
+                              nil
+                              (partial build-utils-comparators/compare-file-change read-file))
        (catch Exception e
          (build-log/error-exception e)
          (build-log/error-data {:target-path filename

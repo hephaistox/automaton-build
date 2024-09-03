@@ -15,11 +15,9 @@
   * `process-opts` options to pass to process creation"
   [cmd expanded-cmd expected-exit-code cli-args process-opts]
   (let [cmd-with-args (concat cmd cli-args [process-opts])
-        [[exit-code _]] (build-cmds/execute-and-trace-return-exit-codes
-                         cmd-with-args)]
+        [[exit-code _]] (build-cmds/execute-and-trace-return-exit-codes cmd-with-args)]
     (if (= expected-exit-code exit-code)
-      [true
-       #(build-log/info-format "Test `%s` successfully passed" expanded-cmd)]
+      [true #(build-log/info-format "Test `%s` successfully passed" expanded-cmd)]
       [false
        #(build-log/error-format "Test `%s` expects `%s` and found `%s`"
                                 expanded-cmd
@@ -41,9 +39,8 @@
         expanded-cmd (build-cmds/expand-cmd cmd)]
     (if (or (empty? la-test) skip?)
       [true #(build-log/debug-format "Skip `%s` " expanded-cmd)]
-      (do
-        (build-log/debug-format "Test cmd `%s`:" expanded-cmd)
-        (run-cmd cmd expanded-cmd expected-exit-code cli-args process-opts)))))
+      (do (build-log/debug-format "Test cmd `%s`:" expanded-cmd)
+          (run-cmd cmd expanded-cmd expected-exit-code cli-args process-opts)))))
 
 (defn- exec-and-return
   "In a command result, execute the display-return-fn and return the value"
@@ -64,8 +61,7 @@
   [task-registry cli-args]
   (let [results (->> task-registry
                      (filter (fn [[_ task-map]] (:la-test task-map)))
-                     (mapv (comp exec-and-return
-                                 (partial test-cli-cmd cli-args))))]
+                     (mapv (comp exec-and-return (partial test-cli-cmd cli-args))))]
     (build-log/info "Summary")
     (doseq [[_ returned-value-fn] results] (returned-value-fn))
     (if (every? first results)

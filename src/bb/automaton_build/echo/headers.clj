@@ -42,11 +42,7 @@
   (pure-printing texts)
   (print build-text/font-default))
 
-(defn exceptionln
-  "Display exception `e`."
-  [e]
-  (errorln (ex-cause e))
-  (normalln (pr-str e)))
+(defn exceptionln "Display exception `e`." [e] (errorln (ex-cause e)) (normalln (pr-str e)))
 
 (defn print-exec-cmd-str
   "Prints the execution of command string `cmd-str` with the `prefixs` added."
@@ -184,20 +180,11 @@
   (h1-valid " valid test"))
 
 ;; Formatting helpers functions.
-(defn pprint-str
-  "Pretty print `data`"
-  [data]
-  (build-echo-common/pprint-str data))
+(defn pprint-str "Pretty print `data`" [data] (build-echo-common/pprint-str data))
 
-(defn uri-str
-  "Returns the string of the `uri`."
-  [uri]
-  (build-echo-common/uri-str uri))
+(defn uri-str "Returns the string of the `uri`." [uri] (build-echo-common/uri-str uri))
 
-(defn current-time-str
-  "Returns current time string."
-  []
-  (build-echo-common/current-time-str))
+(defn current-time-str "Returns current time string." [] (build-echo-common/current-time-str))
 
 (def clear-prev-line (str build-text/move-oneup build-text/clear-eol))
 

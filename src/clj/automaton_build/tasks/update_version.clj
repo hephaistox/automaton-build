@@ -8,9 +8,7 @@
 
 (defn update-version
   [app-dir app-name target-env]
-  (if-let [version (build-app-versioning/generate-new-app-version target-env
-                                                                  app-dir
-                                                                  app-name)]
+  (if-let [version (build-app-versioning/generate-new-app-version target-env app-dir app-name)]
     (if-let [_save-version (build-version/save-version app-dir version)]
       (do (build-log/info-format "New version %s for %s" version app-name) true)
       (do (build-log/warn "Abort, as saving new version failed") false))

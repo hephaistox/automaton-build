@@ -32,24 +32,21 @@
                                              :html-path html-path
                                              :header-id header-id})]
       (when html-path
-        (build-log/trace-format "Generate html `%s` from: `%s` "
-                                html-path
-                                md-path)
+        (build-log/trace-format "Generate html `%s` from: `%s` " html-path md-path)
         (build-files/spit-file html-path html-str))
       (when pdf-path
         (build-log/trace-format "Generate pdf `%s` from `%s`" pdf-path md-path)
-        (build-pdf/html-str->pdf
-         {:html-str html-str
-          :output-path pdf-path
-          :resources-dir resources-dir
-          :pdf-metadata pdf-metadata
-          :margin-box {:margin-box
-                       {:top-left {:element header-id}
-                        :bottom-left {:text (str "Hephaistox - " title)}
-                        :bottom-right {:paging [:page " of " :pages]}}}
-          :styles (-> (build-files/create-dir-path resources-dir "blog.css")
-                      build-files/absolutize
-                      build-uri/from-file-path)})))
+        (build-pdf/html-str->pdf {:html-str html-str
+                                  :output-path pdf-path
+                                  :resources-dir resources-dir
+                                  :pdf-metadata pdf-metadata
+                                  :margin-box {:margin-box
+                                               {:top-left {:element header-id}
+                                                :bottom-left {:text (str "Hephaistox - " title)}
+                                                :bottom-right {:paging [:page " of " :pages]}}}
+                                  :styles (-> (build-files/create-dir-path resources-dir "blog.css")
+                                              build-files/absolutize
+                                              build-uri/from-file-path)})))
     (build-log/warn-format "Md path `%s` is not found" md-path)))
 
 (defn configuration-data-by-language-to-html-pdf
@@ -62,27 +59,22 @@
         keywords (str/join ","
                            (concat ["hephaistox" "supply" "chain" "it"]
                                    (when keywords (str "," keywords))))]
-    (create-html-pdf (assoc (select-keys blog-data
-                                         [:md-path :pdf-path :html-path :title])
+    (create-html-pdf (assoc (select-keys blog-data [:md-path :pdf-path :html-path :title])
                             :pdf-metadata
                             (pdf-metadata title description keywords)))))
 
 (defn configuration-data
   [blog-config-file output-html-dir output-pdf-dir]
   (->> (build-edn-utils/read-edn blog-config-file)
-       (map
-        (fn [[lang
-              {:keys [filename]
-               :as configuration-data}]]
-          (assoc configuration-data
-                 :md-path (build-files/file-in-same-dir blog-config-file
-                                                        (str filename ".md"))
-                 :lang lang
-                 :pdf-path (build-files/create-file-path output-pdf-dir
-                                                         (str filename ".pdf"))
-                 :html-path (build-files/create-file-path output-html-dir
-                                                          (str filename
-                                                               ".html")))))))
+       (map (fn [[lang
+                  {:keys [filename]
+                   :as configuration-data}]]
+              (assoc configuration-data
+                     :md-path (build-files/file-in-same-dir blog-config-file (str filename ".md"))
+                     :lang lang
+                     :pdf-path (build-files/create-file-path output-pdf-dir (str filename ".pdf"))
+                     :html-path (build-files/create-file-path output-html-dir
+                                                              (str filename ".html")))))))
 
 (defn blog-process
   "Process all customer materials directory as set in the configuration file"
@@ -92,32 +84,24 @@
                        :customer-materials-dir customer-materials-dir
                        :output-html-dir output-html-dir
                        :output-pdf-dir output-pdf-dir)
-  (let [blog-config-files (build-files/search-files customer-materials-dir
-                                                    "**.edn")]
+  (let [blog-config-files (build-files/search-files customer-materials-dir "**.edn")]
     (build-log/debug-format "Process configuration files %s" blog-config-files)
     (if (empty? blog-config-files)
       (do (build-log/error "No blog file found") false)
-      (do (doseq [blog-config-file blog-config-files]
-            (build-log/trace-format
-             "Process `%s blog configuration file` blog-config-file")
-            (let [configuration-data (configuration-data blog-config-file
-                                                         output-html-dir
-                                                         output-pdf-dir)]
-              (doseq [{:keys [pdf-path html-path md-path]} configuration-data]
-                (if (and (build-files/modified-since blog-config-file
-                                                     [pdf-path html-path])
-                         (build-files/modified-since md-path
-                                                     [pdf-path html-path]))
-                  (build-log/trace-format
-                   "Blog files `%s` and `%s` are uptodate"
-                   pdf-path
-                   html-path)
-                  (do (build-log/debug-format
-                       "Blog file `%s` and `%s` are regenerated from `%s`"
-                       pdf-path
-                       html-path
-                       md-path)
-                      (doseq [configuration-data-by-language configuration-data]
-                        (configuration-data-by-language-to-html-pdf
-                         configuration-data-by-language)))))))
-          true))))
+      (do
+        (doseq [blog-config-file blog-config-files]
+          (build-log/trace-format "Process `%s blog configuration file` blog-config-file")
+          (let [configuration-data
+                (configuration-data blog-config-file output-html-dir output-pdf-dir)]
+            (doseq [{:keys [pdf-path html-path md-path]} configuration-data]
+              (if (and (build-files/modified-since blog-config-file [pdf-path html-path])
+                       (build-files/modified-since md-path [pdf-path html-path]))
+                (build-log/trace-format "Blog files `%s` and `%s` are uptodate" pdf-path html-path)
+                (do (build-log/debug-format "Blog file `%s` and `%s` are regenerated from `%s`"
+                                            pdf-path
+                                            html-path
+                                            md-path)
+                    (doseq [configuration-data-by-language configuration-data]
+                      (configuration-data-by-language-to-html-pdf
+                       configuration-data-by-language)))))))
+        true))))

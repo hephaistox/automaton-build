@@ -6,6 +6,4 @@
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn exec
   [_task-map {:keys [app-dir]}]
-  (if (build-mermaid/build-all-files app-dir)
-    build-exit-codes/ok
-    build-exit-codes/catch-all))
+  (if (build-mermaid/build-all-files app-dir) build-exit-codes/ok build-exit-codes/catch-all))

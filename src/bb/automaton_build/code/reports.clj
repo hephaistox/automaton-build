@@ -1,8 +1,6 @@
 (ns automaton-build.code.reports "Reports analyzing the clojure code.")
 
-(defn is-ignored-file?
-  [file-content]
-  (re-find #":heph-ignore \{:reports false\}" file-content))
+(defn is-ignored-file? [file-content] (re-find #":heph-ignore \{:reports false\}" file-content))
 
 (defn search-aliases
   "Returns a list of matches, each one being a `filename`, a `ns` and an `alias`."

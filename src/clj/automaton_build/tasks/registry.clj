@@ -6,10 +6,8 @@
    [automaton-build.os.terminal-msg                 :as build-terminal-msg]
    [automaton-build.schema                          :as build-schema]
    [automaton-build.tasks.registry.common           :as build-tasks-common]
-   [automaton-build.tasks.registry.specific-task
-    :as build-specific-task-registry]
-   [automaton-build.tasks.workflow.workflow-to-task :as
-                                                    build-task-workflow-to-task]
+   [automaton-build.tasks.registry.specific-task    :as build-specific-task-registry]
+   [automaton-build.tasks.workflow.workflow-to-task :as build-task-workflow-to-task]
    [automaton-build.utils.map                       :as build-utils-map]
    [automaton-build.utils.namespace                 :as build-namespace]
    [automaton-build.utils.string                    :as build-string]))
@@ -72,9 +70,8 @@
   [task-registry]
   (->> task-registry
        (mapv (fn [[symbol {:keys [build-configs]}]]
-               (vec (concat
-                     [(keyword symbol) {:optional true}]
-                     [(apply vector :map {:closed true} build-configs)]))))
+               (vec (concat [(keyword symbol) {:optional true}]
+                            [(apply vector :map {:closed true} build-configs)]))))
        (concat [:map {:closed true}])
        vec))
 
@@ -84,12 +81,11 @@
   * `tasks-map`"
   [tasks-map]
   (->> tasks-map
-       (map (fn [[k v]] [k
-                         (if (nil? (get-in v [:la-test :cmd]))
-                           (build-utils-map/deep-merge
-                            v
-                            {:la-test {:cmd ["bb" "heph-task" (name k)]}})
-                           v)]))))
+       (map
+        (fn [[k v]] [k
+                     (if (nil? (get-in v [:la-test :cmd]))
+                       (build-utils-map/deep-merge v {:la-test {:cmd ["bb" "heph-task" (name k)]}})
+                       v)]))))
 
 (defn- add-default-task-fn
   "Add the default task-fn to the tasks map
@@ -115,18 +111,17 @@
   * `app-dir`
   * `setuped-tasks` task names"
   [app-dir setuped-tasks]
-  (let [tasks-registry-map
-        (->> (build-specific-task-registry/read-specific-tasks app-dir)
-             (merge (build-tasks-common/tasks))
-             (filter (fn [[k v]]
-                       (or (not (:mandatory-config? v))
-                           (some #(= (keyword k) %) setuped-tasks))))
-             add-names
-             add-default-la-test
-             add-default-task-fn
-             build-config-tasks/add-tracked-tasks
-             build-task-workflow-to-task/update-registry-workflow-entries
-             (into (sorted-map)))]
+  (let [tasks-registry-map (->> (build-specific-task-registry/read-specific-tasks app-dir)
+                                (merge (build-tasks-common/tasks))
+                                (filter (fn [[k v]]
+                                          (or (not (:mandatory-config? v))
+                                              (some #(= (keyword k) %) setuped-tasks))))
+                                add-names
+                                add-default-la-test
+                                add-default-task-fn
+                                build-config-tasks/add-tracked-tasks
+                                build-task-workflow-to-task/update-registry-workflow-entries
+                                (into (sorted-map)))]
     (build-schema/valid? schema tasks-registry-map "task registry")
     (build-edn-utils/spit-edn "tmp/tasks.edn" tasks-registry-map)
     tasks-registry-map))
@@ -147,17 +142,14 @@
   * `task-registry`
   * `app-data`"
   [task-registry app-data]
-  (automaton-build.os.terminal-msg/println-msg
-   "The following tasks are available:")
+  (automaton-build.os.terminal-msg/println-msg "The following tasks are available:")
   (doseq [[task-name {:keys [hidden? doc]}] task-registry]
     (let [task-name (str task-name)
-          hidden? (if (symbol? hidden?)
-                    (build-namespace/symbol-to-fn-call hidden? app-data)
-                    hidden?)]
+          hidden?
+          (if (symbol? hidden?) (build-namespace/symbol-to-fn-call hidden? app-data) hidden?)]
       (when-not hidden?
-        (automaton-build.os.terminal-msg/println-msg
-         (build-string/fix-length task-name 30 nil " ")
-         doc)))))
+        (automaton-build.os.terminal-msg/println-msg (build-string/fix-length task-name 30 nil " ")
+                                                     doc)))))
 
 (defn not-mandatory
   "Filter the task registry to tasks with mandatory configuration,

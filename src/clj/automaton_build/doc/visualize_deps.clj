@@ -12,6 +12,5 @@
   (build-log/trace-format "Graph stored in `%s`" output-filename)
   (build-files/create-parent-dirs output-filename)
   (build-log/debug "Skip as it is not working yet")
-  #_(build-cmds/execute-and-trace
-     ["clj" "-Tgraph" "graph" ":output" output-filename])
+  #_(build-cmds/execute-and-trace ["clj" "-Tgraph" "graph" ":output" output-filename])
   true)

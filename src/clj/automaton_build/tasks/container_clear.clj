@@ -8,6 +8,4 @@
 (defn exec
   [_task-map _app]
   (build-log/info "Clean the containers")
-  (if (nil? (build-local-engine/container-clean))
-    build-exit-codes/ok
-    build-exit-codes/catch-all))
+  (if (nil? (build-local-engine/container-clean)) build-exit-codes/ok build-exit-codes/catch-all))

@@ -9,6 +9,4 @@
   "Clean cache files for compilers to start from scratch"
   [_task-map {:keys [dirs]}]
   (build-log/debug-format "The directories `%s` are cleaned" dirs)
-  (if (nil? (build-files/delete-files dirs))
-    build-exit-codes/ok
-    build-exit-codes/catch-all))
+  (if (nil? (build-files/delete-files dirs)) build-exit-codes/ok build-exit-codes/catch-all))

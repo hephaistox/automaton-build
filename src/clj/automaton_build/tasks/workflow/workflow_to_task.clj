@@ -20,8 +20,7 @@
     (build-log/warn-format
      "Workflow item `%s` has cli options, it will be ignored, the ones of the wk-tasks will be used instead"
      workflow-item))
-  (let [tasks-in-workflow (build-task-registry-find/task-selection task-registry
-                                                                   wk-tasks)
+  (let [tasks-in-workflow (build-task-registry-find/task-selection task-registry wk-tasks)
         shared (->> (mapcat :shared tasks-in-workflow)
                     (filter some?)
                     sort
@@ -31,10 +30,7 @@
                                sort
                                dedupe)]
     (-> workflow-item
-        (assoc :pf (if (every? #(or (nil? %) (= :bb %))
-                               (mapv :pf tasks-in-workflow))
-                     :bb
-                     :clj)
+        (assoc :pf (if (every? #(or (nil? %) (= :bb %)) (mapv :pf tasks-in-workflow)) :bb :clj)
                :shared (vec shared)
                :task-fn 'automaton-build.tasks.workflow.composer/composer
                :task-cli-opts-kws (vec task-cli-opts-kws))
@@ -53,6 +49,4 @@
                   {:keys [wk-tasks]
                    :as workflow-item}]]
               [task-name
-               (if wk-tasks
-                 (workflow-to-task task-registry workflow-item)
-                 workflow-item)]))))
+               (if wk-tasks (workflow-to-task task-registry workflow-item) workflow-item)]))))

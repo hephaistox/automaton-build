@@ -14,10 +14,8 @@
     (is (= {:foo "bar"
             :bar 1}
            (sut/read-edn stub-edn))))
-  (testing "Malformed files are detected "
-    (is (nil? (sut/read-edn stub-non-edn))))
-  (testing "Non existing files are detected "
-    (is (nil? (sut/read-edn "not existing file")))))
+  (testing "Malformed files are detected " (is (nil? (sut/read-edn stub-non-edn))))
+  (testing "Non existing files are detected " (is (nil? (sut/read-edn "not existing file")))))
 
 (deftest spit-edn-test
   (let [tmp-file (sut/create-tmp-edn "edn-utils-test.edn")]

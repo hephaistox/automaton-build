@@ -10,10 +10,7 @@
       (concat shadow-cljs-aliases)
       vec))
 
-(defn install-cmd
-  "Install components setup in `package.json`."
-  []
-  ["npm install"])
+(defn install-cmd "Install components setup in `package.json`." [] ["npm install"])
 
 (defn cljs-compile-cmd
   "Command to compile the `builds` (vector of strings)."

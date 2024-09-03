@@ -19,22 +19,18 @@
 
 (defn get-dependencies
   [package-json]
-  (select-keys
-   package-json
-   ["dependencies" "devDependencies" :dependencies :devDependencies]))
+  (select-keys package-json ["dependencies" "devDependencies" :dependencies :devDependencies]))
 
 (defn add-dependencies
   "Adds 'dependencies' and 'devDependencies' from `deps` map onto a `package-json` map."
   ([package-json deps]
    (assoc package-json
-          "dependencies"
-          (apply merge-with
-                 compare-package-json-deps
-                 (map #(or (get % "dependencies") (:dependencies %)) deps))
+          "dependencies" (apply merge-with
+                                compare-package-json-deps
+                                (map #(or (get % "dependencies") (:dependencies %)) deps))
           "devDependencies" (apply merge-with
                                    compare-package-json-deps
-                                   (map #(or (get % "devDependencies")
-                                             (:devDependencies %))
+                                   (map #(or (get % "devDependencies") (:devDependencies %))
                                         deps)))))
 
 (defn load-package-json

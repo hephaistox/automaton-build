@@ -76,8 +76,7 @@
    excluded-aliases]
   (let [selected-aliases (apply dissoc aliases excluded-aliases)
         paths-in-aliases (mapcat (fn [[_alias-name alias-map]]
-                                   (->> (select-keys alias-map
-                                                     [:extra-paths :paths])
+                                   (->> (select-keys alias-map [:extra-paths :paths])
                                         vals
                                         (apply concat)))
                           selected-aliases)]
@@ -97,8 +96,7 @@
    excluded-aliases]
   (let [selected-aliases (apply dissoc aliases excluded-aliases)]
     (->> selected-aliases
-         (map (fn [[_ alias-defs]]
-                (vals (select-keys alias-defs [:extra-deps :deps]))))
+         (map (fn [[_ alias-defs]] (vals (select-keys alias-defs [:extra-deps :deps]))))
          (apply concat)
          (into {})
          (concat deps)
@@ -110,8 +108,8 @@
   (cond-> alias-map
     (contains? alias-map :extra-deps)
     (update :extra-deps (partial build-utils-map/replace-keys deps-to-replace))
-    (contains? alias-map :deps)
-    (update :deps (partial build-utils-map/replace-keys deps-to-replace))))
+    (contains? alias-map :deps) (update :deps
+                                        (partial build-utils-map/replace-keys deps-to-replace))))
 
 (defn update-test-alias-with-paths
   [test-paths aliases]

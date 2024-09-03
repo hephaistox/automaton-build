@@ -18,10 +18,8 @@
 (defn tailwind-files->tailwind-requires
   "Turns `files-paths` into tailwind requires relative to `dir`"
   [dir files-paths]
-  (let [app-tailwind-requires (mapv (partial file->tailwind-require dir)
-                                    files-paths)]
-    (when-not (or (nil? files-paths) (empty? files-paths))
-      app-tailwind-requires)))
+  (let [app-tailwind-requires (mapv (partial file->tailwind-require dir) files-paths)]
+    (when-not (or (nil? files-paths) (empty? files-paths)) app-tailwind-requires)))
 
 (defn load-tailwind-config
   "Read the tailwind-config from `dir`
@@ -38,8 +36,6 @@
   * `dir`
   * `content`"
   [dir tailwind-config]
-  (let
-    [package-filepath (build-files/create-file-path dir tailwind-config-js)
-     header
-     "/* This file is automatically updated by `automaton-build.app.tailwind-config` */"]
+  (let [package-filepath (build-files/create-file-path dir tailwind-config-js)
+        header "/* This file is automatically updated by `automaton-build.app.tailwind-config` */"]
     (js-config/write-js-config package-filepath tailwind-config header)))

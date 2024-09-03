@@ -24,8 +24,7 @@
   * `extensions` list of strings that will be used to filter the map"
   [file-repo-map extensions]
   (filter-repo-map file-repo-map
-                   (fn [[filename _]]
-                     (apply build-files/match-extension? filename extensions))))
+                   (fn [[filename _]] (apply build-files/match-extension? filename extensions))))
 
 (defn exclude-files
   "Exclude
@@ -36,12 +35,9 @@
   (let [excluded-files (into #{} excluded-files)]
     (->> file-repo-map
          (filter (fn [[filename]]
-                   (let [res (some (fn [excluded-file]
-                                     (str/includes? filename excluded-file))
+                   (let [res (some (fn [excluded-file] (str/includes? filename excluded-file))
                                    excluded-files)]
-                     (when res
-                       (build-log/trace-format "File `%s` is removed from repo"
-                                               filename))
+                     (when res (build-log/trace-format "File `%s` is removed from repo" filename))
                      (not res))))
          (into {}))))
 

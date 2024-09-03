@@ -17,15 +17,12 @@
    :errors nil})
 
 (deftest mandatory-option-test
-  (testing "Mandatory option is required"
-    (is (sut/mandatory-option-present? stub [:force])))
+  (testing "Mandatory option is required" (is (sut/mandatory-option-present? stub [:force])))
   (testing "Not mandatory option is not required"
     (is (re-find #"mandatory and missing"
-                 (with-out-str (sut/mandatory-option-present? stub
-                                                              [:message]))))))
+                 (with-out-str (sut/mandatory-option-present? stub [:message]))))))
 
 (deftest cli-opts-test
   (testing "Boolean Force argument is found"
     (is (get-in (sut/cli-opts [:force] ["-f"]) [:options :force])))
-  (testing "Non required argument is found"
-    (is (some? (:errors (sut/cli-opts [] ["-f"]))))))
+  (testing "Non required argument is found" (is (some? (:errors (sut/cli-opts [] ["-f"]))))))

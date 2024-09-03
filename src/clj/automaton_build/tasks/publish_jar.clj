@@ -24,21 +24,17 @@
         clever-uri (get-in env [environment :clever-uri])]
     (build-log/info-format "Deployment process started to `%s`" deploy-to)
     (if (case deploy-to
-          :clojars (build-deployment/publish-library jar-path
-                                                     (build-pom-xml/pom-xml
-                                                      app-dir))
-          :cc (build-deployment/publish-app
-               clever-uri
-               (->> (name environment)
-                    (build-files/create-dir-path app-dir "target")
-                    build-files/absolutize)
-               (->> ".clever"
-                    (build-files/create-dir-path app-dir)
-                    build-files/absolutize)
-               (build-version/current-version app-dir))
-          (do (build-log/info-format
-               "Deploy skipped as deploy-to param is missing. It's `%s`"
-               deploy-to)
+          :clojars (build-deployment/publish-library jar-path (build-pom-xml/pom-xml app-dir))
+          :cc (build-deployment/publish-app clever-uri
+                                            (->> (name environment)
+                                                 (build-files/create-dir-path app-dir "target")
+                                                 build-files/absolutize)
+                                            (->> ".clever"
+                                                 (build-files/create-dir-path app-dir)
+                                                 build-files/absolutize)
+                                            (build-version/current-version app-dir))
+          (do (build-log/info-format "Deploy skipped as deploy-to param is missing. It's `%s`"
+                                     deploy-to)
               true))
       build-exit-codes/ok
       build-exit-codes/catch-all)))

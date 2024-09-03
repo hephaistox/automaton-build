@@ -25,10 +25,8 @@
              wrapped []]
         (if (<= (count str) size)
           (conj wrapped str)
-          (recur
-           (subs str remaining-size)
-           (conj wrapped
-                 (format "%s%s" (subs str 0 remaining-size) line-feed-back))))))
+          (recur (subs str remaining-size)
+                 (conj wrapped (format "%s%s" (subs str 0 remaining-size) line-feed-back))))))
     (do (println "Unexpected print error, size " size) (println (pr-str str)))))
 
 (defn screenify
@@ -72,5 +70,4 @@
 (defn print-writter
   "Print `str-writter` if necessary."
   [str-writter]
-  (let [str-writter (str str-writter)]
-    (when-not (str/blank? str-writter) (print str-writter))))
+  (let [str-writter (str str-writter)] (when-not (str/blank? str-writter) (print str-writter))))

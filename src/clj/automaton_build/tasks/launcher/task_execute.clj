@@ -14,11 +14,9 @@
         (build-tasks-app-data/task-app-data app-dir task-name cli-args)]
     (build-log-files/save-debug-info "app_data.edn" app-data "For debug only.")
     (cond
-      (nil? app-data) (do (build-log/error-format "No data found for task `%s`"
-                                                  task-name)
+      (nil? app-data) (do (build-log/error-format "No data found for task `%s`" task-name)
                           build-exit-codes/cannot-execute)
-      (some? task-map)
-      (or (build-pf-dispatcher/dispatch task-map app-data cli-opts)
-          build-exit-codes/catch-all)
+      (some? task-map) (or (build-pf-dispatcher/dispatch task-map app-data cli-opts)
+                           build-exit-codes/catch-all)
       :else (do (build-log/error-format "The task `%s` is unknown" task-name)
                 build-exit-codes/invalid-argument))))

@@ -17,9 +17,7 @@
   [build-template build-aliases]
   (map (partial template-build build-template) build-aliases))
 
-(defn merge-shadow-cljs-configs
-  [& configs]
-  (apply build-utils-map/deep-merge configs))
+(defn merge-shadow-cljs-configs [& configs] (apply build-utils-map/deep-merge configs))
 
 (defn get-shadow-filename
   "Get the deps-file of the application

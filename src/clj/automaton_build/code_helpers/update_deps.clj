@@ -28,10 +28,7 @@
    * `file` path to a file to update
    * `dependency` defined in dependency-schema"
   []
-  [:map
-   [:type (type-schema)]
-   [:file :string]
-   [:dependency (dependency-schema)]])
+  [:map [:type (type-schema)] [:file :string] [:dependency (dependency-schema)]])
 
 (defn add-dependency
   [lib version file-map]
@@ -63,12 +60,11 @@
 (defn exclude-libraries
   "Returns `libs` without those that name is in `excluded-libs-names`"
   [dep-maps excluded-libs-names]
-  (reduce (fn [acc dep-map]
-            (if (some #(= % (:name (:dependency dep-map))) excluded-libs-names)
-              acc
-              (conj acc dep-map)))
-          []
-          dep-maps))
+  (reduce
+   (fn [acc dep-map]
+     (if (some #(= % (:name (:dependency dep-map))) excluded-libs-names) acc (conj acc dep-map)))
+   []
+   dep-maps))
 
 (defn find-outdated-deps-edn
   "Finds outdated deps in deps.edn file"

@@ -2,8 +2,7 @@
   (:require
    [automaton-build.app.deps-graph.impl            :as sut]
    [automaton-build.data-structure.graph.apps-stub :as graph-apps-stub]
-   [clojure.test                                   :refer
-                                                   [deftest is testing]]))
+   [clojure.test                                   :refer [deftest is testing]]))
 
 (deftest app-dependency-graph-test
   (testing "Test the graph creation"
@@ -12,8 +11,7 @@
                                :app-name "app-stub"
                                :monorepo {:app-dir "app_stub"}
                                :publication {:as-lib 'hephaistox/app-stub}
-                               :hephaistox-deps ['hephaistox/automaton
-                                                 'hephaistox/build]
+                               :hephaistox-deps ['hephaistox/automaton 'hephaistox/build]
                                :deps-edn {:deps {'babashka/process {}
                                                  'hephaistox/automaton {}
                                                  'hephaistox/build {}}}}
@@ -39,8 +37,7 @@
 
 (deftest nodes-fn-test
   (testing "Nodes are extracted from the graph"
-    (is (= #{'hephaistox/app-stub 'hephaistox/everything 'hephaistox/base-app
-             'hephaistox/build}
+    (is (= #{'hephaistox/app-stub 'hephaistox/everything 'hephaistox/base-app 'hephaistox/build}
            (->> graph-apps-stub/apps-w-deps-stub
                 sut/add-hephaistox-deps
                 sut/nodes-fn
@@ -78,8 +75,8 @@
     (is (= {}
            (-> graph-apps-stub/apps-w-deps-stub
                sut/add-hephaistox-deps
-               (sut/remove-nodes #{'hephaistox/app-stub 'hephaistox/everything
-                                   'hephaistox/base-app 'hephaistox/build})))))
+               (sut/remove-nodes #{'hephaistox/app-stub 'hephaistox/everything 'hephaistox/base-app
+                                   'hephaistox/build})))))
   (testing "Remove nodes"
     (is (= {'hephaistox/app-stub {:app-dir "ldir/app_stub"
                                   :monorepo {:app-dir "app_stub"}
@@ -88,10 +85,8 @@
                                   :deps-edn {:deps {'babashka/process {}
                                                     'hephaistox/automaton {}
                                                     'hephaistox/build {}}}
-                                  :hephaistox-deps ['hephaistox/automaton
-                                                    'hephaistox/build]}}
+                                  :hephaistox-deps ['hephaistox/automaton 'hephaistox/build]}}
            (-> graph-apps-stub/apps-w-deps-stub
                sut/add-hephaistox-deps
-               (sut/remove-nodes ['hephaistox/everything
-                                  'hephaistox/base-app
-                                  'hephaistox/build]))))))
+               (sut/remove-nodes
+                ['hephaistox/everything 'hephaistox/base-app 'hephaistox/build]))))))

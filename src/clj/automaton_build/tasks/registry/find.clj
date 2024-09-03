@@ -1,5 +1,4 @@
-(ns automaton-build.tasks.registry.find
-  "Function to find elemnts in the registry")
+(ns automaton-build.tasks.registry.find "Function to find elemnts in the registry")
 
 (defn search-task
   [registry task-name]

@@ -10,11 +10,7 @@
   (:require
    [automaton-build.code.files           :as build-code-files]
    [automaton-build.code.forbidden-words :as build-code-fw]
-   [automaton-build.echo.headers         :refer [h1
-                                                 h1-error
-                                                 h1-valid
-                                                 h2-error!
-                                                 h2-valid!]]
+   [automaton-build.echo.headers         :refer [h1 h1-error h1-valid h2-error! h2-valid!]]
    [automaton-build.os.file              :as build-file]
    [automaton-build.tasks.impl.reports   :as build-tasks-reports]))
 
@@ -37,8 +33,7 @@
          (map (fn [{:keys [raw-content filename]
                     :as _file-desc}]
                 {:filename filename
-                 :res (build-code-fw/forbidden-words-matches regexp
-                                                             raw-content)}))
+                 :res (build-code-fw/forbidden-words-matches regexp raw-content)}))
          (filterv (comp not empty? :res)))))
 
 (def report-file-path "docs/reports/fw.edn")
@@ -63,18 +58,15 @@
   [{:keys [subprojects]
     :as _monorepo-project-map}]
   (h1 "Scan for forbidden words")
-  (let [res
-        (->> subprojects
-             (mapcat
-              (fn [subproject]
-                (let [forbidden-words
-                      (get-in
-                       subproject
-                       [:project-config-filedesc :edn :code :forbidden-words])
-                      project-file-descs (->> subproject
-                                              :deps
-                                              project-files)]
-                  (generate-report-data project-file-descs forbidden-words)))))]
+  (let [res (->> subprojects
+                 (mapcat (fn [subproject]
+                           (let [forbidden-words
+                                 (get-in subproject
+                                         [:project-config-filedesc :edn :code :forbidden-words])
+                                 project-file-descs (->> subproject
+                                                         :deps
+                                                         project-files)]
+                             (generate-report-data project-file-descs forbidden-words)))))]
     (if (empty? res)
       (h1-valid "No forbidden words found.")
       (h1-error "Some forbidden words have been found."))

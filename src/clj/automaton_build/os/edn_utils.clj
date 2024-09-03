@@ -29,8 +29,7 @@
              edn-content (build-files/read-file edn-filename :silently)]
          (parse-edn edn-content))
        (catch Exception e
-         (build-log/error-exception (ex-info (format "File `%s` is not an edn."
-                                                     edn-filename)
+         (build-log/error-exception (ex-info (format "File `%s` is not an edn." edn-filename)
                                              {:caused-by e
                                               :file-name edn-filename}))
          nil)))
@@ -59,8 +58,7 @@
           (build-log/error-data {:deps-edn-filename edn-filename
                                  :exception e
                                  :content content}
-                                (format "Impossible to update the `%s` file."
-                                        edn-filename))
+                                (format "Impossible to update the `%s` file." edn-filename))
           nil)))
   ([edn-filename content] (spit-edn edn-filename content nil)))
 

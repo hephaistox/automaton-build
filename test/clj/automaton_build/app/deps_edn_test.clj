@@ -36,19 +36,16 @@
     (is (= ["a" "b" "c" "f" "g"]
            (sut/extract-paths {:paths ["f" "g"]
                                :aliases {:repl {:extra-paths ["d" "e" "f"]}
-                                         :runner {:extra-paths
-                                                  ["a" "b" "c" "f"]}}}
+                                         :runner {:extra-paths ["a" "b" "c" "f"]}}}
                               #{:repl})))))
 
 (deftest load-deps-edn-test
   (testing "Existing file is found" (is (map? (sut/slurp ""))))
-  (testing "Non existing file is ok"
-    (is (nil? (sut/slurp "non-existing-dir")))))
+  (testing "Non existing file is ok" (is (nil? (sut/slurp "non-existing-dir")))))
 
 (deftest is-hephaistox-deps-test
   (testing "Hephaistox lib find"
-    (is (sut/is-hephaistox-deps ['hephaistox/automaton-build
-                                 {:mvn/version ""}])))
+    (is (sut/is-hephaistox-deps ['hephaistox/automaton-build {:mvn/version ""}])))
   (testing "Non hephaistox lib is skipped"
     (is (not (sut/is-hephaistox-deps [:is-a-dep {:mvn/version ""}])))))
 
@@ -60,10 +57,8 @@
 
 (deftest compare-deps-test
   (testing "First one is lower"
-    (is (= {:mvn/version "0.1.3"}
-           (sut/compare-deps {:mvn/version "0.1.2"} {:mvn/version "0.1.3"})))
-    (is (= {:mvn/version "0.2.0"}
-           (sut/compare-deps {:mvn/version "0.1.2"} {:mvn/version "0.2.0"})))
+    (is (= {:mvn/version "0.1.3"} (sut/compare-deps {:mvn/version "0.1.2"} {:mvn/version "0.1.3"})))
+    (is (= {:mvn/version "0.2.0"} (sut/compare-deps {:mvn/version "0.1.2"} {:mvn/version "0.2.0"})))
     (is (= {:mvn/version "1.0.0"}
            (sut/compare-deps {:mvn/version "0.1.2"} {:mvn/version "1.0.0"}))))
   (testing "Are identical"

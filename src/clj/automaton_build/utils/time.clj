@@ -7,5 +7,4 @@
 (defn now-str
   "Return the time we are now"
   []
-  (.format (java.text.SimpleDateFormat. "EEE MMM d HH:mm:ss zzz yyyy")
-           (java.util.Date.)))
+  (.format (java.text.SimpleDateFormat. "EEE MMM d HH:mm:ss zzz yyyy") (java.util.Date.)))

@@ -33,25 +33,17 @@
   (if-not regexp
     (build-log/warn "regexp is empty, analysis aborted")
     (let [matches (-> clj-repo
-                      (build-filerepo-text/filecontent-to-match
-                       regexp
-                       [:forbidden-words]))]
+                      (build-filerepo-text/filecontent-to-match regexp [:forbidden-words]))]
       (->> matches
-           (mapv (fn [[filename [whole-match & matches]]] [filename
-                                                           (vec matches)
-                                                           whole-match]))))))
+           (mapv (fn [[filename [whole-match & matches]]] [filename (vec matches) whole-match]))))))
 
 (defn save-report
   [matches filename]
-  (build-analyze-utils/save-report
-   matches
-   "List of forbidden words found in the project"
-   filename
-   str))
+  (build-analyze-utils/save-report matches
+                                   "List of forbidden words found in the project"
+                                   filename
+                                   str))
 
 (defn assert-empty
   [matches filename]
-  (build-analyze-utils/assert-empty
-   matches
-   filename
-   "That words should not appear in the project"))
+  (build-analyze-utils/assert-empty matches filename "That words should not appear in the project"))

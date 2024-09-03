@@ -25,14 +25,7 @@
    * `account` docker organization name"
   [repo-url repo-branch workflows app-dir app-name tag account]
   (let [container-dir (build-files/create-temp-dir "gha-container")
-        container (build-github-action/make-github-action app-name
-                                                          container-dir
-                                                          app-dir
-                                                          account
-                                                          tag)
+        container
+        (build-github-action/make-github-action app-name container-dir app-dir account tag)
         workflow-paths (map #(build-files/create-dir-path app-dir %) workflows)]
-    (publish-container container
-                       container-dir
-                       workflow-paths
-                       repo-url
-                       repo-branch)))
+    (publish-container container container-dir workflow-paths repo-url repo-branch)))

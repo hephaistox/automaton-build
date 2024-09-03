@@ -56,9 +56,8 @@
   ([app-dir] (project-root-dirs app-dir []))
   ([app-dir ignored-files]
    (filter (fn [path] (not (some #(str/includes? path %) ignored-files)))
-           (build-files/parent-dirs-of-files (project-search-files
-                                              (build-files/absolutize app-dir)
-                                              ["build_config.edn"])))))
+           (build-files/parent-dirs-of-files (project-search-files (build-files/absolutize app-dir)
+                                                                   ["build_config.edn"])))))
 
 (defn project-paths-files-content
   [app]

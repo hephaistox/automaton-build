@@ -19,9 +19,7 @@
   [cli-opts opts]
   (update cli-opts
           :options
-          #(if (:inverse %)
-             (reduce (fn [cli-opts opt] (update cli-opts opt not)) % opts)
-             %)))
+          #(if (:inverse %) (reduce (fn [cli-opts opt] (update cli-opts opt not)) % opts) %)))
 
 ;; Parsing
 (defn parse-cli

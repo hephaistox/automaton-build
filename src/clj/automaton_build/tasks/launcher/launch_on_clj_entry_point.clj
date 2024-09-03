@@ -2,8 +2,7 @@
   (:require
    [automaton-build.os.exit-codes                         :as build-exit-codes]
    [automaton-build.os.files                              :as build-files]
-   [automaton-build.tasks.launcher.cli-task-agnostic-opts
-    :as build-cli-task-agnostic-opts]
+   [automaton-build.tasks.launcher.cli-task-agnostic-opts :as build-cli-task-agnostic-opts]
    [automaton-build.utils.namespace                       :as build-namespace]
    [clojure.edn                                           :as edn]))
 
@@ -25,9 +24,5 @@
                                                      edn/read-string)
         {:keys [task-name]} task-map]
     (build-cli-task-agnostic-opts/common-opts! cli-args task-name)
-    (let [exit-code (build-namespace/symbol-to-fn-call (:task-fn task-map)
-                                                       task-map
-                                                       app-data)]
-      (if (nil? exit-code)
-        (System/exit build-exit-codes/catch-all)
-        (System/exit exit-code)))))
+    (let [exit-code (build-namespace/symbol-to-fn-call (:task-fn task-map) task-map app-data)]
+      (if (nil? exit-code) (System/exit build-exit-codes/catch-all) (System/exit exit-code)))))

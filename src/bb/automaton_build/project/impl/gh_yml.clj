@@ -8,9 +8,7 @@
   "File of the workflow named `workflow-name` in the app stored in `app-dir`"
   [app-dir workflow-name]
   (-> app-dir
-      (build-filename/create-file-path ".github"
-                                       "workflows"
-                                       (str workflow-name ".yml"))))
+      (build-filename/create-file-path ".github" "workflows" (str workflow-name ".yml"))))
 
 (defn update-gha-version
   "Update a workflow yml file (described in `filedesc`) with the `version` - concerns only the image `image-name`."

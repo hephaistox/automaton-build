@@ -43,18 +43,15 @@
   * `pattern` pattern to search
   * `file-line` data to search in"
   [pattern file-line]
-  (when pattern
-    (let [pattern (re-pattern pattern)] (re-find pattern file-line))))
+  (when pattern (let [pattern (re-pattern pattern)] (re-find pattern file-line))))
 
 (defn ignore-rule-config
   [filecontent]
-  (build-string/str->map (re-find #"\{:heph-ignore.*"
-                                  (str/join (take 10 filecontent)))))
+  (build-string/str->map (re-find #"\{:heph-ignore.*" (str/join (take 10 filecontent)))))
 
 (defn ignore-match?
   [line-match ignore-values]
-  (some (fn [ignore-val]
-          (some (fn [match-val] (= match-val ignore-val)) line-match))
+  (some (fn [ignore-val] (some (fn [match-val] (= match-val ignore-val)) line-match))
         ignore-values))
 
 (defn ignore-all? [rules] (some #(true? %) rules))
@@ -66,13 +63,11 @@
 (defn match-not-excluded?
   [ignored-matches file-content line-match]
   (let [ignore-config (ignore-rule-config file-content)
-        config-matching-rules (select-keys (:heph-ignore ignore-config)
-                                           ignored-matches)]
+        config-matching-rules (select-keys (:heph-ignore ignore-config) ignored-matches)]
     (or (empty? ignored-matches)
         (nil? ignore-config)
         (empty? config-matching-rules)
-        (not (ignore-config-rule-applies? (flatten (vals config-matching-rules))
-                                          line-match)))))
+        (not (ignore-config-rule-applies? (flatten (vals config-matching-rules)) line-match)))))
 
 (defn filecontent-to-match
   "Apply the pattern to each line of each file of the repo
@@ -87,13 +82,11 @@
         build-filerepo-raw/file-repo-map
         (mapcat (fn [[filename file-content]]
                   (->> file-content
-                       (map (fn [file-line]
-                              [(build-files/relativize-to-pwd filename)
-                               (when-let [line-match (search-line pattern
-                                                                  file-line)]
-                                 (when (match-not-excluded? ignored-matches
-                                                            file-content
-                                                            line-match)
-                                   line-match))]))
+                       (map (fn [file-line] [(build-files/relativize-to-pwd filename)
+                                             (when-let [line-match (search-line pattern file-line)]
+                                               (when (match-not-excluded? ignored-matches
+                                                                          file-content
+                                                                          line-match)
+                                                 line-match))]))
                        (filter (comp not empty? second)))))
         vec)))

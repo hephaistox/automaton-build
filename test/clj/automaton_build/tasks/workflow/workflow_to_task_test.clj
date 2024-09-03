@@ -1,8 +1,7 @@
 (ns automaton-build.tasks.workflow.workflow-to-task-test
   (:require
    [automaton-build.tasks.workflow.workflow-to-task :as sut]
-   [clojure.test                                    :refer
-                                                    [deftest is testing]]))
+   [clojure.test                                    :refer [deftest is testing]]))
 
 (def registry-stub
   {'clean {:doc "Clean cache files for compiles, and logs"
@@ -33,8 +32,7 @@
           :la-test {:cmd ["bb" "clean-hard"]
                     :process-opts {:in "q"}}
           :task-fn 'automaton-build.tasks.clean-hard/clean-hard}]]]
-      (is (= registry-stub
-             (sut/update-registry-workflow-entries registry-stub)))))
+      (is (= registry-stub (sut/update-registry-workflow-entries registry-stub)))))
   (testing "Workflow tasks"
     (let
       [registry-stub

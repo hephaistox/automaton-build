@@ -15,15 +15,13 @@
   "Update all `deps` in `dir`. Returns nil when successful otherwise a map with `:error`"
   [dir deps]
   (when (seq deps)
-    (let [res (blocking-cmd
-               ["npm"
-                "install"
-                "--prefix"
-                "."
-                (str/join " "
-                          (mapv (fn [dep] (str (:name dep) "@" (:version dep)))
-                                deps))]
-               dir)]
+    (let [res (blocking-cmd ["npm"
+                             "install"
+                             "--prefix"
+                             "."
+                             (str/join " "
+                                       (mapv (fn [dep] (str (:name dep) "@" (:version dep))) deps))]
+                            dir)]
       (when-not (= 0 (:exit res))
         {:error (:err res)
          :data res}))))

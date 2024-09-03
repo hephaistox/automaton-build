@@ -11,8 +11,7 @@
 (defn- search-alias-with-multiple-namespaces
   [matches]
   (->> matches
-       (group-by (fn [[_filename namespace alias :as _match]] [namespace
-                                                               alias]))
+       (group-by (fn [[_filename namespace alias :as _match]] [namespace alias]))
        (mapv (fn [[k-alias-ns match]] [k-alias-ns (mapv first match)]))
        (group-by ffirst)
        (filter (fn [[_k-alias-ns files]] (> (count files) 1)))
@@ -35,23 +34,19 @@
          (map (fn [[filename [whole-match namespace alias _refer?]]]
                 [filename namespace alias whole-match]))
          (filter (fn [[_filename namespace alias]]
-                   (not (or (= "sut" alias)
-                            (nil? alias)
-                            (= "clojure.deftest" namespace)))))
+                   (not (or (= "sut" alias) (nil? alias) (= "clojure.deftest" namespace)))))
          search-alias-with-multiple-namespaces
          (into {}))))
 
 (defn save-report
   [matches filename]
-  (build-analyze-utils/save-report
-   matches
-   "List of namespaces referenced by many aliases"
-   filename
-   identity))
+  (build-analyze-utils/save-report matches
+                                   "List of namespaces referenced by many aliases"
+                                   filename
+                                   identity))
 
 (defn assert-empty
   [matches filename]
-  (build-analyze-utils/assert-empty
-   matches
-   filename
-   "Found namespace represented with more than one alias"))
+  (build-analyze-utils/assert-empty matches
+                                    filename
+                                    "Found namespace represented with more than one alias"))

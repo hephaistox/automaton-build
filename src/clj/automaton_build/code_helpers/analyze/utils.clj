@@ -6,9 +6,7 @@
    [automaton-build.os.exit-codes :as build-exit-codes]
    [automaton-build.os.files      :as build-files]))
 
-(defn- matches-to-output-lines
-  [match-to-output-line matches]
-  (mapv match-to-output-line matches))
+(defn- matches-to-output-lines [match-to-output-line matches] (mapv match-to-output-line matches))
 
 (defn save-report
   "Matches
@@ -23,17 +21,14 @@
     (do (build-log/info report-title)
         (build-edn-utils/spit-edn filename
                                   (->> matches
-                                       (matches-to-output-lines
-                                        match-to-output-line))
+                                       (matches-to-output-lines match-to-output-line))
                                   report-title)
         matches)))
 
 (defn assert-empty
   [matches filename assert-message]
   (when-not (empty? matches)
-    (build-log/warn-data
-     matches
-     (format "%s - open file `%s` for details" assert-message filename))
+    (build-log/warn-data matches (format "%s - open file `%s` for details" assert-message filename))
     true))
 
 (defn when-broken-exit

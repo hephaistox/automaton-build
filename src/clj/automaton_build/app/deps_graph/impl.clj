@@ -15,12 +15,8 @@
                   :as app}]
               (let [as-lib (get publication
                                 :as-lib
-                                (build-namespace/namespaced-keyword "non-lib"
-                                                                    app-name))]
-                [as-lib
-                 (assoc app
-                        :hephaistox-deps
-                        (build-deps-edn/hephaistox-deps deps-edn))])))
+                                (build-namespace/namespaced-keyword "non-lib" app-name))]
+                [as-lib (assoc app :hephaistox-deps (build-deps-edn/hephaistox-deps deps-edn))])))
        (into {})))
 
 (defn nodes-fn
@@ -40,9 +36,7 @@
 
 (defn dst-in-edge [edge] (second edge))
 
-(defn remove-nodes
-  [graph nodes-to-remove]
-  (apply dissoc graph (set nodes-to-remove)))
+(defn remove-nodes [graph nodes-to-remove] (apply dissoc graph (set nodes-to-remove)))
 
 (defn map-app-lib-to-app
   [deps-graph ordered-libs]

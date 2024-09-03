@@ -14,8 +14,7 @@
   [clj-repo]
   (build-log/info "Css in code analysis")
   (let [matches (-> clj-repo
-                    (build-filerepo-text/filecontent-to-match css-pattern
-                                                              [:css]))]
+                    (build-filerepo-text/filecontent-to-match css-pattern [:css]))]
     (->> matches
          (map (fn [[filename [_whole-match comment]]] [comment filename]))
          vec)))
@@ -25,11 +24,8 @@
   (build-analyze-utils/save-report matches
                                    "List of forbidden css forms"
                                    filename
-                                   (fn [[match filename]]
-                                     (format "%s -> [%s]" match filename))))
+                                   (fn [[match filename]] (format "%s -> [%s]" match filename))))
 
 (defn assert-empty
   [matches filename]
-  (build-analyze-utils/assert-empty matches
-                                    filename
-                                    "Found forbidden css code"))
+  (build-analyze-utils/assert-empty matches filename "Found forbidden css code"))

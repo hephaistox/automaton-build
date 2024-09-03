@@ -94,10 +94,8 @@
   (let [{:keys [err]} cmd-res]
     (println "err" err)
     (cond-> cmd-res
-      (re-find #"(?m)Could not find remote branch" err)
-      (assoc :inexisting-remote-branch true)
-      (re-find #"repository .* does not exist" err) (assoc :repository-not-found
-                                                           true))))
+      (re-find #"(?m)Could not find remote branch" err) (assoc :inexisting-remote-branch true)
+      (re-find #"repository .* does not exist" err) (assoc :repository-not-found true))))
 
 (defn pull-changes-chain-cmd
   "Returns a command to fetch and pull changes from `origin`."
@@ -184,8 +182,7 @@
 (defn spit-hook
   "Spit the `content` in the hook called `hook-name` of `app-dir` repo."
   [app-dir hook-name content]
-  (let [hook-filename
-        (build-filename/create-file-path app-dir ".git" "hooks" hook-name)]
+  (let [hook-filename (build-filename/create-file-path app-dir ".git" "hooks" hook-name)]
     (build-file/write-file hook-filename content)
     (-> (build-file/make-executable hook-filename)
         str)))
@@ -205,10 +202,7 @@
    [["git" "add" "."]]
    [["git" "push" "--force" "--set-upstream" "origin" branch]]])
 
-(defn clean-state
-  "Returns a command to detect clean state"
-  []
-  ["git" "status" "-s"])
+(defn clean-state "Returns a command to detect clean state" [] ["git" "status" "-s"])
 
 (defn clean-state-analyze
   "Check if the returned value of clean state "

@@ -2,8 +2,7 @@
   (:require
    [automaton-build.data-structure.graph.graph-impl :as sut]
    [automaton-build.data-structure.graph.graph-stub :as graph-stub]
-   [clojure.test                                    :refer
-                                                    [deftest is testing]]))
+   [clojure.test                                    :refer [deftest is testing]]))
 
 (deftest remove-graph-layer-test
   (testing

@@ -25,23 +25,19 @@
           :err ""}
          (dissoc (sut/blocking-cmd ["echo" "so"] ".") :dir))
       "A valid command is executed and return message.")
-  (is
-   (= {:cmd-str "ls non-existing-dir"
-       :out ""
-       :exit 1
-       :err "ls: non-existing-dir: No such file or directory\n"}
-      (dissoc (sut/blocking-cmd ["ls" "non-existing-dir"] ".") :dir))
-   "A failing coding has a non zero exit code, and display messages in error.")
-  (is
-   (=
-    {:cmd-str "non-existing-command"
-     :exit -1
-     :err
-     "Cannot run program \"non-existing-command\" : error=2, No such file or directory"}
-    (-> (sut/blocking-cmd ["non-existing-command"] "")
-        (dissoc :dir :e)
-        (update :err #(str/replace % #"\(.*\)" ""))))
-   "An invalid command raises an exception"))
+  (is (= {:cmd-str "ls non-existing-dir"
+          :out ""
+          :exit 1
+          :err "ls: non-existing-dir: No such file or directory\n"}
+         (dissoc (sut/blocking-cmd ["ls" "non-existing-dir"] ".") :dir))
+      "A failing coding has a non zero exit code, and display messages in error.")
+  (is (= {:cmd-str "non-existing-command"
+          :exit -1
+          :err "Cannot run program \"non-existing-command\" : error=2, No such file or directory"}
+         (-> (sut/blocking-cmd ["non-existing-command"] "")
+             (dissoc :dir :e)
+             (update :err #(str/replace % #"\(.*\)" ""))))
+      "An invalid command raises an exception"))
 
 (deftest force-dirs
   (is (= [[["ls"] "target-dir"] [["pwd"] "target-dir"]]

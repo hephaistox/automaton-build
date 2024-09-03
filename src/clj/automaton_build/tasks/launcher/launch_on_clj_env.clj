@@ -19,20 +19,15 @@
                                :task-cli-opts task-cli-opts
                                :task-map task-map
                                :task-fn task-fn})
-    (build-log/trace-format "Data passed to file `%s` to launch clojure"
-                            clj-input-tmp-file)
-    (let
-      [exit-code
-       (ffirst
-        (build-cmds/execute-and-trace-return-exit-codes
-         (vector
-          "clojure"
-          "-X:build:bb-deps"
-          (str
-           'automaton-build.tasks.launcher.launch-on-clj-entry-point/entry-point)
-          :clj-input-tmp-file (format "\"%s\"" clj-input-tmp-file))))]
+    (build-log/trace-format "Data passed to file `%s` to launch clojure" clj-input-tmp-file)
+    (let [exit-code (ffirst
+                     (build-cmds/execute-and-trace-return-exit-codes
+                      (vector
+                       "clojure"
+                       "-X:build:bb-deps"
+                       (str 'automaton-build.tasks.launcher.launch-on-clj-entry-point/entry-point)
+                       :clj-input-tmp-file (format "\"%s\"" clj-input-tmp-file))))]
       (if (int? exit-code)
         exit-code
-        (do (build-log/trace
-             "The clj command has failed, so the exit code is passed to the bb")
+        (do (build-log/trace "The clj command has failed, so the exit code is passed to the bb")
             build-exit-codes/catch-all)))))

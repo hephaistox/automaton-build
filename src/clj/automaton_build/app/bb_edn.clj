@@ -7,9 +7,7 @@
    [automaton-build.os.edn-utils :as build-edn-utils]
    [automaton-build.os.files     :as build-files]))
 
-(def bb-edn-filename
-  "Should not be used externally except in test namespaces"
-  "bb.edn")
+(def bb-edn-filename "Should not be used externally except in test namespaces" "bb.edn")
 
 (defn bb-edn-filename-fullpath
   "Return the full path of the bb.edn file"
@@ -26,8 +24,7 @@
         bb-edn (build-edn-utils/read-edn filepath)]
     (if (and filepath bb-edn)
       bb-edn
-      (build-log/error-format
-       "Are you sure directory `%s` is an app, no valid bb task in it"))))
+      (build-log/error-format "Are you sure directory `%s` is an app, no valid bb task in it"))))
 
 
 #_{:clj-kondo/ignore [:redefined-var]}
@@ -46,8 +43,7 @@
                                   bb-edn-filename-fullpath)
                               bb-edn
                               "The file is updated automatically")
-    (build-log/error
-     "Can't proceed with update of `bb.edn` as `:bb-deps` in `deps.edn` is empty")))
+    (build-log/error "Can't proceed with update of `bb.edn` as `:bb-deps` in `deps.edn` is empty")))
 
 (defn tasks
   "Return the tasks from the bb-edn file in parameter"

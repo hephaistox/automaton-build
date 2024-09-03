@@ -30,8 +30,7 @@
 (defn is-existing-file?
   "Returns true if `filename` path already exist and is not a directory."
   [filename]
-  (when (and (is-existing-path? filename) (not (fs/directory? filename)))
-    filename))
+  (when (and (is-existing-path? filename) (not (fs/directory? filename))) filename))
 
 (defn is-existing-dir?
   "Check if this the path exist and is a directory."
@@ -67,8 +66,7 @@
 (defn modified-since
   "Returns `true` if `anchor` is older than one of the file in `file-set`."
   [anchor file-set]
-  (let [file-set (filter some? file-set)]
-    (when anchor (seq (fs/modified-since anchor file-set)))))
+  (let [file-set (filter some? file-set)] (when anchor (seq (fs/modified-since anchor file-set)))))
 
 (defn matching-files
   "Match files recursively found in `dir` that are matching `file-pattern`."
@@ -125,8 +123,7 @@
   "Search `file-or-dir` in the parents directories of `dir`."
   [dir file-or-dir]
   (loop [dir (build-filename/absolutize dir)]
-    (let [file-candidate (build-filename/create-file-path (str dir)
-                                                          file-or-dir)]
+    (let [file-candidate (build-filename/create-file-path (str dir) file-or-dir)]
       (if (fs/exists? file-candidate)
         (do (println file-candidate "exists") dir)
         (when-not (str/blank? dir) (recur (str (fs/parent dir))))))))
@@ -174,8 +171,7 @@
                        :relative-path rp
                        :target-dir-path (cond->> rp
                                           file? build-filename/extract-path
-                                          :else (build-filename/create-file-path
-                                                 dst-dir))))))
+                                          :else (build-filename/create-file-path dst-dir))))))
        set))
 
 (defn to-src-dst
@@ -189,14 +185,11 @@
                   dir? (str path build-filename/directory-separator))
                 (cond
                   file? target-dir-path
-                  dir? (str target-dir-path
-                            build-filename/directory-separator))]))))
+                  dir? (str target-dir-path build-filename/directory-separator))]))))
 
 (defn copy-file [src-path dst-path options] (fs/copy src-path dst-path options))
 
-(defn copy-dir
-  [src-path dst-path options]
-  (fs/copy-tree src-path dst-path options))
+(defn copy-dir [src-path dst-path options] (fs/copy-tree src-path dst-path options))
 
 (defn search-files
   "Search files and dirs.
@@ -219,8 +212,7 @@
 (defn actual-copy
   "Do the actual copy of `copy-actions`."
   [copy-actions]
-  (doseq [{:keys [file? dir? path target-dir-path options]}
-          (filter :exists? copy-actions)]
+  (doseq [{:keys [file? dir? path target-dir-path options]} (filter :exists? copy-actions)]
     (ensure-dir-exists target-dir-path)
     (cond
       file? (copy-file path target-dir-path options)
@@ -228,11 +220,7 @@
       :else nil))
   copy-actions)
 
-(defn empty-dir
-  "Empty the directory `path`."
-  [path]
-  (delete-dir path)
-  (ensure-dir-exists path))
+(defn empty-dir "Empty the directory `path`." [path] (delete-dir path) (ensure-dir-exists path))
 
 (defn create-sym-link
   "Creates a sym link to `target` linking to `path`."

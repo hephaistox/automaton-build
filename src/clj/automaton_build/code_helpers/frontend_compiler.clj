@@ -37,9 +37,7 @@
                                                {:dir dir
                                                 :error-to-std? true}])
            build-cmds/first-cmd-failing)
-       (catch Exception e
-         (build-log/error (ex-info "Release compilation failed." e))
-         nil)))
+       (catch Exception e (build-log/error (ex-info "Release compilation failed." e)) nil)))
 
 (defn builds
   "List shadow-cljs-build setup in the application
@@ -61,15 +59,12 @@
   (cond
     (not (and (build-compiler-shadow/is-shadow-project? dir)
               (build-compiler-shadow/shadow-installed? dir)))
-    (do (build-log/trace
-         "Frontend test is skipped as the project has no valid frontend")
-        true)
+    (do (build-log/trace "Frontend test is skipped as the project has no valid frontend") true)
     (not= :ok
           (build-cmd/log-if-fail
            (concat ["npx" "shadow-cljs" "compile"] (builds dir) [{:dir dir}])))
     (do (build-log/error "Compilation failed") true)
-    :else (build-cmd/log-if-fail
-           ["npx" "karma" "start" "--single-run" {:dir dir}])))
+    :else (build-cmd/log-if-fail ["npx" "karma" "start" "--single-run" {:dir dir}])))
 
 (defn create-size-optimization-report
   "Create a report on size-optimization
@@ -84,13 +79,8 @@
     (nil? (-> (build-compiler-shadow/load-shadow-cljs dir)
               (get-in [:build :app])))
     (build-log/debug "no app build target found, skip optimization report")
-    :else (build-cmds/execute-and-trace ["npx"
-                                         "shadow-cljs"
-                                         "run"
-                                         "shadow.cljs.build-report"
-                                         "app"
-                                         target-file
-                                         {:dir dir}])))
+    :else (build-cmds/execute-and-trace
+           ["npx" "shadow-cljs" "run" "shadow.cljs.build-report" "app" target-file {:dir dir}])))
 
 (defn- shadow-cljs-watch-command
   [watch-aliases]

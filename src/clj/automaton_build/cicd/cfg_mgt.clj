@@ -10,8 +10,7 @@
 
 (defn latest-commit-message
   []
-  (first (build-cmds/execute-get-string
-          ["git" "log" "-1" "--pretty=format:%B"])))
+  (first (build-cmds/execute-get-string ["git" "log" "-1" "--pretty=format:%B"])))
 
 (defn git-installed?*
   "Returns true if git is properly installed
@@ -19,8 +18,7 @@
   * `git-cmd` is an optional parameter to give an alternative git command"
   ([] (git-installed?* "git"))
   ([git-cmd]
-   (try (or (zero? (ffirst (build-cmds/execute-with-exit-code
-                            [git-cmd "-v" {:dir "."}])))
+   (try (or (zero? (ffirst (build-cmds/execute-with-exit-code [git-cmd "-v" {:dir "."}])))
             (do (build-log/error "Git command does not work") false))
         (catch Exception e (build-log/error-exception e) false))))
 
@@ -51,24 +49,24 @@
   "Clones specific file with it's latest revision.
    It's quick as it ignores all other files of the repository and git history."
   [repo-address repo-dir-name target-dir branch-name file-name]
-  (build-cmds/execute-with-exit-code
-   ["git"
-    "clone"
-    "--branch"
-    branch-name
-    repo-address
-    repo-dir-name
-    "--depth"
-    "1"
-    "--no-checkout"
-    "--filter=blob:none"
-    {:dir target-dir}]
-   ["git"
-    "checkout"
-    branch-name
-    "--"
-    file-name
-    {:dir (build-files/create-dir-path target-dir repo-dir-name)}]))
+  (build-cmds/execute-with-exit-code ["git"
+                                      "clone"
+                                      "--branch"
+                                      branch-name
+                                      repo-address
+                                      repo-dir-name
+                                      "--depth"
+                                      "1"
+                                      "--no-checkout"
+                                      "--filter=blob:none"
+                                      {:dir target-dir}]
+                                     ["git"
+                                      "checkout"
+                                      branch-name
+                                      "--"
+                                      file-name
+                                      {:dir (build-files/create-dir-path target-dir
+                                                                         repo-dir-name)}]))
 
 (defn clone-repo-branch
   "Clone one branch of a remote repository to the `target-dir`
@@ -86,11 +84,9 @@
    (when (git-installed?)
      (let [[exit-code message]
            (->> (build-cmds/execute-with-exit-code
-                 (vec
-                  (concat
-                   ["git" "clone" repo-address repo-dir-name "--single-branch"]
-                   (when branch-name ["-b" branch-name])
-                   ["--depth" "1" {:dir target-dir}])))
+                 (vec (concat ["git" "clone" repo-address repo-dir-name "--single-branch"]
+                              (when branch-name ["-b" branch-name])
+                              ["--depth" "1" {:dir target-dir}])))
                 first)]
        (cond
          (zero? exit-code) true
@@ -100,11 +96,8 @@
                                     repo-address)
              false)
          (re-find #"Repository not found" message)
-         (do (build-log/warn-format "Repository `%s` not found" repo-address)
-             false)
-         :else (do (build-log/error "Unexpected error during clone repo: "
-                                    message)
-                   false)))))
+         (do (build-log/warn-format "Repository `%s` not found" repo-address) false)
+         :else (do (build-log/error "Unexpected error during clone repo: " message) false)))))
   ([target-dir repo-address branch-name]
    (clone-repo-branch target-dir target-dir repo-address branch-name)))
 
@@ -130,15 +123,13 @@
   * `dir` directory where the repository to get the branch from"
   [dir]
   (when (git-installed?)
-    (let [result (-> (build-cmds/execute-get-string
-                      ["git" "branch" "--show-current" {:dir dir}])
+    (let [result (-> (build-cmds/execute-get-string ["git" "branch" "--show-current" {:dir dir}])
                      first
                      str/split-lines
                      first)]
-      (build-log/trace-format
-       "Retrieve the current branch in directory `%s`, found = `%s`"
-       dir
-       result)
+      (build-log/trace-format "Retrieve the current branch in directory `%s`, found = `%s`"
+                              dir
+                              result)
       result)))
 
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
@@ -148,8 +139,7 @@
   Params:
   * `dir` directory where the local repo is stored"
   [dir]
-  (-> (build-cmds/execute-get-string
-       ["git" "log" "-n" "1" "--pretty=format:%H" {:dir dir}])
+  (-> (build-cmds/execute-get-string ["git" "log" "-n" "1" "--pretty=format:%H" {:dir dir}])
       first))
 
 (defn commit-and-push
@@ -162,25 +152,20 @@
   ([dir msg branch-name force?]
    (let [msg (or msg "automatic commit")]
      (when (git-installed?)
-       (let [commit-res
-             (build-cmds/execute-with-exit-code
-              ["git" "add" "-A" {:dir dir}]
-              ["git" "commit" "-m" msg {:dir dir}]
-              (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
-                           (when force? ["--force"])
-                           [{:dir dir}])))
+       (let [commit-res (build-cmds/execute-with-exit-code
+                         ["git" "add" "-A" {:dir dir}]
+                         ["git" "commit" "-m" msg {:dir dir}]
+                         (vec (concat ["git" "push" "--set-upstream" "origin" branch-name]
+                                      (when force? ["--force"])
+                                      [{:dir dir}])))
              [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
          (case cmd-failing
            nil (do (build-log/info "Successfully pushed") true)
-           1 (do (build-log/info-format "Nothing to commit, skip the push")
-                 true)
+           1 (do (build-log/info-format "Nothing to commit, skip the push") true)
            2 (do (build-log/error-format "Push has failed - %s" message) false)
-           3 (do (build-log/error-format "Push has failed with message: %s"
-                                         message)
-                 false)
-           :else (do (build-log/error
-                      "Unexpected error during commit-and-push : "
-                      (into [] commit-res))
+           3 (do (build-log/error-format "Push has failed with message: %s" message) false)
+           :else (do (build-log/error "Unexpected error during commit-and-push : "
+                                      (into [] commit-res))
                      false))))))
   ([dir msg branch-name] (commit-and-push dir msg branch-name false)))
 
@@ -212,12 +197,8 @@
                           {:dir dir}])
              [cmd-failing message] (build-cmds/first-cmd-failing commit-res)]
          (case cmd-failing
-           nil (do (build-log/info-format
-                    "Successfully pushed version `%s` version"
-                    version)
-                   true)
-           1 (do (build-log/info-format "Nothing to commit, skip the push")
-                 true)
+           nil (do (build-log/info-format "Successfully pushed version `%s` version" version) true)
+           1 (do (build-log/info-format "Nothing to commit, skip the push") true)
            2 (do (build-log/error-format "Tag has failed - %s" message) false)
            3
            (do
@@ -226,9 +207,8 @@
               message
               version)
              false)
-           :else (do (build-log/error
-                      "Unexpected error during commit-and-push : "
-                      (into [] commit-res))
+           :else (do (build-log/error "Unexpected error during commit-and-push : "
+                                      (into [] commit-res))
                      false)))))))
 
 (defn- prepare-cloned-repo-on-branch
@@ -239,14 +219,12 @@
   * `branch-name`"
   [tmp-dir repo-address branch-name]
   (if (clone-repo-branch tmp-dir repo-address branch-name)
-    (do (build-log/debug-format "Successfully cloned branch %s" branch-name)
-        true)
-    (do
-      (build-log/debug-format
-       "Branch `%s` does not exist on the remote repo, it will be created locally"
-       branch-name)
-      (when (clone-repo-branch tmp-dir repo-address nil)
-        (create-and-switch-to-branch tmp-dir branch-name)))))
+    (do (build-log/debug-format "Successfully cloned branch %s" branch-name) true)
+    (do (build-log/debug-format
+         "Branch `%s` does not exist on the remote repo, it will be created locally"
+         branch-name)
+        (when (clone-repo-branch tmp-dir repo-address nil)
+          (create-and-switch-to-branch tmp-dir branch-name)))))
 
 (defn- replace-repo-git-dir
   [new-git-dir repo-dir]
@@ -256,10 +234,9 @@
 
 (defn pull-changes
   [branch dir]
-  (build-cmds/execute-with-exit-code
-   ["git" "fetch" "origin" (str branch ":" branch) {:dir dir}]
-   ["git" "pull" {:dir dir}]
-   ["git" "merge" branch (current-branch dir) {:dir dir}]))
+  (build-cmds/execute-with-exit-code ["git" "fetch" "origin" (str branch ":" branch) {:dir dir}]
+                                     ["git" "pull" {:dir dir}]
+                                     ["git" "merge" branch (current-branch dir) {:dir dir}]))
 
 (defn- target-branch-git-dir
   "Returns '.git' directory from `target-branch`"
@@ -287,8 +264,7 @@
   "Returns true if there is a difference between state on `branch` and `source-dir`"
   [source-dir repo-address branch]
   (when (git-installed?)
-    (when-let [replaced-dir
-               (replace-branch-files source-dir repo-address branch)]
+    (when-let [replaced-dir (replace-branch-files source-dir repo-address branch)]
       (git-changes? replaced-dir))))
 
 (defn remote-branches
@@ -299,12 +275,10 @@
   * `repo-url` The url of the repo to download"
   [repo-url]
   (let [tmp-dir (build-files/create-temp-dir)]
-    (build-log/trace-format "Create a repo `%s` to check for remote branches"
-                            tmp-dir)
-    (build-cmds/execute-and-trace
-     ["git" "init" "-q" {:dir tmp-dir}]
-     ["git" "config" "--local" "pager.branch" "false" {:dir tmp-dir}]
-     ["git" "remote" "add" "origin" repo-url {:dir tmp-dir}])
+    (build-log/trace-format "Create a repo `%s` to check for remote branches" tmp-dir)
+    (build-cmds/execute-and-trace ["git" "init" "-q" {:dir tmp-dir}]
+                                  ["git" "config" "--local" "pager.branch" "false" {:dir tmp-dir}]
+                                  ["git" "remote" "add" "origin" repo-url {:dir tmp-dir}])
     (build-cmds/execute-get-string ["git" "branch" "-aqr" {:dir tmp-dir}])))
 
 (defn push-local-dir-to-repo
@@ -320,11 +294,8 @@
   ([{:keys [source-dir repo-address commit-msg tag force? target-branch]
      :or {target-branch (current-branch ".")}}]
    (when (git-installed?)
-     (build-log/debug-format "Pushing from `%s` to repository `%s`"
-                             source-dir
-                             repo-address)
-     (let [dir-to-push
-           (replace-branch-files source-dir repo-address target-branch)]
+     (build-log/debug-format "Pushing from `%s` to repository `%s`" source-dir repo-address)
+     (let [dir-to-push (replace-branch-files source-dir repo-address target-branch)]
        (if tag
          (commit-and-push-and-tag dir-to-push
                                   commit-msg
@@ -332,10 +303,7 @@
                                   (:id tag)
                                   (:msg tag)
                                   force?)
-         (commit-and-push dir-to-push
-                          commit-msg
-                          (current-branch dir-to-push)
-                          force?))))))
+         (commit-and-push dir-to-push commit-msg (current-branch dir-to-push) force?))))))
 
 (defn find-git-repo
   "Search in the parent directories if
@@ -351,9 +319,8 @@
   * `hook-name`
   * `content`"
   [app-dir hook-name content]
-  (let [hook-filename
-        (-> (find-git-repo app-dir)
-            (build-files/create-file-path ".git" "hooks" hook-name))]
+  (let [hook-filename (-> (find-git-repo app-dir)
+                          (build-files/create-file-path ".git" "hooks" hook-name))]
     (build-log/trace-format "Creating hook `%s`" hook-filename)
     (build-files/spit-file hook-filename content)
     (build-files/make-executable hook-filename)))

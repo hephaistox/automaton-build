@@ -22,11 +22,8 @@
 (defn log-if-fail
   [command]
   (try (let [{:keys [exit out err]} @(generate-process command)]
-         (if (zero? exit)
-           :ok
-           (do (build-log/error (str err)) (build-log/info (str out)) :fail)))
+         (if (zero? exit) :ok (do (build-log/error (str err)) (build-log/info (str out)) :fail)))
        (catch Exception e
          (build-log/error-exception e)
-         (build-log/error-format
-          "Unexpected error during execution of this command `%s`"
-          command))))
+         (build-log/error-format "Unexpected error during execution of this command `%s`"
+                                 command))))

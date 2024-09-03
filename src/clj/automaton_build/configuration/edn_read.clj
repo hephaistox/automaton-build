@@ -19,8 +19,7 @@
   (let [edn-filename (when edn-filename (str (fs/absolutize edn-filename)))
         edn-content (try (slurp edn-filename)
                          (catch Exception _
-                           (build-log/warn-format "Unable to load the file `%s`"
-                                                  edn-filename)
+                           (build-log/warn-format "Unable to load the file `%s`" edn-filename)
                            nil))]
     (when edn-content
       (build-log/trace "Load file:" edn-filename)

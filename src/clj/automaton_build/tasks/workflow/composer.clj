@@ -16,16 +16,13 @@
   * `cli-opts`
   * `wk-task`"
   [task-registry app cli-opts wk-task]
-  (let [{:keys [task-fn]} (build-task-registry-find/task-map task-registry
-                                                             wk-task)]
+  (let [{:keys [task-fn]} (build-task-registry-find/task-map task-registry wk-task)]
     (if (nil? task-fn)
-      (do
-        (build-log/warn-format
-         "The task `%s` has been skipped, it has not been found in the registry"
-         wk-task)
-        nil)
-      (if-let [task-code
-               (build-namespace/symbol-to-fn-call task-fn cli-opts app)]
+      (do (build-log/warn-format
+           "The task `%s` has been skipped, it has not been found in the registry"
+           wk-task)
+          nil)
+      (if-let [task-code (build-namespace/symbol-to-fn-call task-fn cli-opts app)]
         task-code
         build-exit-codes/fatal-error-signal))))
 
@@ -38,15 +35,13 @@
   [cli-opts
    {:keys [task-registry task-name]
     :as app}]
-  (let [{:keys [wk-tasks]} (build-task-registry-find/task-map task-registry
-                                                              task-name)]
+  (let [{:keys [wk-tasks]} (build-task-registry-find/task-map task-registry task-name)]
     (loop [wk-tasks wk-tasks]
       (let [wk-task (first wk-tasks)
             rest-tasks (rest wk-tasks)
             res (execute-task-in-wf task-registry app cli-opts wk-task)]
         (cond
-          (and (or (nil? res) (= res build-exit-codes/ok)) (seq rest-tasks))
-          (recur rest-tasks)
+          (and (or (nil? res) (= res build-exit-codes/ok)) (seq rest-tasks)) (recur rest-tasks)
           :else (cond
                   (nil? res) build-exit-codes/ok
                   (number? res) res))))))

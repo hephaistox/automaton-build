@@ -5,20 +5,16 @@
         org.clojure/tools.cli {:mvn/version "1.1.230"}}
  :paths ["src/clj" "src/bb" "test_la/clj"]
  :tasks
- {:requires
-  [[automaton-build.tasks.launcher.bb-entrypoint :as build-task-bb-entrypoint]
-   [babashka.process :as babahska-process]]
+ {:requires [[automaton-build.tasks.launcher.bb-entrypoint :as build-task-bb-entrypoint]
+             [babashka.process :as babahska-process]]
   heph-task {:doc "Launch an Hephaistox task"
-             :task (System/exit (build-task-bb-entrypoint/-main
-                                 *command-line-args*))}
+             :task (System/exit (build-task-bb-entrypoint/-main *command-line-args*))}
   lconnect
   {:doc
    "Repl in case automaton-build is failing. Using -f or --force cli arguments to force start if some part are failing"
-   :task (try (-> (babahska-process/shell
-                   "clojure"
-                   "-M:common-test:env-development-repl:build"
-                   *command-line-args*)
+   :task (try (-> (babahska-process/shell "clojure"
+                                          "-M:common-test:env-development-repl:build"
+                                          *command-line-args*)
                   System/exit)
               (catch Exception e
-                (println "Repl failed also - error during repl startup"
-                         (ex-message e))))}}}
+                (println "Repl failed also - error during repl startup" (ex-message e))))}}}

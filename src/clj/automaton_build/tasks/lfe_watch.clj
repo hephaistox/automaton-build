@@ -12,8 +12,7 @@
     :as _app-data}]
   (let [frontend (:frontend publication)]
     (if (not (build-frontend-compiler/is-frontend-project? app-dir))
-      (do (build-log/fatal "Is not a frontend project")
-          build-exit-codes/catch-all)
+      (do (build-log/fatal "Is not a frontend project") build-exit-codes/catch-all)
       (if (empty? frontend)
         (do
           (build-log/warn
@@ -22,8 +21,7 @@
         (let [{:keys [run-aliases]} frontend
               run-aliases-strs (mapv name run-aliases)]
           (if-not (build-frontend-compiler/fe-watch app-dir run-aliases-strs)
-            (do (build-log/fatal "Tests have failed")
-                build-exit-codes/catch-all)
+            (do (build-log/fatal "Tests have failed") build-exit-codes/catch-all)
             build-exit-codes/ok))))))
 
 (comment

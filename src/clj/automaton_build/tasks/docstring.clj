@@ -11,11 +11,6 @@
     :as app-data}]
   (let [app-dirs (->> (build-app-data/classpath-dirs app-data)
                       (filterv #(not (contains? exclude-dirs %))))]
-    (if (true? (build-docstring/docstring app-dir
-                                          app-name
-                                          app-dirs
-                                          title
-                                          description
-                                          dir))
+    (if (true? (build-docstring/docstring app-dir app-name app-dirs title description dir))
       build-exit-codes/ok
       build-exit-codes/catch-all)))
