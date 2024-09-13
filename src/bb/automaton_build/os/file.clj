@@ -40,9 +40,9 @@
 (defn write-file
   "Write the text file `filename` with its `content`.
 
-  Returns the filename if succesful, `nil` otherwise."
+  Returns the nil if succesful, map with :exception otherwise"
   [filename content]
-  (try (spit filename content) filename (catch Exception _ nil)))
+  (try (spit filename content) (catch Exception e {:exception e})))
 
 (defn read-file
   "Read the file named `filename`.
@@ -103,19 +103,20 @@
        (spit filename)))
 
 (defn delete-file
-  "Deletes `filename` if exists."
+  "Deletes `filename` and returns it.
+   If `filename` does not exist, returns nil."
   [filename]
   (when (is-existing-file? filename) (fs/delete filename) filename))
 
 (defn delete-dir
-  "Deletes `dir` if exists.
-   Returns nil if the `dir` does not exists, its unix path otherwise."
+  "Deletes `dir` and returns it.
+   If `dir` does not exist, returns nil"
   [dir]
-  (when (is-existing-dir? dir) (fs/delete-tree dir)))
+  (when (is-existing-dir? dir) (fs/delete-tree dir) dir))
 
 (defn delete-path
-  "Deletes `path` if exists.
-   Returns nil if the `dir` does not exists, its unix path otherwise."
+  "Deletes `path` and returns it.
+   Returns nil if the `path` does not exists."
   [path]
   (if (fs/directory? path) (delete-dir path) (delete-file path)))
 

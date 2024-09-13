@@ -60,7 +60,7 @@
                                     (build-tasks-report-aliases/scan-alias monorepo-project-map
                                                                            verbose))
             fw-status (when (get-in cli-opts [:options :reports])
-                        (build-tasks-reports-fw/report-monorepo monorepo-project-map))
+                        (build-tasks-reports-fw/report monorepo-project-map))
             linter-status (when (get-in cli-opts [:options :lint])
                             (build-linter/lint (:deps monorepo-project-map) verbose))
             commit-status (when commit-msg

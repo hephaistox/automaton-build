@@ -4,6 +4,7 @@
   (:require
    [automaton-build.code.cljs                 :as build-cljs]
    [automaton-build.code.formatter            :as build-formatter]
+   [automaton-build.code.vcs                  :as build-vcs]
    [automaton-build.echo.headers              :refer [build-writter
                                                       errorln
                                                       h1
@@ -18,6 +19,7 @@
                                                       print-writter]]
    [automaton-build.monorepo.apps             :as build-apps]
    [automaton-build.os.cli-opts               :as build-cli-opts]
+   [automaton-build.os.exit-codes             :as build-exit-codes]
    [automaton-build.project.map               :as build-project-map]
    [automaton-build.tasks.impl.commit         :as build-tasks-commit]
    [automaton-build.tasks.impl.headers.cmds   :refer [blocking-cmd success]]
@@ -30,12 +32,40 @@
 ;; Task parameters
 ;; ********************************************************************************
 (def cli-opts-data
-  (-> [["-c" "--commit-message COMMIT-MESSAGE" "Commit message"]]
-      (concat build-cli-opts/help-options build-cli-opts/verbose-options)))
+  (-> [["-c" "--commit-message COMMIT-MESSAGE" "Commit message"]
+       ["-f" "--tests-frontend" "Do not execute frontend tests" :default true :parse-fn not]
+       ["-d"
+        "--deps-alias ALIAS"
+        "Alias from deps-edn to"
+        :multi
+        true
+        :default
+        []
+        :update-fn
+        (fn [opt arg] (conj opt (keyword arg)))]
+       ["-b" "--tests-backend" "Do not execute frontend tests" :default true :parse-fn not]
+       ["-p" "--pretty-format" "Do not execute formatting" :default true :parse-fn not]
+       ["-a" "--aliases" "Do not execute aliases check" :default true :parse-fn not]
+       ["-w" "--words-forbidden" "Do not execute forbidden words check" :default true :parse-fn not]
+       ["-l" "--linter" "Do not execute linting" :default true :parse-fn not]]
+      (concat build-cli-opts/help-options
+              build-cli-opts/verbose-options
+              build-cli-opts/inverse-options)))
 
-(def cli-opts (build-cli-opts/parse-cli cli-opts-data))
+(def cli-opts
+  (-> (build-cli-opts/parse-cli cli-opts-data)
+      (build-cli-opts/inverse
+       [:pretty-format :aliases :words-forbidden :linter :tests-frontend :tests-backend])))
 
 (def verbose (get-in cli-opts [:options :verbose]))
+(def formatting? (get-in cli-opts [:options :pretty-format]))
+(def fw? (get-in cli-opts [:options :words-forbidden]))
+(def aliases? (get-in cli-opts [:options :aliases]))
+(def linter? (get-in cli-opts [:options :linter]))
+(def tests-b? (get-in cli-opts [:options :tests-backend]))
+(def tests-f? (get-in cli-opts [:options :tests-frontend]))
+(def commit-msg (get-in cli-opts [:options :commit-message]))
+(def deps-alias (get-in cli-opts [:options :deps-alias]))
 
 ;; ********************************************************************************
 ;; Helpers
@@ -86,19 +116,37 @@
 ;; ********************************************************************************
 ;; API
 ;; ********************************************************************************
+(defn clean-state
+  "Check if the state is clean"
+  [project-dir]
+  (h1 "Check clean state.")
+  (let [s (build-writter)
+        res (binding [*out* s]
+              (-> (build-vcs/clean-state)
+                  (blocking-cmd project-dir "" verbose)))]
+    (if (build-vcs/clean-state-analyze res)
+      (h1-valid "git state is clean.")
+      (h1-error "git state is not clean."))
+    (print-writter s)
+    (when verbose (normalln (:out res)))
+    (build-vcs/clean-state-analyze res)))
+
 (defn clj-test
   "Run clj test."
   [project-dir test-aliases]
-  (let [s (build-writter)]
-    (h1 "Test clj")
-    (let [clj-res (binding [*out* s]
-                    (-> ["clojure" (apply str "-M" test-aliases)]
-                        (blocking-cmd project-dir "Error during tests" verbose)))
-          clj-success (success clj-res)]
-      (if-not (success clj-res) (errorln "clj tests have failed.") (h1-valid "clj test ok."))
-      (print-writter s)
-      (when verbose (normalln (:out clj-res)))
-      clj-success)))
+  (h1 "Test clj")
+  (let [s (build-writter)
+        clj-res (map #(let [res (binding [*out* s]
+                                  (-> ["clojure" (str "-M" %)]
+                                      (blocking-cmd project-dir "Error during tests" verbose)))]
+                        (when verbose (normalln (:out res)))
+                        res)
+                     test-aliases)
+        clj-success (every? success clj-res)]
+    (if-not clj-success
+      (do (errorln "clj test have failed.") (print-writter s))
+      (h1-valid "clj test ok."))
+    clj-success))
 
 (defn cljs-test
   "Run cljs test"
@@ -122,53 +170,65 @@
     (when verbose (normalln (:out res)))
     (success res)))
 
-(defn run-monorepo
-  [test-aliases]
+(defn commit
+  [app-dir success?]
+  (build-tasks-commit/commit app-dir
+                             (if success? (str commit-msg "- wf-4 OK") (str commit-msg "- wf-4 KO"))
+                             verbose))
+
+(defn run*
+  [project-map test-aliases]
   (normalln "Create a mergeable commit.")
   (normalln)
-  (let [app-dir ""
-        monorepo-name :default
-        commit-msg (get-in cli-opts [:options :commit-message])
-        monorepo-project-map (-> (build-project-map/create-project-map app-dir)
-                                 build-project-map/add-project-config
-                                 build-project-map/add-deps-edn
-                                 (build-apps/add-monorepo-subprojects monorepo-name)
-                                 (build-apps/apply-to-subprojects
+  (let [app-dir (:app-dir project-map)
+        test-aliases (if (and deps-alias (not-empty deps-alias)) deps-alias test-aliases)
+        status-map (merge
+                    (when fw? {:forbidden-words-check (build-tasks-reports-fw/report project-map)})
+                    (when formatting? {:formatting (format-files app-dir)})
+                    (when aliases?
+                      {:aliases-check (build-tasks-report-aliases/scan-alias project-map verbose)})
+                    (when linter? {:linting (build-linter/lint (:deps project-map) verbose)})
+                    (when tests-b? {:clj-tests-check (clj-test app-dir test-aliases)})
+                    (when tests-f? {:cljs-tests-check (cljs-test app-dir)})
+                    {:clean-state (clean-state app-dir)})
+        status (->> status-map
+                    vals
+                    (every? true?))]
+    (normalln)
+    (normalln)
+    (when commit-msg (commit app-dir status))
+    (if (true? status)
+      build-exit-codes/ok
+      (do (h1 "Synthesis:")
+          (doseq [[k v] status-map]
+            (if (true? v) (h1-valid! (name k) " is ok.") (h1-error! (name k) " has failed.")))
+          build-exit-codes/catch-all))))
+
+(defn run
+  ([] (run []))
+  ([test-aliases]
+   (let [project-map (-> (build-project-map/create-project-map ".")
+                         build-project-map/add-project-config
+                         build-project-map/add-deps-edn)]
+     (run* project-map test-aliases))))
+
+(defn run-monorepo
+  ([] (run-monorepo []))
+  ([test-aliases]
+   (let [monorepo-project-map (-> (build-project-map/create-project-map "")
                                   build-project-map/add-project-config
-                                  build-project-map/add-deps-edn))
-        format-status (format-files app-dir)
-        report-aliases-status (build-tasks-report-aliases/scan-alias monorepo-project-map verbose)
-        fw-status (build-tasks-reports-fw/report-monorepo monorepo-project-map)
-        linter-status (build-linter/lint (:deps monorepo-project-map) verbose)
-        clj-status (clj-test app-dir test-aliases)
-        cljs-status (cljs-test app-dir)
-        commit-status (when commit-msg
-                        (build-tasks-commit/commit (:dir monorepo-project-map)
-                                                   (str commit-msg
-                                                        (if (->> [format-status
-                                                                  report-aliases-status
-                                                                  fw-status
-                                                                  linter-status
-                                                                  clj-status
-                                                                  cljs-status]
-                                                                 (remove nil?)
-                                                                 (every? true?))
-                                                          "- wf-4 OK"
-                                                          "- wf-4 KO"))
-                                                   verbose))]
-    (normalln)
-    (normalln)
-    (h1-valid! "Synthesis:")
-    (if format-status (h1-valid! "Formatting is ok.") (h1-error! "Formatting has failed."))
-    (build-tasks-report-aliases/synthesis report-aliases-status)
-    (build-tasks-reports-fw/synthesis fw-status)
-    (build-linter/synthesis linter-status)
-    (if clj-status (h1-valid! "Clj test ok.") (h1-error! "Clj test has failed."))
-    (if cljs-status (h1-valid! "Cljs test ok.") (h1-error! "Cljs test has failed."))
-    (and format-status
-         report-aliases-status
-         fw-status
-         linter-status
-         clj-status
-         cljs-status
-         commit-status)))
+                                  build-project-map/add-deps-edn
+                                  (build-apps/add-monorepo-subprojects :default)
+                                  (build-apps/apply-to-subprojects
+                                   build-project-map/add-project-config
+                                   build-project-map/add-deps-edn))]
+     (run* monorepo-project-map test-aliases))))
+
+
+(comment
+  (-> (build-project-map/create-project-map "")
+      build-project-map/add-project-config
+      (build-apps/add-monorepo-subprojects :default)
+      (build-apps/apply-to-subprojects build-project-map/add-project-config))
+  ;
+)

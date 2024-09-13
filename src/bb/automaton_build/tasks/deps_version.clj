@@ -141,7 +141,10 @@
                                   build-project-map/add-project-config))]
     (if (get-in monorepo-project-map [:project-config-filedesc :invalid?])
       (h1-error! "No project file found for monorepo.")
-      (do
-        (doseq [project (:subprojects monorepo-project-map)] (run* project))
-        (normalln
-         "[temporary] to update also files in the monorepo root, run `bb heph-task generate-files`")))))
+      (let [projects (:subprojects monorepo-project-map)]
+        (if (empty? projects)
+          (h1-error! "No monorepo apps has been found")
+          (do
+            (doseq [project projects] (run* project))
+            (normalln
+             "[temporary] to update also files in the monorepo root, run `bb heph-task generate-files`")))))))

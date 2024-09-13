@@ -4,7 +4,8 @@ jobs:
   clojure:
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest] # , windows-latest There is a path issue
+        os: [ubuntu-latest] # , windows-latest There is a path issue
+                # macOS-latest is removed to save github costs
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -30,5 +31,6 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
       - name: Test
-        run: bb heph-task gha
+        working-directory: clojure/
+        run: bb wf-4 -ibawl -d :common-test
         
