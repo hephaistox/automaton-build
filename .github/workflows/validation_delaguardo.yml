@@ -31,6 +31,4 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
       - name: Test
-        working-directory: clojure/
         run: bb wf-4 -ibawl -d :common-test
-        
