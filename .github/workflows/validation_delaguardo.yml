@@ -1,5 +1,9 @@
 name: Commit validation - Delaguardo flavor
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - la
 jobs:
   clojure:
     strategy:
