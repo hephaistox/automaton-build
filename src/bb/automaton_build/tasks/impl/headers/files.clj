@@ -78,10 +78,18 @@
   ([root-dir filters] (build-file/search-files root-dir filters))
   ([root-dir filters options] (build-file/search-files root-dir filters options)))
 
+(defn- dir
+  "Returns the path as a string, whatever `path` is a `URL` or a `string`."
+  [path]
+  (if (string? path) path (.getFile path)))
+
 (defn copy-files
   "Copy files from `src-dir` to `dst-dir` applying the `filters`."
   [src-dir dst-dir filters verbose options]
-  (let [copy-actions (-> src-dir
+  (let [src-dir (dir src-dir)
+        dst-dir (dir dst-dir)
+        copy-actions (-> src-dir
+                         str
                          (build-file/search-files filters)
                          build-file/file-rich-list
                          (build-file/copy-actions src-dir dst-dir options))]

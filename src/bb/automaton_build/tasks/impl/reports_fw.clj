@@ -17,18 +17,18 @@
 ;; ********************************************************************************
 ;; Helpers
 ;; ********************************************************************************
-(defn- project-files
-  "Returns project file descriptions found in the project in `project-dir`."
-  [deps-edn-filedesc]
-  (->> deps-edn-filedesc
-       build-code-files/project-dirs
-       build-code-files/project-files
-       (map build-file/read-file)))
+
+(def report-file-path "docs/reports/fw.edn")
+
+(defn project-forbidden-words
+  [project-map]
+  (get-in project-map [:project-config-filedesc :edn :code :forbidden-words]))
 
 (defn- generate-report-data
   "Returns the report data for the matches of `forbidden-words` in the file in `file-descs`."
-  [file-descs forbidden-words]
-  (let [regexp (build-code-fw/coll-to-alternate-in-regexp forbidden-words)]
+  [filenames forbidden-words]
+  (let [file-descs (map build-file/read-file filenames)
+        regexp (build-code-fw/coll-to-alternate-in-regexp forbidden-words)]
     (->> file-descs
          (map (fn [{:keys [raw-content filename]
                     :as _file-desc}]
@@ -36,37 +36,30 @@
                  :res (build-code-fw/forbidden-words-matches regexp raw-content)}))
          (filterv (comp not empty? :res)))))
 
-(def report-file-path "docs/reports/fw.edn")
-
 ;; ********************************************************************************
 ;; API
 ;; ********************************************************************************
+
+(defn project-report
+  [project-map]
+  (let [forbidden-words (project-forbidden-words project-map)
+        project-filenames (->> project-map
+                               :deps
+                               ((juxt :dir :edn))
+                               (apply build-code-files/project-dirs)
+                               build-code-files/project-files)]
+    (generate-report-data project-filenames forbidden-words)))
+
 (defn report
   "Reports all forbidden words found in the files in the `file-descs`, they're in the report if the file contains `forbidden-words`.
 
   Returns `true` if ok."
-  [file-descs forbidden-words]
+  [project-map]
   (h1 "Scan for forbidden words")
-  (let [res (generate-report-data file-descs forbidden-words)]
-    (build-tasks-reports/save-report! res report-file-path)
-    (if (empty? res)
-      (h1-valid "No forbidden words found.")
-      (h1-error "Some forbidden words have been found."))
-    (empty? res)))
-
-(defn report-monorepo
-  [{:keys [subprojects]
-    :as _monorepo-project-map}]
-  (h1 "Scan for forbidden words")
-  (let [res (->> subprojects
-                 (mapcat (fn [subproject]
-                           (let [forbidden-words
-                                 (get-in subproject
-                                         [:project-config-filedesc :edn :code :forbidden-words])
-                                 project-file-descs (->> subproject
-                                                         :deps
-                                                         project-files)]
-                             (generate-report-data project-file-descs forbidden-words)))))]
+  (let [res (if-let [subprojects (:subprojects project-map)]
+              (->> subprojects
+                   (mapcat project-report))
+              (project-report project-map))]
     (if (empty? res)
       (h1-valid "No forbidden words found.")
       (h1-error "Some forbidden words have been found."))

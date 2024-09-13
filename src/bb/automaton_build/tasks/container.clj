@@ -211,12 +211,11 @@
       (let [workflow-file (build-gh-yml/workflow-yml app-dir workflow)
             updated-wf (-> workflow-file
                            build-file/read-file
-                           (build-gh-yml/update-gha-version container-name version))]
-        (if-not (build-file/write-file workflow-file updated-wf)
-          (h2-error "Can't write update yaml in" workflow-file)
-          (h2-valid "Updated container" container-name
-                    "in workflow" workflow
-                    "to version " version))
+                           (build-gh-yml/update-gha-version container-name version))
+            write-workflow-file (build-file/write-file workflow-file updated-wf)]
+        (if (nil? write-workflow-file)
+          (h2-valid "Updated container" container-name "in workflow" workflow "to version " version)
+          (h2-error "Can't write update yaml in " workflow-file " due to " write-workflow-file))
         (when verbose? (normalln "file:" (uri-str workflow-file)))))))
 
 (defn- container-url

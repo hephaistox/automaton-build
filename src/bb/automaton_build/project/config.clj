@@ -9,6 +9,10 @@
   "Project configuration schema"
   [:map {:closed true}
    [:app-name :string]
+   [:frontend {:optional true}
+    [:map
+     [:run-aliases {:optional true}
+      [:vector :keyword]]]]
    [:code {:optional true}
     [:map {:closed true}
      [:forbidden-words [:vector :string]]]]
@@ -31,7 +35,9 @@
       [:apps
        [:vector
         [:map {:closed true}
-         [:app-dir :string]]]]]]]])
+         [:app-dir :string]]]]]]]
+   [:publication {:optional true}
+    [:map [:as-lib :symbol]]]])
 
 (def project-cfg-filename "project.edn")
 

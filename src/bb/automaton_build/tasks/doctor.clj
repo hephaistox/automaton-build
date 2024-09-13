@@ -89,11 +89,11 @@
      group-id (-> (build-user/group-id-cmd)
                   (blocking-cmd "" "" false)
                   build-user/id-analyze)
-     mermaid-filename
-     (->
-       (build-file/create-temp-file)
-       (build-file/write-file
-        "erDiagram\nCUSTOMER ||--o{ ORDER : places\nORDER ||--|{ LINE-ITEM : contains\nCUSTOMER }|..|{ DELIVERY-ADDRESS : uses"))
+     mermaid-filename (build-file/create-temp-file)
+     _write-mermaid-file
+     (build-file/write-file
+      mermaid-filename
+      "erDiagram\nCUSTOMER ||--o{ ORDER : places\nORDER ||--|{ LINE-ITEM : contains\nCUSTOMER }|..|{ DELIVERY-ADDRESS : uses")
      tmp-dir (build-file/create-temp-dir)
      {:keys [output-file cmd]}
      (build-mermaid-bb/mermaid-build-image-cmd mermaid-filename user-id group-id tmp-dir)

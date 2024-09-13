@@ -7,21 +7,21 @@
 
 (defn project-dirs
   "Returns project directories path (as strings), as defined in the `deps.edn` file - whatever the alias."
-  [deps-edn-filedesc]
-  (let [root-dir (:dir deps-edn-filedesc)
-        deps (:edn deps-edn-filedesc)]
-    (->> deps
-         build-deps/get-src
-         (mapv (fn [file] (build-filename/create-dir-path root-dir file)))
-         (keep build-file/is-existing-dir?)
-         (mapv str)
-         set)))
+  [deps-edn-dir deps-edn]
+  (->> deps-edn
+       build-deps/get-src
+       (mapv (fn [file] (build-filename/create-dir-path deps-edn-dir file)))
+       (keep build-file/is-existing-dir?)
+       (mapv str)
+       set))
 
 (defn project-files
-  "Based on a `project-dirs`, returns the filenames."
-  [project-dirs]
-  (->> project-dirs
-       (mapcat (fn [project-dir]
-                 (-> project-dir
-                     (build-file/matching-files "**{.clj,.cljc,.cljs,.edn}"))))
-       (mapv str)))
+  "Based on a `project-dirs`, returns the filenames matching `files-extensions`.
+   `files-extensions` defaults to all files with extensions: .clj/cljc/.cljs/.edn"
+  ([project-dirs files-extensions]
+   (->> project-dirs
+        (mapcat (fn [project-dir]
+                  (-> project-dir
+                      (build-file/matching-files files-extensions))))
+        (mapv str)))
+  ([project-dirs] (project-files project-dirs "**{.clj,.cljc,.cljs,.edn}")))
