@@ -1,5 +1,9 @@
 name: Commit validation - Delaguardo flavor
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - la
 jobs:
   clojure:
     strategy:
@@ -31,5 +35,4 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
       - name: Test
-        run: bb heph-task gha
-        
+        run: bb wf-4 -ibawl -d :common-test

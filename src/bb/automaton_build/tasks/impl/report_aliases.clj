@@ -12,18 +12,21 @@
                                                h2-error!
                                                h2-valid!
                                                normalln
-                                               print-writter]]
+                                               print-writter
+                                               uri-str]]
    [automaton-build.os.file            :as build-file]
    [automaton-build.tasks.impl.reports :as build-tasks-reports]
-   [clojure.set                        :as set]))
+   [clojure.set                        :as set]
+   [clojure.string                     :as str]))
 
 (defn project-files
   "Returns project file descriptions found in the project in `project-dir`."
   [deps-edn-filedesc]
-  (->> deps-edn-filedesc
-       build-code-files/project-dirs
-       build-code-files/project-files
-       (map build-file/read-file)))
+  (let [deps-edn-dir (:dir deps-edn-filedesc)
+        deps (:edn deps-edn-filedesc)]
+    (->> (build-code-files/project-dirs deps-edn-dir deps)
+         build-code-files/project-files
+         (map build-file/read-file))))
 
 ;; ********************************************************************************
 ;; Helpers
@@ -36,9 +39,16 @@
   Return `matches`, a list of map with keys `:filename`, `:ns` and `:alias` for all matches found in the content."
   [project-file-descs]
   (->> project-file-descs
-       (mapcat (fn [project-file-desc]
+       (mapcat (fn [{:keys [raw-content]
+                     :as project-file-desc}]
                  (->> (build-code-reports/search-aliases project-file-desc)
-                      (remove (fn [{:keys [alias]}] (contains? #{"sut" nil} alias))))))
+                      (map (fn [{:keys [alias]
+                                 :as alias-map}]
+                             (cond-> alias-map
+                               (= "sut" alias) (assoc :sut-alias true :skip true)
+                               (nil? alias) (assoc :nil-alias true :skip true)
+                               (build-code-reports/is-ignored-file? raw-content)
+                               (assoc :ignored-file true :skip true)))))))
        vec))
 
 ;; ********************************************************************************
@@ -52,30 +62,39 @@
   Returns `true` if all aliases are consistent."
   [project-file-descs verbose]
   (h1 "Search for alias inconsistencies.")
-  (let [cleaned-project-file-descs (remove (comp build-code-reports/is-ignored-file? :raw-content)
-                                           project-file-descs)
-        s (build-writter)
-        res (binding [*out* s]
-              (let [matches (alias-list cleaned-project-file-descs)
-                    clj-files-wo-aliases (set/difference (set (mapv :filename
-                                                                    cleaned-project-file-descs))
-                                                         (set (mapv :filename matches)))]
-                (when verbose
-                  (normalln "found"
-                            (count project-file-descs)
-                            "files,"
-                            (- (count project-file-descs) (count cleaned-project-file-descs))
-                            "ignored and found"
-                            (count matches)
-                            "matches, "
-                            (count clj-files-wo-aliases)
-                            "files with no alias."))
-                (and (-> (build-code-reports/alias-inconsistent-ns matches)
-                         (build-tasks-reports/save-report!
-                          "docs/reports/ns-inconsistent-alias.edn"))
-                     (-> (build-code-reports/ns-inconsistent-aliases matches)
-                         (build-tasks-reports/save-report!
-                          "docs/reports/alias-inconsistent-ns.edn")))))]
+  (let [s (build-writter)
+        res
+        (binding [*out* s]
+          (let [matches (alias-list project-file-descs)
+                non-skipped-matches (remove :skip matches)
+                clj-files-wo-aliases (set/difference (set (mapv :filename project-file-descs))
+                                                     (set (mapv :filename non-skipped-matches)))]
+            (when verbose
+              (normalln "found"
+                        (count project-file-descs)
+                        "files,"
+                        (count matches)
+                        "matches, with "
+                        (count (filter :skip matches))
+                        "ignored (sut:"
+                        (count (filter :sut-alias matches))
+                        ", nil:"
+                        (count (filter :nil-alias matches))
+                        ", ignored:"
+                        (count (filter :ignored-file matches))
+                        ") and "
+                        (count clj-files-wo-aliases)
+                        "files with no alias.")
+              (normalln "ignored files are:"
+                        (vec (distinct (map :filename (filter :ignored-file matches)))))
+              (let [filename (build-file/create-temp-file "matches.edn")]
+                (build-file/write-file filename (str/replace (pr-str matches) #"}" "}\n"))
+                (normalln "Find details of matches here:" (uri-str filename))))
+            (and (-> (build-code-reports/alias-inconsistent-ns clj-files-wo-aliases)
+                     (build-tasks-reports/save-report! "docs/reports/ns-inconsistent-alias.edn"))
+                 (-> (build-code-reports/ns-inconsistent-aliases clj-files-wo-aliases)
+                     (build-tasks-reports/save-report!
+                      "docs/reports/alias-inconsistent-ns.edn")))))]
     (if res (h1-valid "Alias are consistent.") (h1-error "Alias inconsistency found."))
     (print-writter s)
     res))
