@@ -102,6 +102,7 @@
              (build-commands/force-dirs dir-to-push)
              (chain-cmds "Impossible to commit" false)
              build-commands/first-failing)]
+     (prn "res: " res)
      (case exit
        (1 0 nil) {:status :success}
        :else {:status :failed
