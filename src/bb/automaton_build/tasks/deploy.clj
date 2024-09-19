@@ -262,7 +262,10 @@
          :msg "Couldn't ensure that there is no cache"})
       {:status :skipped
        :data {:repo repo
-              :target-branch target-branch}
+              :target-branch target-branch
+              :branch-env target-branch-env
+              :app app
+              :app-config (get-in app [:project-config-filedesc :edn])}
        :msg (if (and repo target-branch) "No changes found" "Missing parameters")})))
 
 (defn run-monorepo
@@ -313,12 +316,24 @@
                       subapps)]
             (if-not (every? #(= :success (:status %)) push-current-branch-subapps)
               (do (h1-error! "Local push failed") 1)
-              (let [deploy-res (mapv #(-> (deploy % env current-branch)
+              (let [deploy-res (mapv #(-> %
+                                          (deploy env current-branch)
                                           (assoc :app-name (:app-name %)))
                                      subapps)]
                 deploy-res))))))))
 
 (comment
   (run-monorepo)
+  (-> (build-project-map/create-project-map "")
+      build-project-map/add-project-config
+      (build-apps/add-monorepo-subprojects :default)
+      (build-apps/apply-to-subprojects build-project-map/add-deps-edn
+                                       build-project-map/add-project-config)
+      :subprojects
+      first
+      :project-config-filedesc
+      :edn
+      :publication
+      :la-branch)
   ;
 )
