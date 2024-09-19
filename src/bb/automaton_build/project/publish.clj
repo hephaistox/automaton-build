@@ -8,15 +8,14 @@
 
 (defn publish-clojars
   "Publish jar to clojars"
-  [jar-path pom-path]
-  (build-commands/blocking-cmd (build-deploy-jar/deploy jar-path pom-path) "")
+  [jar-path app-dir]
+  (build-commands/blocking-cmd (build-deploy-jar/deploy jar-path) app-dir)
   #_(build-deploy-jar/deploy jar-path
                              pom-path
                              {"clojars"
                               {:url "https://clojars.org/repo"
                                :username (build-project-conf/read-param [:clojars-username])
-                               :password (build-project-conf/read-param [:clojars-password])}})
-  true)
+                               :password (build-project-conf/read-param [:clojars-password])}}))
 
 (defn publish-clever-cloud
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
