@@ -324,16 +324,5 @@
 
 (comment
   (run-monorepo)
-  (-> (build-project-map/create-project-map "")
-      build-project-map/add-project-config
-      (build-apps/add-monorepo-subprojects :default)
-      (build-apps/apply-to-subprojects build-project-map/add-deps-edn
-                                       build-project-map/add-project-config)
-      :subprojects
-      first
-      :project-config-filedesc
-      :edn
-      :publication
-      :la-branch)
   ;
 )
