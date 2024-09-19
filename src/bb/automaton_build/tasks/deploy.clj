@@ -357,3 +357,6 @@
                             (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
                   (let [push-res (mapv #(publish-apps %) deploy-res)])
                   (h1-error! "Compilation failed: " deploy-res))))))))))
+
+(comment
+  (run-monorepo))
