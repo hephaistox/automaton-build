@@ -7,8 +7,8 @@
    * `jar-path` string
    * `pom-path` string
    * `repository` map consisting of key being an id for where to deploy and value being required data for deploy (e.g. map with :url, :username, :password) "
-  [jar-path pom-path]
-  ["clojure" "-X:deploy" ":artifact" jar-path ":pom-file" pom-path]
+  [jar-path]
+  ["clojure" "-X:deploy" ":artifact" jar-path]
   #_(deps-deploy/deploy {:installer :remote
                          :artifact jar-path
                          :sign-release? true

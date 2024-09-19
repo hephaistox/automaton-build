@@ -218,12 +218,7 @@
 
 (defn publish-clojars
   [jar-path app-dir]
-  (prn "jar-path: " jar-path)
-  (prn "pom-path: " (build-project-pom-xml/pom-xml app-dir))
-  #_(let [res (build-project-publish/publish-clojars jar-path
-                                                     (build-project-pom-xml/pom-xml app-dir))]
-      (prn res)
-      res))
+  (let [res (build-project-publish/publish-clojars jar-path app-dir)] res))
 
 (defn publish-clever-cloud
   [clever-uri app-dir env]
@@ -245,10 +240,7 @@
    3. Deploy app
 
   It's done currently not as a workflow, only because workflow can't be used in another workflow and we have a logic we want to preserve here"
-  [{:keys [repo target-branch]
-    :as app}
-   env
-   current-branch]
+  [app env current-branch repo target-branch]
   (if (and repo
            target-branch
            (build-project-versioning/correct-environment? (:app-dir app) env)
@@ -269,12 +261,12 @@
 
 (defn publish-apps
   [{:keys
-    [app-name app-dir repo target-branch general publish-clojars? publish-cc? jar-res env cc-uri]}]
+    [app-name app-dir repo target-branch general publish-clojars? publish-cc? jar env cc-uri]}]
   (if (= :success (:status general))
     (when
       (push-base-branch app-name app-dir repo target-branch (build-version/current-version app-dir))
-      (when publish-clojars? (publish-clojars (:jar-path jar-res) app-dir))
-      (when publish-cc? (publish-clever-cloud cc-uri app-dir env)))
+      (when publish-cc? (publish-clever-cloud cc-uri app-dir env))
+      (when publish-clojars? (publish-clojars (:jar-path jar) app-dir)))
     (normalln app-name " publish skipped")))
 
 (defn run-monorepo
@@ -333,9 +325,16 @@
                                      (= :la env) :cc-uri-la
                                      (= :production env) :cc-uri-production
                                      :else :imnotthere)
-                    deploy-res
-                    (mapv
-                     #(-> %
+                    deploy-res []
+                    #_(mapv
+                       #(->
+                          %
+                          (deploy env
+                                  current-branch
+                                  (get-in % [:project-config-filedesc :edn :publication :repo-url])
+                                  (get-in
+                                   %
+                                   [:project-config-filedesc :edn :publication target-branch-env]))
                           (assoc
                            :cc-uri
                            (get-in % [:project-config-filedesc :edn :publication clever-uri-env]))
@@ -350,9 +349,8 @@
                                  (get-in
                                   %
                                   [:project-config-filedesc :edn :publication target-branch-env]))
-                          (deploy env current-branch)
                           (assoc :app-name (:app-name %)))
-                     subapps)]
+                       subapps)]
                 deploy-res
                 #_(if (every? (fn [[_ {:keys [status]}]]
                                 (or (= status :skipped) (= status :success)))
@@ -361,6 +359,67 @@
                     (h1-error! "Compilation failed: " deploy-res))))))))))
 
 (comment
-  (run-monorepo)
+  (def subapps
+    (-> (build-project-map/create-project-map "")
+        build-project-map/add-project-config
+        (build-apps/add-monorepo-subprojects :default)
+        (build-apps/apply-to-subprojects build-project-map/add-deps-edn
+                                         build-project-map/add-project-config)
+        :subprojects))
+  (def env :la)
+  (def current-branch (build-headers-vcs/current-branch ""))
+  (def target-branch-env
+    (cond
+      (= :la env) :la-branch
+      (= :production env) :base-branch
+      :else :imnothere))
+  (def clever-uri-env
+    (cond
+      (= :la env) :cc-uri-la
+      (= :production env) :cc-uri-production
+      :else :imnotthere))
+  (mapv #(-> %
+             (deploy env
+                     current-branch
+                     (get-in % [:project-config-filedesc :edn :publication :repo-url])
+                     (get-in % [:project-config-filedesc :edn :publication target-branch-env]))
+             (assoc :cc-uri (get-in % [:project-config-filedesc :edn :publication clever-uri-env]))
+             (assoc :env env)
+             (assoc :publish-clojars?
+                    (get-in % [:project-config-filedesc :edn :publication :clojars]))
+             (assoc :publish-cc? (get-in % [:project-config-filedesc :edn :publication :cc]))
+             (assoc :repo (get-in % [:project-config-filedesc :edn :publication :repo-url]))
+             (assoc :target-branch
+                    (get-in % [:project-config-filedesc :edn :publication target-branch-env]))
+             (assoc :app-name (:app-name %)))
+        subapps)
+  (def deploy-res
+    [{:shadow-cljs {:status :skipped}
+      :jar
+      {:status :success
+       :jar-path
+       "/var/folders/bm/ht7v0qs123l47q1thzpy9hn80000gn/T/8ced1d54-1555-4d52-9e79-bbbc32fbb5514083203275859471275/target/la/automaton-build.jar"}
+      :general {:status :success}
+      :publish-cc? nil
+      :css {:status :skipped}
+      :app-name "automaton-build"
+      :env :la
+      :cc-uri nil
+      :app-dir
+      "/var/folders/bm/ht7v0qs123l47q1thzpy9hn80000gn/T/8ced1d54-1555-4d52-9e79-bbbc32fbb5514083203275859471275/"
+      :class-dir
+      "/var/folders/bm/ht7v0qs123l47q1thzpy9hn80000gn/T/8ced1d54-1555-4d52-9e79-bbbc32fbb5514083203275859471275/target/la/class"
+      :uber-jar {:status :skipped}
+      :publish-clojars? true
+      :repo "git@github.com:hephaistox/automaton-build.git"
+      :target-branch "la"}])
+  (mapv #(publish-apps %) deploy-res)
+  ;; [{:cmd-str
+  ;;      "clojure -X:deploy :artifact /var/folders/bm/ht7v0qs123l47q1thzpy9hn80000gn/T/8ced1d54-1555-4d52-9e79-bbbc32fbb5514083203275859471275/target/la/automaton-build.jar :pom-file /var/folders/bm/ht7v0qs123l47q1thzpy9hn80000gn/T/8ced1d54-1555-4d52-9e79-bbbc32fbb5514083203275859471275/pom.xml",
+  ;;      :out "",
+  ;;      :dir "/Users/Mati/Projects/hephaistox/monorepo/clojure/.",
+  ;;      :exit 1,
+  ;;      :err
+  ;;      "Unreadable arg: \"/var/folders/bm/ht7v0qs123l47q1thzpy9hn80000gn/T/8ced1d54-1555-4d52-9e79-bbbc32fbb5514083203275859471275/target/la/automaton-build.jar\"\n"}]
   ;
 )
