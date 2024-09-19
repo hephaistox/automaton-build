@@ -30,7 +30,8 @@
                        :sign-releases? true}
            :exec-fn deps-deploy.deps-deploy/deploy
            :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
-                                             :mvn/version "0.2.2"}}}
+                                             :git/url "https://github.com/Kaspazza/deps-deploy"
+                                             :sha "7b4b72d124f788c9e4a876e0ba55899fd9091f1d"}}}
   :env-development-repl
   {:extra-deps {djblue/portal {:mvn/version "0.57.2"}
                 org.clojure/core.async {:mvn/version "1.6.681"}}
