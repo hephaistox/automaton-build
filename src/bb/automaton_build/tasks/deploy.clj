@@ -100,7 +100,7 @@
              build-vcs/commit-chain-cmd
              (concat [[(build-vcs/push-cmd (build-headers-vcs/current-branch dir-to-push) force?)]])
              (build-commands/force-dirs dir-to-push)
-             (chain-cmds "Impossible to commit" false)
+             build-commands/chain-cmds
              build-commands/first-failing)]
      (prn "res: " res)
      (normalln "hello")
