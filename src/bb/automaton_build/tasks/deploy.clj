@@ -263,9 +263,8 @@
       {:status :skipped
        :data {:repo repo
               :target-branch target-branch
-              :branch-env target-branch-env
-              :app app
-              :app-config (get-in app [:project-config-filedesc :edn])}
+              :env env
+              :branch-env target-branch-env}
        :msg (if (and repo target-branch) "No changes found" "Missing parameters")})))
 
 (defn run-monorepo
