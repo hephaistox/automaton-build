@@ -353,10 +353,12 @@
                           (deploy env current-branch)
                           (assoc :app-name (:app-name %)))
                      subapps)]
-                (if (every? (fn [[_ {:keys [status]}]] (or (= status :skipped) (= status :success)))
-                            (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
-                  (let [push-res (mapv #(publish-apps %) deploy-res)] push-res)
-                  (h1-error! "Compilation failed: " deploy-res))))))))))
+                deploy-res
+                #_(if (every? (fn [[_ {:keys [status]}]]
+                                (or (= status :skipped) (= status :success)))
+                              (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
+                    (let [push-res (mapv #(publish-apps %) deploy-res)] push-res)
+                    (h1-error! "Compilation failed: " deploy-res))))))))))
 
 (comment
   (run-monorepo)
