@@ -23,7 +23,7 @@
                                            :sha "9d36f36ff541dac680a05010e4348c744333f191"}
                 org.clojure/tools.namespace {:mvn/version "1.5.0"}
                 org.clojure/tools.reader {:mvn/version "1.5.0"}}
-   :extra-paths ["test/unit/clj" "test/unit/bb" "test/unit/resources" "test/la/clj" "test/la/bb"]
+   :extra-paths ["test/unit/bb" "test/unit/resources" "test/la/bb"]
    :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn" "-Dhephaistox-in-test=true"]
    :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/unit" "-d" "test/la"]}
   :env-development-repl
@@ -59,4 +59,4 @@
                              :mvn/version "0.2.2"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :ns-default automaton-build.core
- :paths ["src/clj" "src/bb"]}
+ :paths ["src/bb"]}

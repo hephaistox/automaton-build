@@ -37,15 +37,26 @@
 (defn update-dep!
   "Update single `dependency`"
   [dependency]
-  (-> ["clojure" "-M:antq" "--upgrade" "--force" "--focus=" (str (:name dependency))]
-      (blocking-cmd (build-filename/extract-path (:path dependency)))))
+  (-> ["clojure"
+       "-M:antq"
+       "--upgrade"
+       "--force"
+       "--no-changes"
+       "--focus="
+       (str (:name dependency) (when (:version dependency) (str "@" (:version dependency))))]
+      (blocking-cmd (:path dependency))))
+
 
 (defn update-deps!
   "Update all `deps` in `dir`"
-  [dir deps]
-  (let [res (cond-> ["clojure" "-M:antq" "--upgrade" "--no-changes" "--force"]
-              (and deps (not-empty deps)) (concat (mapv #(str "--focus=" (:name %)) deps))
-              true (echo-cmds/blocking-cmd dir "Antq update failed" false))]
-    (when-not (= 0 (:exit res))
-      {:error (:err res)
-       :data res})))
+  ([dir target-dir deps]
+   (let [res (cond-> ["clojure" "-M:antq" "--upgrade" "--no-changes" "--force"]
+               (and deps (not-empty deps))
+               (concat (mapv #(str "--focus=" (:name %) (when (:version %) (str "@" (:version %))))
+                             deps))
+               (some? target-dir) (concat ["-d" target-dir])
+               true (echo-cmds/blocking-cmd dir "Antq update failed" false))]
+     (when-not (= 0 (:exit res))
+       {:error (:err res)
+        :data res})))
+  ([dir deps] (update-deps! dir nil deps)))
