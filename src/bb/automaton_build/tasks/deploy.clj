@@ -243,14 +243,12 @@
   It's done currently not as a workflow, only because workflow can't be used in another workflow and we have a logic we want to preserve here"
   [app env current-branch]
   (let [repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
-        target-branch (get-in app
-                              [:project-config-filedesc
-                               :edn
-                               :publication
-                               (cond
-                                 (= :la env) :la-branch
-                                 (= :production env) :base-branch
-                                 :else :imnothere)])
+        target-branch-env (cond
+                            (= :la env) :la-branch
+                            (= :production env) :base-branch
+                            :else :imnothere)
+        _ (prn "target-branch-env: " target-branch-env)
+        target-branch (get-in app [:project-config-filedesc :edn :publication target-branch-env])
         app-dir (:app-dir app)]
     (if (and repo
              target-branch
@@ -323,5 +321,41 @@
 
 (comment
   (run-monorepo)
+  ;; [{:status :skipped,
+  ;;      :data
+  ;;      {:repo "git@github.com:hephaistox/automaton-build.git", :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "automaton-build"}
+  ;;     {:status :skipped,
+  ;;      :data
+  ;;      {:repo "git@github.com:hephaistox/automaton-core.git", :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "automaton-core"}
+  ;;     {:status :skipped,
+  ;;      :data
+  ;;      {:repo "git@github.com:hephaistox/automaton-web.git", :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "automaton-web"}
+  ;;     {:status :skipped,
+  ;;      :data
+  ;;      {:repo "git@github.com:hephaistox/automaton-web-dev.git",
+  ;;       :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "automaton-web-dev"}
+  ;;     {:status :skipped,
+  ;;      :data
+  ;;      {:repo "git@github.com:hephaistox/automaton-web.git", :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "automaton-optimization"}
+  ;;     {:status :skipped,
+  ;;      :data
+  ;;      {:repo "git@github.com:hephaistox/automaton-simulation-de.git",
+  ;;       :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "automaton-simulation-de"}
+  ;;     {:status :skipped,
+  ;;      :data {:repo "git@github.com:hephaistox/landing.git", :target-branch nil},
+  ;;      :msg "Missing parameters",
+  ;;      :app-name "landing"}]
   ;
 )
