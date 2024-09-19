@@ -10,7 +10,7 @@
 (defn shadow-cljs
   [app-dir deploy-alias]
   (-> [[(build-cljs/install-cmd)]]
-      (concat [[(build-cljs/cljs-compile-cmd [deploy-alias])]])
+      (concat [[(build-cljs/cljs-compile-release-cmd deploy-alias)]])
       (build-commands/force-dirs app-dir)
       build-commands/chain-cmds
       build-commands/first-failing))

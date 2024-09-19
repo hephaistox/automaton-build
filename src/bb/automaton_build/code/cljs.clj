@@ -17,6 +17,11 @@
   [builds]
   (reduce conj ["npx" "shadow-cljs" "compile"] builds))
 
+(defn cljs-compile-release-cmd
+  "Command to compile the `builds` (vector of strings)."
+  [build]
+  ["npx" "shadow-cljs" "release" build])
+
 (defn karma-test-cmd
   "Returns a command to launch karma test."
   []
