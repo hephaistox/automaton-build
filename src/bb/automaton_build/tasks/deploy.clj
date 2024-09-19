@@ -11,7 +11,6 @@
    [automaton-build.project.deps             :as build-deps]
    [automaton-build.project.map              :as build-project-map]
    [automaton-build.project.versioning       :as build-project-versioning]
-   [automaton-build.tasks.impl.headers.cmds  :refer [chain-cmds]]
    [automaton-build.tasks.impl.headers.files :as build-headers-files]
    [automaton-build.tasks.impl.headers.vcs   :as build-headers-vcs]
    [clojure.string                           :as str]))
@@ -55,10 +54,18 @@
   * `repo-address`
   * `branch-name`"
   [tmp-dir repo-address branch-name]
-  (if (build-headers-vcs/clone-repo-branch tmp-dir repo-address branch-name false)
+  (if (-> (build-vcs/shallow-clone-repo-branch-cmd repo-address branch-name)
+          (build-commands/blocking-cmd tmp-dir)
+          build-commands/success)
     true
-    (when (build-headers-vcs/clone-repo-branch tmp-dir repo-address false)
-      (build-headers-vcs/new-branch-and-switch tmp-dir branch-name false))))
+    (when (-> (build-vcs/shallow-clone-repo-branch-cmd repo-address)
+              (build-commands/blocking-cmd tmp-dir)
+              (build-commands/success))
+      (-> (build-vcs/new-branch-and-switch-chain-cmd branch-name)
+          (build-commands/force-dirs tmp-dir)
+          build-commands/chain-cmds
+          build-commands/first-failing
+          build-commands/success))))
 
 (defn- target-branch-git-dir
   "Returns '.git' directory from `target-branch`"
@@ -78,11 +85,10 @@
   [files-dir repo-address target-branch]
   (let [target-git-dir (target-branch-git-dir repo-address target-branch)
         dir-with-replaced-files (build-file/create-temp-dir)]
-    (prn "target-gir-dir: " target-git-dir)
-    (prn "dir-with-replaced: " dir-with-replaced-files)
-    (build-headers-files/copy-files files-dir dir-with-replaced-files "*" false {})
-    (replace-repo-git-dir target-git-dir dir-with-replaced-files)
-    dir-with-replaced-files))
+    (when target-git-dir
+      (build-headers-files/copy-files files-dir dir-with-replaced-files "*" false {})
+      (replace-repo-git-dir target-git-dir dir-with-replaced-files)
+      dir-with-replaced-files)))
 
 (defn push-local-dir-to-repo
   "Commit and push `target-branch` with files from `source-dir`.
@@ -95,22 +101,22 @@
   * `force?` (optional default false) if true, will force the changes to be pushed as top commit
   * `target-branch` (optional default current-branch) where to push"
   ([source-dir repo-address force? target-branch commit-msg]
-   (let [dir-to-push (replace-branch-files source-dir repo-address target-branch)
-         {:keys [exit]
-          :as res}
-         (-> (or commit-msg "automatic commit")
-             build-vcs/commit-chain-cmd
-             (concat [[(build-vcs/push-cmd (build-headers-vcs/current-branch dir-to-push) force?)]])
-             (build-commands/force-dirs dir-to-push)
-             build-commands/chain-cmds
-             build-commands/first-failing)]
-     (prn "res: " res)
-     (normalln "hello")
-     (normalln "hello")
-     (case exit
-       (1 0 nil) {:status :success}
-       :else {:status :failed
-              :data res}))))
+   (if-let [dir-to-push (replace-branch-files source-dir repo-address target-branch)]
+     (let [branch (build-headers-vcs/current-branch dir-to-push)
+           {:keys [exit]
+            :as res}
+           (-> (or commit-msg "automatic commit")
+               build-vcs/commit-chain-cmd
+               (concat [[(build-vcs/push-cmd branch force?)]])
+               (build-commands/force-dirs dir-to-push)
+               build-commands/chain-cmds
+               build-commands/first-failing)]
+       (case exit
+         (1 0 nil) {:status :success}
+         :else {:status :failed
+                :data res}))
+     {:status :failed
+      :message "Copying local failes for push has failed"})))
 
 (defn push-current-branch
   "Pushes `app` current changes to it's repository. The changes are pushed to the current branch of user running the function. It is forbidden to push to base-branch of application."
@@ -190,29 +196,24 @@
 (defn ensure-no-cache
   [new-changes-branch repo]
   (let [tmp-dir (build-file/create-temp-dir)]
-    (build-headers-vcs/clone-repo-branch tmp-dir repo new-changes-branch false)
-    tmp-dir))
+    (when (build-headers-vcs/clone-repo-branch tmp-dir repo new-changes-branch false) tmp-dir)))
 
 (defn deploy*
-  [app current-branch repo env]
-  (let [app-dir (ensure-no-cache current-branch repo)
-        app-name (:app-name app)
-        class-dir (build-filename/absolutize
+  [app-dir app-name project-config deps-edn env]
+  (let [class-dir (build-filename/absolutize
                    (build-filename/create-dir-path app-dir (format "target/%s/class/" (name env))))
         target-jar-filename (build-filename/create-file-path
                              (format "target/%s/%s.jar" (name env) app-name))
-        excluded-aliases (get-in app [:project-config-filedesc :edn :publication :excluded-aliases])
+        excluded-aliases (get-in project-config [:publication :excluded-aliases])
         paths (map #(build-filename/absolutize (build-filename/create-dir-path app-dir %))
-                   (build-deps/extract-paths (get-in app [:deps :edn]) excluded-aliases))
-        shadow-deploy-alias
-        (get-in app [:project-config-filedesc :edn :publication :shadow-cljs-deploy-alias])
-        css-files [:project-config-filedesc :edn :publication :css-files]
+                   (build-deps/extract-paths deps-edn excluded-aliases))
+        shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
+        css-files (get-in project-config [:publication :css-files])
         compiled-css-path [:project-config-filedesc :edn :publication :compiled-css-path]
-        compile-jar (get-in app [:project-config-filedesc :edn :publication :compile-jar])
-        compile-uber-jar (get-in app [:project-config-filedesc :edn :publication :compile-uber-jar])
-        jar-entrypoint (get-in app
-                               [:project-config-filedesc :edn :publication :uber-jar :entrypoint])
-        java-opts (get-in app [:project-config-filedesc :edn :publication :uber-jar :java-opts])]
+        compile-jar (get-in project-config [:publication :compile-jar])
+        compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
+        jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
+        java-opts (get-in project-config [:publication :uber-jar :java-opts])]
     (cond-> {}
       true (assoc :app-dir app-dir)
       true (assoc :class-dir class-dir)
@@ -254,7 +255,14 @@
     (if (and repo
              target-branch
              (build-project-versioning/version-changed? app-dir repo target-branch env))
-      (deploy* app current-branch repo env)
+      (if-let [app-dir (ensure-no-cache current-branch repo)]
+        (deploy* app-dir
+                 (:app-name app)
+                 (get-in app [:project-config-filedesc :edn])
+                 (get-in app [:deps :edn])
+                 env)
+        {:status :failed
+         :msg "Couldn't ensure that there is no cache"})
       {:status :skipped
        :data {:repo repo
               :target-branch target-branch}

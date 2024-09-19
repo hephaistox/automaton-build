@@ -85,10 +85,10 @@
 
 (defn shallow-clone-repo-branch-cmd
   "Returns command to clone the repository at address `repo-url` for branch `branch-name` - only the result of the latest commit (i.e. shallow commit). "
-  ([repo-url branch-name target-dir]
+  ([repo-url branch-name cloned-dir-name]
    (concat ["git" "clone" repo-url "--single-branch"]
            (when branch-name ["-b" branch-name])
-           ["--depth" "1" target-dir]))
+           ["--depth" "1" cloned-dir-name]))
   ([repo-url branch-name] (shallow-clone-repo-branch-cmd repo-url branch-name "."))
   ([repo-url] (shallow-clone-repo-branch-cmd repo-url nil ".")))
 
