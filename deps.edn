@@ -28,8 +28,7 @@
    :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/unit" "-d" "test/la"]}
   :deploy {:exec-args {:installer :remote}
            :exec-fn deps-deploy.deps-deploy/deploy
-           :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
-                                             :git/url "https://github.com/Kaspazza/deps-deploy"
+           :extra-deps {slipset/deps-deploy {:git/url "https://github.com/Kaspazza/deps-deploy"
                                              :sha "7b4b72d124f788c9e4a876e0ba55899fd9091f1d"}}}
   :env-development-repl
   {:extra-deps {djblue/portal {:mvn/version "0.57.2"}
@@ -60,8 +59,6 @@
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
         markdown-clj/markdown-clj {:mvn/version "1.12.1"}
         metosin/malli {:mvn/version "0.16.1"}
-        slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
-                             :mvn/version "0.2.2"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :ns-default automaton-build.core
  :paths ["src/bb"]}
