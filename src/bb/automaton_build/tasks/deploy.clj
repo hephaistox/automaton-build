@@ -132,6 +132,10 @@
                                   (when (and message (string? message) (not (str/blank? message)))
                                     message))))
 
+(comment
+ ;
+)
+
 ;; this for deployment
 ;; (defn push-base-branch
 ;;   "Pushes app to `base-branch`"
@@ -239,6 +243,7 @@
                                  build-project-map/add-project-config
                                  (build-apps/add-monorepo-subprojects :default)
                                  (build-apps/apply-to-subprojects
+                                  build-project-map/add-deps-edn
                                   build-project-map/add-project-config))
         env (get-in cli-opts [:options :env])
         force (get-in cli-opts [:options :force])
