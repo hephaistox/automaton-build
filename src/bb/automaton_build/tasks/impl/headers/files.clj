@@ -99,7 +99,7 @@
                      build-file/to-src-dst
                      (mapv (fn [[s d]] (str (uri-str s) "->" (uri-str d))))
                      (str/join ",")))
-      (let [removed-files (filter :exists? copy-actions)]
+      (let [removed-files (remove :exists? copy-actions)]
         (when-not (empty? removed-files)
           (errorln "These files are not found and excluded from the copy:"
                    (str/join "," (mapv :path removed-files))))))
