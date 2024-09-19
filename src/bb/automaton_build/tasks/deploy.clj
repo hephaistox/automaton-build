@@ -133,7 +133,25 @@
                                     message))))
 
 (comment
- ;
+  (def monorepo-project-map
+    (-> (build-project-map/create-project-map "")
+        build-project-map/add-project-config
+        (build-apps/add-monorepo-subprojects :default)
+        (build-apps/apply-to-subprojects build-project-map/add-deps-edn
+                                         build-project-map/add-project-config)))
+  (def current-branch (build-headers-vcs/current-branch ""))
+  current-branch
+  ;
+  (def automaton-build-config (first (:subprojects monorepo-project-map)))
+  (push-current-branch
+   (:app-dir automaton-build-config)
+   (:app-name automaton-build-config)
+   (get-in automaton-build-config [:project-config-filedesc :edn :publication :repo-url])
+   (get-in automaton-build-config [:project-config-filedesc :edn :publication :base-branch])
+   current-branch
+   false
+   nil)
+  ;
 )
 
 ;; this for deployment
