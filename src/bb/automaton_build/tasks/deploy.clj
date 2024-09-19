@@ -78,6 +78,8 @@
   [files-dir repo-address target-branch]
   (let [target-git-dir (target-branch-git-dir repo-address target-branch)
         dir-with-replaced-files (build-file/create-temp-dir)]
+    (prn "target-gir-dir: " target-git-dir)
+    (prn "dir-with-replaced: " dir-with-replaced-files)
     (build-headers-files/copy-files files-dir dir-with-replaced-files "*" false {})
     (replace-repo-git-dir target-git-dir dir-with-replaced-files)
     dir-with-replaced-files))
