@@ -1,20 +1,20 @@
 (ns automaton-build.project.versioning
   "Code related to app versioning, holds current strategy for versioning"
   (:require
-   [automaton-build.code.vcs                :as build-vcs]
-   [automaton-build.os.file                 :as build-file]
-   [automaton-build.os.filename             :as build-filename]
-   [automaton-build.os.version              :as build-version]
-   [automaton-build.tasks.impl.headers.cmds :refer [chain-cmds]]
-   [clojure.string                          :as str]))
+   [automaton-build.code.vcs   :as build-vcs]
+   [automaton-build.os.cmds    :as build-commands]
+   [automaton-build.os.file    :as build-file]
+   [automaton-build.os.version :as build-version]
+   [clojure.string             :as str]))
 
 (defn production?
   "Tells if version is a production one or test env"
   [version]
   (nil? (second (build-version/split-optional-qualifier version))))
 
-(defn- correct-environment?
-  "Checks that deploy the right environment is targeted for version change.
+(defn correct-environment?
+  "Checks that the right environment is targeted for deploy according to our practices.
+   So version for la should have optional qualifier and for production there should be no qualifier.
    Covers case that project branch version will be different because there was deploy to la and than to  production."
   [app-dir environment]
   (let [current-version-production? (production? (build-version/current-version app-dir))]
@@ -25,15 +25,15 @@
 
 (defn version-changed?
   "Checks if current version in `app-dir` is the same as in `target-branch`"
-  [app-dir repo target-branch environment]
+  [app-dir repo target-branch]
   (let [tmp-dir (build-file/create-temp-dir)
-        {:keys [chain-cmd file-path]}
-        (build-vcs/clone-file-chain-cmd repo tmp-dir target-branch (build-version/version-file))
-        clone-res (chain-cmds chain-cmd "Unexpected error during" false)]
-    (and (every? :exit clone-res)
-         (correct-environment? app-dir environment)
-         (not= (build-version/current-version (build-filename/extract-path file-path))
-               (build-version/current-version app-dir)))))
+        current-app-version (build-version/current-version app-dir)
+        clone-res
+        (-> (build-vcs/clone-file-chain-cmd repo tmp-dir target-branch (build-version/version-file))
+            build-commands/chain-cmds
+            build-commands/first-failing)]
+    (and (build-commands/success clone-res)
+         (not= (build-version/current-version tmp-dir) current-app-version))))
 
 (defn- generate-new-test-env-version
   [version]

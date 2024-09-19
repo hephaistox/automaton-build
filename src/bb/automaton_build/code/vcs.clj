@@ -66,22 +66,20 @@
   It's quick as it ignores all other files, all other branches of the repository and git history."
   [repo-url target-dir branch-name file-name]
   (build-file/ensure-dir-exists target-dir)
-  (let [subdir "clone"
-        file-path (build-filename/create-dir-path target-dir subdir)]
-    {:chain-cmd [[["git"
-                   "clone"
-                   "--single-branch"
-                   "--branch"
-                   branch-name
-                   repo-url
-                   subdir
-                   "--depth"
-                   "1"
-                   "--no-checkout"
-                   "--filter=blob:none"]
-                  target-dir]
-                 [["git" "checkout" branch-name "--" file-name] file-path]]
-     :file-path (build-filename/create-file-path file-path file-name)}))
+  (let [file-path (build-filename/create-dir-path target-dir)]
+    [[["git"
+       "clone"
+       "--single-branch"
+       "--branch"
+       branch-name
+       repo-url
+       "--depth"
+       "1"
+       "--no-checkout"
+       "--filter=blob:none"
+       "."]
+      target-dir]
+     [["git" "checkout" branch-name "--" file-name] file-path]]))
 
 (defn shallow-clone-repo-branch-cmd
   "Returns command to clone the repository at address `repo-url` for branch `branch-name` - only the result of the latest commit (i.e. shallow commit). "
