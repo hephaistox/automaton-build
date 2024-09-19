@@ -5,4 +5,11 @@
           :name "metosin/malli"}]}
  :publication {:as-lib org.clojars.hephaistox/automaton-build
                :base-branch "main"
+               :clojars true
+               :compile-jar true
+               :excluded-aliases
+               [:antq :codox :env-development-repl :env-development-test :common-test]
+               :la-branch "la"
+               :pom-xml-license {:name "CC BY-NC 4.0"
+                                 :url "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
                :repo-url "git@github.com:hephaistox/automaton-build.git"}}

@@ -66,27 +66,29 @@
   It's quick as it ignores all other files, all other branches of the repository and git history."
   [repo-url target-dir branch-name file-name]
   (build-file/ensure-dir-exists target-dir)
-  (let [subdir (str "get-" file-name)
-        file-path (build-filename/create-file-path target-dir subdir)]
-    {:chain-cmd [[["git"
-                   "clone"
-                   "--single-branch"
-                   "--branch"
-                   branch-name
-                   repo-url
-                   subdir
-                   "--depth"
-                   "1"
-                   "--no-checkout"
-                   "--filter=blob:none"]
-                  target-dir]
-                 [["git" "checkout" branch-name "--" file-name] file-path]]
-     :file-path (build-filename/create-file-path target-dir subdir file-name)}))
+  (let [file-path (build-filename/create-dir-path target-dir)]
+    [[["git"
+       "clone"
+       "--single-branch"
+       "--branch"
+       branch-name
+       repo-url
+       "--depth"
+       "1"
+       "--no-checkout"
+       "--filter=blob:none"
+       "."]
+      target-dir]
+     [["git" "checkout" branch-name "--" file-name] file-path]]))
 
 (defn shallow-clone-repo-branch-cmd
   "Returns command to clone the repository at address `repo-url` for branch `branch-name` - only the result of the latest commit (i.e. shallow commit). "
-  [repo-url branch-name]
-  ["git" "clone" repo-url "-b" branch-name "--depth" "1" "."])
+  ([repo-url branch-name cloned-dir-name]
+   (concat ["git" "clone" repo-url "--single-branch"]
+           (when branch-name ["-b" branch-name])
+           ["--depth" "1" cloned-dir-name]))
+  ([repo-url branch-name] (shallow-clone-repo-branch-cmd repo-url branch-name "."))
+  ([repo-url] (shallow-clone-repo-branch-cmd repo-url nil ".")))
 
 (defn shallow-clone-repo-branch-analyze
   "Adds to the `cmd-res` keys `:inexisting-remote-branch` if the repo does not exist, or `:inexisting-remote-branch` if the branch does not exist."
@@ -99,8 +101,10 @@
 
 (defn pull-changes-chain-cmd
   "Returns a command to fetch and pull changes from `origin`."
-  []
-  [[["git" "fetch" "origin"]] [["git" "pull"]]])
+  [branch]
+  [[["git" "fetch" "origin" (str branch ":" branch)]] [["git" "pull"]]])
+
+(defn merge-cmd "Merges `branch1` into `branch2`" [branch1 branch2] ["git" "merge" branch1 branch2])
 
 (defn new-branch-and-switch-chain-cmd
   "Returns a command "
