@@ -1,7 +1,7 @@
 (ns automaton-build.tasks.deploy
   (:require
    [automaton-build.code.vcs                 :as build-vcs]
-   [automaton-build.echo.headers             :refer [h1 h1-error h1-error! h1-valid]]
+   [automaton-build.echo.headers             :refer [h1 h1-error h1-error! h1-valid normalln]]
    [automaton-build.monorepo.apps            :as build-apps]
    [automaton-build.os.cli-opts              :as build-cli-opts]
    [automaton-build.os.cmds                  :as build-commands]
@@ -103,6 +103,8 @@
              (chain-cmds "Impossible to commit" false)
              build-commands/first-failing)]
      (prn "res: " res)
+     (normalln "hello")
+     (normalln "hello")
      (case exit
        (1 0 nil) {:status :success}
        :else {:status :failed
