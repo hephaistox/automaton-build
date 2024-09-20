@@ -16,6 +16,7 @@
    [automaton-build.project.versioning       :as build-project-versioning]
    [automaton-build.tasks.impl.headers.files :as build-headers-files]
    [automaton-build.tasks.impl.headers.vcs   :as build-headers-vcs]
+   [clojure.pprint                           :as pp]
    [clojure.string                           :as str]))
 
 (def cli-opts
@@ -181,7 +182,7 @@
          {:status :failed
           :ex e})))
 
-(defn deploy*
+(defn compile*
   [app-dir
    app-name
    paths
@@ -249,7 +250,7 @@
                                                    build-filename/absolutize)
                                               (build-version/current-version app-dir)))
 
-(defn deploy
+(defn compile-app
   "Deploys app in isolation to ensure no cache which requires that your state should be clean and current branch is not a base branch
 
    The process of deployment is:
@@ -277,17 +278,17 @@
            (build-project-versioning/correct-environment? dir env)
            (build-project-versioning/version-changed? dir repo target-branch))
     (if-let [app-dir (ensure-no-cache current-branch repo)]
-      (deploy* app-dir
-               app-name
-               paths
-               shadow-deploy-alias
-               css-files
-               compiled-css-path
-               compile-jar
-               compile-uber-jar
-               jar-entrypoint
-               java-opts
-               env)
+      (compile* app-dir
+                app-name
+                paths
+                shadow-deploy-alias
+                css-files
+                compiled-css-path
+                compile-jar
+                compile-uber-jar
+                jar-entrypoint
+                java-opts
+                env)
       {:status :failed
        :msg "Couldn't ensure that there is no cache"})
     {:status :skipped
@@ -309,7 +310,8 @@
            cc-uri
            paths
            as-lib
-           pom-xml-license]}
+           pom-xml-license]
+    :as app}
    verbose?]
   (if (= :success status)
     (if (push-base-branch app-name
@@ -345,7 +347,10 @@
       {:status :failed
        :msg (str "Push to " target-branch " failed")})
     {:status :skipped
-     :message (str "because compilation status is: " status)}))
+     :message (str "because compilation status is: " status
+                   " more details: " (with-out-str
+                                       (pp/pprint
+                                        (select-keys app [:shadow-cljs :css :jar :uber-jar]))))}))
 
 (defn run-monorepo
   []
@@ -435,20 +440,20 @@
                                jar-entrypoint (get-in project-config
                                                       [:publication :uber-jar :entrypoint])
                                java-opts (get-in project-config [:publication :uber-jar :java-opts])
-                               res (-> (deploy app-dir
-                                               app-name
-                                               paths
-                                               shadow-deploy-alias
-                                               css-files
-                                               compiled-css-path
-                                               compile-jar
-                                               compile-uber-jar
-                                               jar-entrypoint
-                                               java-opts
-                                               env
-                                               current-branch
-                                               repo
-                                               base-branch)
+                               res (-> (compile-app app-dir
+                                                    app-name
+                                                    paths
+                                                    shadow-deploy-alias
+                                                    css-files
+                                                    compiled-css-path
+                                                    compile-jar
+                                                    compile-uber-jar
+                                                    jar-entrypoint
+                                                    java-opts
+                                                    env
+                                                    current-branch
+                                                    repo
+                                                    base-branch)
                                        (assoc :cc-uri cc-uri)
                                        (assoc :env env)
                                        (assoc :publish-clojars? publish-clojars?)
