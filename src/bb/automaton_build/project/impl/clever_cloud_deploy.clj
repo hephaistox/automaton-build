@@ -37,6 +37,5 @@
        (concat [[(build-vcs/push-cmd "master" true)]])
        (build-commands/force-dirs dir)
        build-commands/chain-cmds
-       build-commands/first-failing
-       build-commands/success))
+       build-commands/first-failing))
   ([dir] (deploy dir "Automatically pushed version")))
