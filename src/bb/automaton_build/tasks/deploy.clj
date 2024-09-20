@@ -198,24 +198,28 @@
         target-jar-filename (build-filename/create-file-path
                              (format "target/%s/%s.jar" (name env) app-name))
         shadow-res (if shadow-deploy-alias
-                     (wrap-fn-ex
-                      (partial build-project-compile/shadow-cljs app-dir shadow-deploy-alias))
+                     (let [res (wrap-fn-ex (partial build-project-compile/shadow-cljs
+                                                    app-dir
+                                                    shadow-deploy-alias))]
+                       (if (build-commands/success res)
+                         {:status :success}
+                         {:status :failed
+                          :res res}))
                      {:status :skipped})
-        _ (prn "shadow-res: " shadow-res)
-        _ (prn "app-dir: " app-dir)
-        _ (prn "css-files: " css-files)
-        _ (prn "compiled-css-path: " compiled-css-path)
         css-res (if (and css-files compiled-css-path)
-                  (wrap-fn-ex
-                   (partial build-project-compile/css app-dir css-files compiled-css-path))
+                  (let [res
+                        (wrap-fn-ex
+                         (partial build-project-compile/css app-dir css-files compiled-css-path))]
+                    (if (build-commands/success res)
+                      {:status :success}
+                      {:status :failed
+                       :res res}))
                   {:status :skipped})
-        _ (prn "css-res: " css-res)
         jar-res
         (if compile-jar
           (wrap-fn-ex
            (partial build-project-compile/compile-jar class-dir paths target-jar-filename app-dir))
           {:status :skipped})
-        _ (prn "jar-res: " jar-res)
         uber-jar-res (if compile-uber-jar
                        (wrap-fn-ex (partial build-project-compile/compile-uber-jar
                                             class-dir
@@ -224,8 +228,7 @@
                                             app-dir
                                             jar-entrypoint
                                             java-opts))
-                       {:status :skipped})
-        _ (prn "uber-jar-res: " uber-jar-res)]
+                       {:status :skipped})]
     (-> {}
         (assoc :app-dir app-dir)
         (assoc :class-dir class-dir)
