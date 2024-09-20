@@ -201,15 +201,18 @@
                      (wrap-fn-ex
                       (partial build-project-compile/shadow-cljs app-dir shadow-deploy-alias))
                      {:status :skipped})
+        _ (prn "shadow-res: " shadow-res)
         css-res (if (and css-files compiled-css-path)
                   (wrap-fn-ex
                    (partial build-project-compile/css app-dir css-files compiled-css-path))
                   {:status :skipped})
+        _ (prn "css-res: " css-res)
         jar-res
         (if compile-jar
           (wrap-fn-ex
            (partial build-project-compile/compile-jar class-dir paths target-jar-filename app-dir))
           {:status :skipped})
+        _ (prn "jar-res: " jar-res)
         uber-jar-res (if compile-uber-jar
                        (wrap-fn-ex (partial build-project-compile/compile-uber-jar
                                             class-dir
@@ -218,7 +221,8 @@
                                             app-dir
                                             jar-entrypoint
                                             java-opts))
-                       {:status :skipped})]
+                       {:status :skipped})
+        _ (prn "uber-jar-res: " uber-jar-res)]
     (-> {}
         (assoc :app-dir app-dir)
         (assoc :class-dir class-dir)
