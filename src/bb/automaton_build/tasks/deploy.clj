@@ -16,6 +16,7 @@
    [automaton-build.project.versioning       :as build-project-versioning]
    [automaton-build.tasks.impl.headers.files :as build-headers-files]
    [automaton-build.tasks.impl.headers.vcs   :as build-headers-vcs]
+   [clojure.pprint                           :as pp]
    [clojure.string                           :as str]))
 
 (def cli-opts
@@ -181,7 +182,7 @@
          {:status :failed
           :ex e})))
 
-(defn deploy*
+(defn compile*
   [app-dir
    app-name
    paths
@@ -249,7 +250,7 @@
                                                    build-filename/absolutize)
                                               (build-version/current-version app-dir)))
 
-(defn deploy
+(defn compile-app
   "Deploys app in isolation to ensure no cache which requires that your state should be clean and current branch is not a base branch
 
    The process of deployment is:
@@ -277,17 +278,17 @@
            (build-project-versioning/correct-environment? dir env)
            (build-project-versioning/version-changed? dir repo target-branch))
     (if-let [app-dir (ensure-no-cache current-branch repo)]
-      (deploy* app-dir
-               app-name
-               paths
-               shadow-deploy-alias
-               css-files
-               compiled-css-path
-               compile-jar
-               compile-uber-jar
-               jar-entrypoint
-               java-opts
-               env)
+      (compile* app-dir
+                app-name
+                paths
+                shadow-deploy-alias
+                css-files
+                compiled-css-path
+                compile-jar
+                compile-uber-jar
+                jar-entrypoint
+                java-opts
+                env)
       {:status :failed
        :msg "Couldn't ensure that there is no cache"})
     {:status :skipped
@@ -296,7 +297,7 @@
             :env env}
      :msg (if (and repo target-branch) "No changes found" "Missing parameters")}))
 
-(defn publish-apps
+(defn publish-app
   [{:keys [app-name
            app-dir
            repo
@@ -309,7 +310,8 @@
            cc-uri
            paths
            as-lib
-           pom-xml-license]}
+           pom-xml-license]
+    :as app}
    verbose?]
   (if (= :success status)
     (if (push-base-branch app-name
@@ -345,7 +347,75 @@
       {:status :failed
        :msg (str "Push to " target-branch " failed")})
     {:status :skipped
-     :message (str "because compilation status is: " status)}))
+     :message (str "because compilation status is: " status " more details: " (:msg app))}))
+
+(defn compile-monorepo
+  [{:keys [app-name app-dir]
+    :as app}
+   target-branch-env
+   clever-uri-env
+   env
+   current-branch
+   verbose?]
+  (h1 app-name " being compiled")
+  (let [project-config (get-in app [:project-config-filedesc :edn])
+        repo (get-in project-config [:publication :repo-url])
+        base-branch (get-in project-config [:publication target-branch-env])
+        cc-uri (get-in project-config [:publication clever-uri-env])
+        publish-clojars? (get-in project-config [:publication :clojars])
+        publish-cc? (get-in project-config [:publication :cc])
+        as-lib (get-in project-config [:publication :as-lib])
+        pom-xml-license (get-in project-config [:publication :pom-xml-license])
+        excluded-aliases (get-in project-config [:publication :excluded-aliases])
+        deps-edn (get-in app [:deps :edn])
+        paths (mapv #(build-filename/absolutize (build-filename/create-dir-path app-dir %))
+                    (build-deps/extract-paths deps-edn excluded-aliases))
+        shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
+        css-files (get-in project-config [:publication :css-files])
+        compiled-css-path (get-in project-config [:publication :compiled-css-path])
+        compile-jar (get-in project-config [:publication :compile-jar])
+        compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
+        jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
+        java-opts (get-in project-config [:publication :uber-jar :java-opts])
+        compile-res (-> (compile-app app-dir
+                                     app-name
+                                     paths
+                                     shadow-deploy-alias
+                                     css-files
+                                     compiled-css-path
+                                     compile-jar
+                                     compile-uber-jar
+                                     jar-entrypoint
+                                     java-opts
+                                     env
+                                     current-branch
+                                     repo
+                                     base-branch)
+                        (assoc :cc-uri cc-uri)
+                        (assoc :env env)
+                        (assoc :publish-clojars? publish-clojars?)
+                        (assoc :publish-cc? publish-cc?)
+                        (assoc :repo repo)
+                        (assoc :target-branch base-branch)
+                        (assoc :app-name app-name)
+                        (assoc :as-lib as-lib)
+                        (assoc :pom-xml-license pom-xml-license))]
+    (if (every? #(or (= :success (:status %)) (= :skipped (:status %)))
+                (concat (vals (select-keys compile-res [:shadow-cljs :css :jar :uber-jar]))
+                        [{:status (:status compile-res)}]))
+      (do (h1-valid app-name " compiled")
+          (h1 app-name " deploying")
+          (let [res (-> compile-res
+                        (publish-app verbose?)
+                        (assoc :app-name app-name))]
+            (cond
+              (= :success (:status res)) (h1-valid app-name " deployed")
+              (= :skipped (:status res)) (normalln app-name " deployment skipped")
+              :else (h1-error app-name " failed deployment with: " res))
+            res))
+      (do (h1-error app-name " failed compilation with: " compile-res)
+          {:status :failed
+           :res compile-res}))))
 
 (defn run-monorepo
   []
@@ -404,97 +474,32 @@
                                        (= :la env) :cc-uri-la
                                        (= :production env) :cc-uri-production
                                        :else :imnotthere)
-                      deploy-res
-                      (mapv
-                       (fn [{:keys [app-dir app-name]
-                             :as app}]
-                         (h1 app-name " being compiled")
-                         (let [project-config (get-in app [:project-config-filedesc :edn])
-                               repo (get-in project-config [:publication :repo-url])
-                               base-branch (get-in project-config [:publication target-branch-env])
-                               cc-uri (get-in project-config [:publication clever-uri-env])
-                               publish-clojars? (get-in project-config [:publication :clojars])
-                               publish-cc? (get-in project-config [:publication :cc])
-                               as-lib (get-in project-config [:publication :as-lib])
-                               pom-xml-license (get-in project-config
-                                                       [:publication :pom-xml-license])
-                               excluded-aliases (get-in project-config
-                                                        [:publication :excluded-aliases])
-                               deps-edn (get-in app [:deps :edn])
-                               paths (mapv #(build-filename/absolutize
-                                             (build-filename/create-dir-path app-dir %))
-                                           (build-deps/extract-paths deps-edn excluded-aliases))
-                               shadow-deploy-alias (get-in project-config
-                                                           [:publication :shadow-cljs-deploy-alias])
-                               css-files (get-in project-config [:publication :css-files])
-                               compiled-css-path (get-in project-config
-                                                         [:publication :compiled-css-path])
-                               compile-jar (get-in project-config [:publication :compile-jar])
-                               compile-uber-jar (get-in project-config
-                                                        [:publication :compile-uber-jar])
-                               jar-entrypoint (get-in project-config
-                                                      [:publication :uber-jar :entrypoint])
-                               java-opts (get-in project-config [:publication :uber-jar :java-opts])
-                               res (-> (deploy app-dir
-                                               app-name
-                                               paths
-                                               shadow-deploy-alias
-                                               css-files
-                                               compiled-css-path
-                                               compile-jar
-                                               compile-uber-jar
-                                               jar-entrypoint
-                                               java-opts
-                                               env
-                                               current-branch
-                                               repo
-                                               base-branch)
-                                       (assoc :cc-uri cc-uri)
-                                       (assoc :env env)
-                                       (assoc :publish-clojars? publish-clojars?)
-                                       (assoc :publish-cc? publish-cc?)
-                                       (assoc :repo repo)
-                                       (assoc :target-branch base-branch)
-                                       (assoc :app-name app-name)
-                                       (assoc :as-lib as-lib)
-                                       (assoc :pom-xml-license pom-xml-license))]
-                           (if (every? #(or (= :success (:status %)) (= :skipped (:status %)))
-                                       (concat
-                                        (vals (select-keys res [:shadow-cljs :css :jar :uber-jar]))
-                                        [{:status (:status res)}]))
-                             (h1-valid app-name " compiled")
-                             (h1-error app-name " failed compilation with: " res))
-                           res))
-                       subapps)]
-                  (if (every? (fn [res]
-                                (every? #(or (= :success (:status %)) (= :skipped (:status %)))
-                                        (concat
-                                         (vals (select-keys res [:shadow-cljs :css :jar :uber-jar]))
-                                         [{:status (:status res)}])))
-                              deploy-res)
-                    (let [push-res (mapv (fn [{:keys [app-name]
-                                               :as app}]
-                                           (h1 app-name " deploying")
-                                           (let [res (-> app
-                                                         (publish-apps verbose?)
-                                                         (assoc :app-name app-name))]
-                                             (if (= :success (:status res))
-                                               (h1-valid app-name " deployed")
-                                               (h1-error app-name " failed deployment with: " res))
-                                             res))
-                                         deploy-res)]
-                      (mapv (fn [res]
-                              (cond
-                                (= :success (:status res)) (apply h1-valid!
-                                                                  (:app-name res)
-                                                                  " successfully deployed to "
-                                                                  (mapcat #(str (name (:publish %)))
-                                                                   (filter #(= :success (:status %))
-                                                                           (:res res))))
-                                (= :skipped (:status res))
-                                (normalln (:app-name res) " skipped due to " (:message res))
-                                :else (h1-error! (:app-name res) " failed with: " res)))
-                            push-res))
-                    (h1-error! "Compilation failed: " deploy-res)))))))))
+                      push-res (reduce (fn [acc app]
+                                         (if (some (fn [{:keys [status]}] (= :failed status)) acc)
+                                           (conj acc
+                                                 {:app-name (:app-name app)
+                                                  :status :skipped
+                                                  :message "previous app failed"})
+                                           (conj acc
+                                                 (compile-monorepo app
+                                                                   target-branch-env
+                                                                   clever-uri-env
+                                                                   env
+                                                                   current-branch
+                                                                   verbose?))))
+                                       []
+                                       subapps)]
+                  (mapv (fn [res]
+                          (cond
+                            (= :success (:status res)) (apply h1-valid!
+                                                              (:app-name res)
+                                                              " successfully deployed to "
+                                                              (mapcat #(str (name (:publish %)))
+                                                               (filter #(= :success (:status %))
+                                                                       (:res res))))
+                            (= :skipped (:status res))
+                            (normalln (:app-name res) " skipped due to " (:message res))
+                            :else (h1-error! (:app-name res) " failed with: " res)))
+                        push-res))))))))
     0
     (catch Exception e (h1-error! "error happened: " e) 1)))
