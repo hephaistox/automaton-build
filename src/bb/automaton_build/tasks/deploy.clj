@@ -284,7 +284,7 @@
            app-dir
            repo
            target-branch
-           general
+           status
            publish-clojars?
            publish-cc?
            jar
@@ -294,26 +294,31 @@
            as-lib
            pom-xml-license]}
    verbose?]
-  (if (= :success (:status general))
+  (if (= :success status)
     (if (push-base-branch app-name
                           app-dir
                           repo
                           target-branch
                           (build-version/current-version app-dir)
                           verbose?)
-      (let [publish-cc
-            (-> (if publish-cc? (publish-clever-cloud cc-uri app-dir env) {:status :skipped})
-                (assoc :publish :cc))
+      (let [publish-cc (-> (if publish-cc?
+                               (publish-clever-cloud cc-uri app-dir env)
+                               {:status :skipped
+                                :message ":publication :cc project.edn is missing"})
+                           (assoc :publish :cc))
             publish-clojars (-> (if publish-clojars?
                                     (build-project-publish/publish-clojars (:jar-path jar)
                                                                            app-dir
                                                                            paths
                                                                            as-lib
                                                                            pom-xml-license)
-                                    {:status :skipped})
+                                    {:status :skipped
+                                     :message ":publication :clojars project.edn is missing"})
                                 (assoc :publish :clojars))]
         (if (every? (fn [{:keys [status]}] (= status :skipped)) [publish-cc publish-clojars])
-          {:status :skipped}
+          {:status :skipped
+           :message (str "clever cloud skipped: " (:message publish-cc)
+                         " | clojars skipped: " (:message publish-clojars))}
           (if (every? (fn [{:keys [status]}] (or (= status :success) (= status :skipped)))
                       [publish-cc publish-clojars])
             {:status :success
@@ -322,7 +327,8 @@
              :res [publish-cc publish-clojars]})))
       {:status :failed
        :msg (str "Push to " target-branch " failed")})
-    {:status :skipped}))
+    {:status :skipped
+     :message (str "because compilation status is: " status)}))
 
 (defn run-monorepo
   []
@@ -437,9 +443,13 @@
                                (assoc :as-lib as-lib)
                                (assoc :pom-xml-license pom-xml-license))))
                        subapps)]
-                  (if (every? (fn [[_ {:keys [status]}]]
-                                (or (= status :skipped) (= status :success)))
-                              (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
+                  (if (every? (fn [res]
+                                (every? #(or (= :success (:status %)) (= :skipped (:status %)))
+                                        (concat (vals (select-keys
+                                                       deploy-res
+                                                       [:shadow-cljs :css :jar :uber-jar]))
+                                                [{:status (:status res)}])))
+                              deploy-res)
                     (let [push-res (mapv #(-> %
                                               (publish-apps verbose?)
                                               (assoc :app-name (:app-name %)))
@@ -452,7 +462,8 @@
                                                                   (mapcat #(str (name (:publish %)))
                                                                    (filter #(= :success (:status %))
                                                                            (:res res))))
-                                (= :skipped (:status res)) (normalln (:app-name res) " skipped")
+                                (= :skipped (:status res))
+                                (normalln (:app-name res) " skipped due to " (:message res))
                                 :else (h1-error! (:app-name res) " failed with: " res)))
                             push-res))
                     (h1-error! "Compilation failed: " deploy-res)))))))))
