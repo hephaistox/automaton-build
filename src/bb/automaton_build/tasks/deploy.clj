@@ -175,21 +175,21 @@
     (when (build-headers-vcs/clone-repo-branch tmp-dir repo new-changes-branch false) tmp-dir)))
 
 (defn deploy*
-  [app-dir app-name project-config deps-edn env]
+  [app-dir
+   app-name
+   paths
+   shadow-deploy-alias
+   css-files
+   compiled-css-path
+   compile-jar
+   compile-uber-jar
+   jar-entrypoint
+   java-opts
+   env]
   (let [class-dir (build-filename/absolutize
                    (build-filename/create-dir-path app-dir (format "target/%s/class/" (name env))))
         target-jar-filename (build-filename/create-file-path
                              (format "target/%s/%s.jar" (name env) app-name))
-        excluded-aliases (get-in project-config [:publication :excluded-aliases])
-        paths (mapv #(build-filename/absolutize (build-filename/create-dir-path app-dir %))
-                    (build-deps/extract-paths deps-edn excluded-aliases))
-        shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
-        css-files (get-in project-config [:publication :css-files])
-        compiled-css-path [:project-config-filedesc :edn :publication :compiled-css-path]
-        compile-jar (get-in project-config [:publication :compile-jar])
-        compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
-        jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
-        java-opts (get-in project-config [:publication :uber-jar :java-opts])
         shadow-res (if shadow-deploy-alias
                      (build-project-compile/shadow-cljs app-dir shadow-deploy-alias)
                      {:status :skipped})
@@ -237,16 +237,35 @@
    3. Deploy app
 
   It's done currently not as a workflow, only because workflow can't be used in another workflow and we have a logic we want to preserve here"
-  [app env current-branch repo target-branch]
+  [dir
+   app-name
+   paths
+   shadow-deploy-alias
+   css-files
+   compiled-css-path
+   compile-jar
+   compile-uber-jar
+   jar-entrypoint
+   java-opts
+   env
+   current-branch
+   repo
+   target-branch]
   (if (and repo
            target-branch
-           (build-project-versioning/correct-environment? (:app-dir app) env)
-           (build-project-versioning/version-changed? (:app-dir app) repo target-branch))
+           (build-project-versioning/correct-environment? dir env)
+           (build-project-versioning/version-changed? dir repo target-branch))
     (if-let [app-dir (ensure-no-cache current-branch repo)]
       (deploy* app-dir
-               (:app-name app)
-               (get-in app [:project-config-filedesc :edn])
-               (get-in app [:deps :edn])
+               app-name
+               paths
+               shadow-deploy-alias
+               css-files
+               compiled-css-path
+               compile-jar
+               compile-uber-jar
+               jar-entrypoint
+               java-opts
                env)
       {:general {:status :failed
                  :msg "Couldn't ensure that there is no cache"}})
@@ -360,35 +379,59 @@
                                        :else :imnotthere)
                       deploy-res
                       (mapv
-                       #(->
-                          %
-                          (deploy env
-                                  current-branch
-                                  (get-in % [:project-config-filedesc :edn :publication :repo-url])
-                                  (get-in
-                                   %
-                                   [:project-config-filedesc :edn :publication target-branch-env]))
-                          (assoc
-                           :cc-uri
-                           (get-in % [:project-config-filedesc :edn :publication clever-uri-env]))
-                          (assoc :env env)
-                          (assoc :publish-clojars?
-                                 (get-in % [:project-config-filedesc :edn :publication :clojars]))
-                          (assoc :publish-cc?
-                                 (get-in % [:project-config-filedesc :edn :publication :cc]))
-                          (assoc :repo
-                                 (get-in % [:project-config-filedesc :edn :publication :repo-url]))
-                          (assoc :target-branch
-                                 (get-in
-                                  %
-                                  [:project-config-filedesc :edn :publication target-branch-env]))
-                          (assoc :app-name (:app-name %))
-                          (assoc :as-lib
-                                 (get-in % [:project-config-filedesc :edn :publication :as-lib]))
-                          (assoc :pom-xml-license
-                                 (get-in
-                                  %
-                                  [:project-config-filedesc :edn :publication :pom-xml-license])))
+                       (fn [app]
+                         (let [app-dir (:app-dir app)
+                               app-name (:app-name app)
+                               project-config (get-in app [:project-config-filedesc :edn])
+                               repo (get-in project-config [:publication :repo-url])
+                               base-branch (get-in project-config [:publication target-branch-env])
+                               cc-uri (get-in project-config [:publication clever-uri-env])
+                               publish-clojars? (get-in project-config [:publication :clojars])
+                               publish-cc? (get-in project-config [:publication :cc])
+                               as-lib (get-in project-config [:publication :as-lib])
+                               pom-xml-license (get-in project-config
+                                                       [:publication :pom-xml-license])
+                               excluded-aliases (get-in project-config
+                                                        [:publication :excluded-aliases])
+                               deps-edn (get-in app [:deps :edn])
+                               paths (mapv #(build-filename/absolutize
+                                             (build-filename/create-dir-path app-dir %))
+                                           (build-deps/extract-paths deps-edn excluded-aliases))
+                               shadow-deploy-alias (get-in project-config
+                                                           [:publication :shadow-cljs-deploy-alias])
+                               css-files (get-in project-config [:publication :css-files])
+                               compiled-css-path
+                               [:project-config-filedesc :edn :publication :compiled-css-path]
+                               compile-jar (get-in project-config [:publication :compile-jar])
+                               compile-uber-jar (get-in project-config
+                                                        [:publication :compile-uber-jar])
+                               jar-entrypoint (get-in project-config
+                                                      [:publication :uber-jar :entrypoint])
+                               java-opts (get-in project-config
+                                                 [:publication :uber-jar :java-opts])]
+                           (-> (deploy app-dir
+                                       app-name
+                                       paths
+                                       shadow-deploy-alias
+                                       css-files
+                                       compiled-css-path
+                                       compile-jar
+                                       compile-uber-jar
+                                       jar-entrypoint
+                                       java-opts
+                                       env
+                                       current-branch
+                                       repo
+                                       base-branch)
+                               (assoc :cc-uri cc-uri)
+                               (assoc :env env)
+                               (assoc :publish-clojars? publish-clojars?)
+                               (assoc :publish-cc? publish-cc?)
+                               (assoc :repo repo)
+                               (assoc :target-branch base-branch)
+                               (assoc :app-name app-name)
+                               (assoc :as-lib as-lib)
+                               (assoc :pom-xml-license pom-xml-license))))
                        subapps)]
                   (if (every? (fn [[_ {:keys [status]}]]
                                 (or (= status :skipped) (= status :success)))
