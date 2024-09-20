@@ -303,104 +303,111 @@
 
 (defn run-monorepo
   []
-  (let [monorepo-project-map (-> (build-project-map/create-project-map "")
-                                 build-project-map/add-project-config
-                                 (build-apps/add-monorepo-subprojects :default)
-                                 (build-apps/apply-to-subprojects
-                                  build-project-map/add-deps-edn
-                                  build-project-map/add-project-config))
-        env (get-in cli-opts [:options :env])
-        message (get-in cli-opts [:options :message])
-        verbose? (get-in cli-opts [:options :verbose])
-        base-branch (get-in monorepo-project-map
-                            [:project-config-filedesc :edn :publication :base-branch])
-        app-dir (get-in monorepo-project-map [:app-dir])
-        current-branch (build-headers-vcs/current-branch app-dir)
-        subapps (->> monorepo-project-map
-                     :subprojects)]
-    (if-not (pull-base-branch app-dir base-branch current-branch)
-      (do
-        (h1-error!
-         "Current branch is not up-to-date with base, first pull changes from monorepo main branch")
-        1)
-      (if-not (clean-state? app-dir)
-        (do (h1-error! "Git status is not empty. First commmit your changes.") 1)
-        (if (current-branch-name-invalid? subapps current-branch)
-          (do (h1-error! "Monorepo current branch is same as base branch of subapp") 1)
-          (let [push-current-branch-subapps
-                (mapv (fn [{:keys [app-dir app-name]
-                            :as app}]
-                        (h1 app-name " being pushed to " current-branch)
-                        (let [app-base-branch
-                              (get-in app [:project-config-filedesc :edn :publication :base-branch])
-                              repo (get-in app
-                                           [:project-config-filedesc :edn :publication :repo-url])
-                              push-res (push-current-branch app-dir
-                                                            app-name
-                                                            repo
-                                                            app-base-branch
-                                                            current-branch
-                                                            message
-                                                            verbose?)]
-                          (if (= :success (:status push-res))
-                            (h1-valid app-name "pushed")
-                            (h1-error app-name "push failed with: " push-res))
-                          push-res))
-                      subapps)]
-            (if-not (every? #(= :success (:status %)) push-current-branch-subapps)
-              (do (h1-error! "Local push failed") 1)
-              (let [target-branch-env (cond
-                                        (= :la env) :la-branch
-                                        (= :production env) :base-branch
-                                        :else :imnothere)
-                    clever-uri-env (cond
-                                     (= :la env) :cc-uri-la
-                                     (= :production env) :cc-uri-production
-                                     :else :imnotthere)
-                    deploy-res
-                    (mapv
-                     #(->
-                        %
-                        (deploy
-                         env
-                         current-branch
-                         (get-in % [:project-config-filedesc :edn :publication :repo-url])
-                         (get-in % [:project-config-filedesc :edn :publication target-branch-env]))
-                        (assoc :cc-uri
-                               (get-in %
-                                       [:project-config-filedesc :edn :publication clever-uri-env]))
-                        (assoc :env env)
-                        (assoc :publish-clojars?
-                               (get-in % [:project-config-filedesc :edn :publication :clojars]))
-                        (assoc :publish-cc?
-                               (get-in % [:project-config-filedesc :edn :publication :cc]))
-                        (assoc :repo
-                               (get-in % [:project-config-filedesc :edn :publication :repo-url]))
-                        (assoc
-                         :target-branch
-                         (get-in % [:project-config-filedesc :edn :publication target-branch-env]))
-                        (assoc :app-name (:app-name %))
-                        (assoc :as-lib
-                               (get-in % [:project-config-filedesc :edn :publication :as-lib]))
-                        (assoc
-                         :pom-xml-license
-                         (get-in % [:project-config-filedesc :edn :publication :pom-xml-license])))
-                     subapps)]
-                (if (every? (fn [[_ {:keys [status]}]] (or (= status :skipped) (= status :success)))
-                            (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
-                  (let [push-res (mapv #(-> %
-                                            (publish-apps verbose?)
-                                            (assoc :app-name (:app-name %)))
-                                       deploy-res)]
-                    (mapv (fn [res]
-                            (cond
-                              (= :success (:status res)) (apply h1-valid!
-                                                                (:app-name res)
-                                                                " successfully deployed to "
-                                                                (mapcat #(str (name (:publish %)))
-                                                                 (filter #(= :success (:status %))
-                                                                         (:res res))))
-                              (= :skipped (:status res)) (normalln (:app-name res) " skipped")
-                              :else (h1-error! (:app-name res) " failed with: " res)))
-                          push-res))
-                  (h1-error! "Compilation failed: " deploy-res))))))))))
+  (try
+    (let [monorepo-project-map (-> (build-project-map/create-project-map "")
+                                   build-project-map/add-project-config
+                                   (build-apps/add-monorepo-subprojects :default)
+                                   (build-apps/apply-to-subprojects
+                                    build-project-map/add-deps-edn
+                                    build-project-map/add-project-config))
+          env (get-in cli-opts [:options :env])
+          message (get-in cli-opts [:options :message])
+          verbose? (get-in cli-opts [:options :verbose])
+          base-branch (get-in monorepo-project-map
+                              [:project-config-filedesc :edn :publication :base-branch])
+          app-dir (get-in monorepo-project-map [:app-dir])
+          current-branch (build-headers-vcs/current-branch app-dir)
+          subapps (->> monorepo-project-map
+                       :subprojects)]
+      (if-not (pull-base-branch app-dir base-branch current-branch)
+        (do
+          (h1-error!
+           "Current branch is not up-to-date with base, first pull changes from monorepo main branch")
+          1)
+        (if-not (clean-state? app-dir)
+          (do (h1-error! "Git status is not empty. First commmit your changes.") 1)
+          (if (current-branch-name-invalid? subapps current-branch)
+            (do (h1-error! "Monorepo current branch is same as base branch of subapp") 1)
+            (let [push-current-branch-subapps
+                  (mapv
+                   (fn [{:keys [app-dir app-name]
+                         :as app}]
+                     (h1 app-name " being pushed to " current-branch)
+                     (let [app-base-branch
+                           (get-in app [:project-config-filedesc :edn :publication :base-branch])
+                           repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
+                           push-res (push-current-branch app-dir
+                                                         app-name
+                                                         repo
+                                                         app-base-branch
+                                                         current-branch
+                                                         message
+                                                         verbose?)]
+                       (if (= :success (:status push-res))
+                         (h1-valid app-name "pushed")
+                         (h1-error app-name "push failed with: " push-res))
+                       push-res))
+                   subapps)]
+              (if-not (every? #(= :success (:status %)) push-current-branch-subapps)
+                (do (h1-error! "Local push failed") 1)
+                (let [target-branch-env (cond
+                                          (= :la env) :la-branch
+                                          (= :production env) :base-branch
+                                          :else :imnothere)
+                      clever-uri-env (cond
+                                       (= :la env) :cc-uri-la
+                                       (= :production env) :cc-uri-production
+                                       :else :imnotthere)
+                      deploy-res
+                      (mapv
+                       #(->
+                          %
+                          (deploy env
+                                  current-branch
+                                  (get-in % [:project-config-filedesc :edn :publication :repo-url])
+                                  (get-in
+                                   %
+                                   [:project-config-filedesc :edn :publication target-branch-env]))
+                          (assoc
+                           :cc-uri
+                           (get-in % [:project-config-filedesc :edn :publication clever-uri-env]))
+                          (assoc :env env)
+                          (assoc :publish-clojars?
+                                 (get-in % [:project-config-filedesc :edn :publication :clojars]))
+                          (assoc :publish-cc?
+                                 (get-in % [:project-config-filedesc :edn :publication :cc]))
+                          (assoc :repo
+                                 (get-in % [:project-config-filedesc :edn :publication :repo-url]))
+                          (assoc :target-branch
+                                 (get-in
+                                  %
+                                  [:project-config-filedesc :edn :publication target-branch-env]))
+                          (assoc :app-name (:app-name %))
+                          (assoc :as-lib
+                                 (get-in % [:project-config-filedesc :edn :publication :as-lib]))
+                          (assoc :pom-xml-license
+                                 (get-in
+                                  %
+                                  [:project-config-filedesc :edn :publication :pom-xml-license])))
+                       subapps)]
+                  (if (every? (fn [[_ {:keys [status]}]]
+                                (or (= status :skipped) (= status :success)))
+                              (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
+                    (let [push-res (mapv #(-> %
+                                              (publish-apps verbose?)
+                                              (assoc :app-name (:app-name %)))
+                                         deploy-res)]
+                      (mapv (fn [res]
+                              (cond
+                                (= :success (:status res)) (apply h1-valid!
+                                                                  (:app-name res)
+                                                                  " successfully deployed to "
+                                                                  (mapcat #(str (name (:publish %)))
+                                                                   (filter #(= :success (:status %))
+                                                                           (:res res))))
+                                (= :skipped (:status res)) (normalln (:app-name res) " skipped")
+                                :else (h1-error! (:app-name res) " failed with: " res)))
+                            push-res))
+                    (h1-error! "Compilation failed: " deploy-res)))))))))
+    0
+    (catch Exception e (h1-error! "error happened: " e) 1)))
