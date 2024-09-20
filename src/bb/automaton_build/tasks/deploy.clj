@@ -200,6 +200,8 @@
                   (try (build-project-compile/css app-dir css-files compiled-css-path)
                        (catch Exception e
                          {:status :failed
+                          :params {:css-files css-files
+                                   :compiled-css-path compiled-css-path}
                           :ex e}))
                   {:status :skipped})
         jar-res (if compile-jar
