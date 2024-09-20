@@ -3,9 +3,8 @@
 
   Proxy to [tailwindcss](https://tailwindcss.com/docs/installation)."
   (:require
-   [automaton-build.os.file     :as build-file]
-   [automaton-build.os.filename :as build-filename]
-   [clojure.string              :as str]))
+   [automaton-build.os.file :as build-file]
+   [clojure.string          :as str]))
 
 (defn tailwind-compile-cmd
   [css-file compiled-dir]
@@ -19,15 +18,15 @@
   [css-file compiled-dir]
   (conj (tailwind-compile-cmd css-file compiled-dir) "--minify"))
 
-(defn save-css
-  [filename content]
-  (build-file/write-file
-   filename
-   (cons "/* This file is automatically updated by `automaton-build.fe.css` */" content)))
+(defn save-css [filename content] (build-file/write-file filename content))
 
 (defn combine-css-files
   [& css-files]
   (let [combined-tmp-file (build-file/create-temp-file "combined.css")
-        files-content (str/join "\n" (map #(slurp %) css-files))]
+        files-content (str/join "\n"
+                                (map (fn [css-filename]
+                                       (let [res (build-file/read-file css-filename)]
+                                         (when-not (:invalid? res) (:raw-content res))))
+                                     css-files))]
     (save-css combined-tmp-file files-content)
     combined-tmp-file))

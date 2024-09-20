@@ -19,7 +19,7 @@
   [app-dir input-css-files output-css-path]
   (let [input-css-file (apply build-fe-css/combine-css-files input-css-files)]
     (-> [[(build-cljs/install-cmd)]]
-        (concat (build-fe-css/tailwind-release-cmd input-css-file output-css-path))
+        (concat [[(build-fe-css/tailwind-release-cmd input-css-file output-css-path)]])
         (build-commands/force-dirs app-dir)
         build-commands/chain-cmds
         build-commands/first-failing)))
@@ -64,3 +64,4 @@
        (catch Exception e
          {:status :failed
           :exception e})))
+
