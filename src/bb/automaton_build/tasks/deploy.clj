@@ -474,22 +474,21 @@
                                        (= :la env) :cc-uri-la
                                        (= :production env) :cc-uri-production
                                        :else :imnotthere)
-                      push-res (reduce
-                                (fn [acc app]
-                                  (if (every? (fn [{:keys [status]}] (not (= :failed status))) acc)
-                                    (conj acc {})
-                                    (conj acc
-                                          {:app-name (:app-name app)
-                                           :status :skipped
-                                           :message "previous apps failing"}
-                                          (compile-monorepo app
-                                                            target-branch-env
-                                                            clever-uri-env
-                                                            env
-                                                            current-branch
-                                                            verbose?))))
-                                []
-                                subapps)]
+                      push-res (reduce (fn [acc app]
+                                         (if (some (fn [{:keys [status]}] (= :failed status)) acc)
+                                           (conj acc
+                                                 {:app-name (:app-name app)
+                                                  :status :skipped
+                                                  :message "previous app failed"})
+                                           (conj acc
+                                                 (compile-monorepo app
+                                                                   target-branch-env
+                                                                   clever-uri-env
+                                                                   env
+                                                                   current-branch
+                                                                   verbose?))))
+                                       []
+                                       subapps)]
                   (mapv (fn [res]
                           (cond
                             (= :success (:status res)) (apply h1-valid!
