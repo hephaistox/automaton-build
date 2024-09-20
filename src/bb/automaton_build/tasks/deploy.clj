@@ -186,40 +186,48 @@
    jar-entrypoint
    java-opts
    env]
-  (try
-    (let [class-dir (build-filename/absolutize (build-filename/create-dir-path
-                                                app-dir
-                                                (format "target/%s/class/" (name env))))
-          target-jar-filename (build-filename/create-file-path
-                               (format "target/%s/%s.jar" (name env) app-name))
-          shadow-res (if shadow-deploy-alias
-                       (build-project-compile/shadow-cljs app-dir shadow-deploy-alias)
-                       {:status :skipped})
-          css-res (if (and css-files compiled-css-path)
-                    (build-project-compile/css app-dir css-files compiled-css-path)
-                    {:status :skipped})
-          jar-res (if compile-jar
+  (let [class-dir (build-filename/absolutize
+                   (build-filename/create-dir-path app-dir (format "target/%s/class/" (name env))))
+        target-jar-filename (build-filename/create-file-path
+                             (format "target/%s/%s.jar" (name env) app-name))
+        shadow-res (if shadow-deploy-alias
+                     (try (build-project-compile/shadow-cljs app-dir shadow-deploy-alias)
+                          (catch Exception e
+                            {:status :failed
+                             :ex e}))
+                     {:status :skipped})
+        css-res (if (and css-files compiled-css-path)
+                  (try (build-project-compile/css app-dir css-files compiled-css-path)
+                       (catch Exception e
+                         {:status :failed
+                          :ex e}))
+                  {:status :skipped})
+        jar-res (if compile-jar
+                  (try
                     (build-project-compile/compile-jar class-dir paths target-jar-filename app-dir)
-                    {:status :skipped})
-          uber-jar-res (if compile-uber-jar
-                         (build-project-compile/compile-uber-jar class-dir
-                                                                 paths
-                                                                 target-jar-filename
-                                                                 app-dir
-                                                                 jar-entrypoint
-                                                                 java-opts)
-                         {:status :skipped})]
-      (-> {}
-          (assoc :app-dir app-dir)
-          (assoc :class-dir class-dir)
-          (assoc :shadow-cljs shadow-res)
-          (assoc :css css-res)
-          (assoc :jar jar-res)
-          (assoc :uber-jar uber-jar-res)
-          (assoc :status :success)))
-    (catch Exception e
-      {:status :failed
-       :ex e})))
+                    (catch Exception e
+                      {:status :failed
+                       :ex e}))
+                  {:status :skipped})
+        uber-jar-res (if compile-uber-jar
+                       (try (build-project-compile/compile-uber-jar class-dir
+                                                                    paths
+                                                                    target-jar-filename
+                                                                    app-dir
+                                                                    jar-entrypoint
+                                                                    java-opts)
+                            (catch Exception e
+                              {:status :failed
+                               :ex e}))
+                       {:status :skipped})]
+    (-> {}
+        (assoc :app-dir app-dir)
+        (assoc :class-dir class-dir)
+        (assoc :shadow-cljs shadow-res)
+        (assoc :css css-res)
+        (assoc :jar jar-res)
+        (assoc :uber-jar uber-jar-res)
+        (assoc :status :success))))
 
 (defn publish-clever-cloud
   [clever-uri app-dir env]
