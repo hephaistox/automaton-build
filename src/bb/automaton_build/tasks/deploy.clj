@@ -174,6 +174,13 @@
   (let [tmp-dir (build-file/create-temp-dir)]
     (when (build-headers-vcs/clone-repo-branch tmp-dir repo new-changes-branch false) tmp-dir)))
 
+(defn- wrap-fn-ex
+  [f]
+  (try (f)
+       (catch Exception e
+         {:status :failed
+          :ex e})))
+
 (defn deploy*
   [app-dir
    app-name
@@ -191,36 +198,26 @@
         target-jar-filename (build-filename/create-file-path
                              (format "target/%s/%s.jar" (name env) app-name))
         shadow-res (if shadow-deploy-alias
-                     (try (build-project-compile/shadow-cljs app-dir shadow-deploy-alias)
-                          (catch Exception e
-                            {:status :failed
-                             :ex e}))
+                     (wrap-fn-ex
+                      (partial build-project-compile/shadow-cljs app-dir shadow-deploy-alias))
                      {:status :skipped})
         css-res (if (and css-files compiled-css-path)
-                  (try (build-project-compile/css app-dir css-files compiled-css-path)
-                       (catch Exception e
-                         {:status :failed
-                          :params {:css-files css-files
-                                   :compiled-css-path compiled-css-path}
-                          :ex e}))
+                  (wrap-fn-ex
+                   (partial build-project-compile/css app-dir css-files compiled-css-path))
                   {:status :skipped})
-        jar-res (if compile-jar
-                  (try
-                    (build-project-compile/compile-jar class-dir paths target-jar-filename app-dir)
-                    (catch Exception e
-                      {:status :failed
-                       :ex e}))
-                  {:status :skipped})
+        jar-res
+        (if compile-jar
+          (wrap-fn-ex
+           (partial build-project-compile/compile-jar class-dir paths target-jar-filename app-dir))
+          {:status :skipped})
         uber-jar-res (if compile-uber-jar
-                       (try (build-project-compile/compile-uber-jar class-dir
-                                                                    paths
-                                                                    target-jar-filename
-                                                                    app-dir
-                                                                    jar-entrypoint
-                                                                    java-opts)
-                            (catch Exception e
-                              {:status :failed
-                               :ex e}))
+                       (wrap-fn-ex (partial build-project-compile/compile-uber-jar
+                                            class-dir
+                                            paths
+                                            target-jar-filename
+                                            app-dir
+                                            jar-entrypoint
+                                            java-opts))
                        {:status :skipped})]
     (-> {}
         (assoc :app-dir app-dir)
@@ -399,10 +396,10 @@
                                        :else :imnotthere)
                       deploy-res
                       (mapv
-                       (fn [app]
-                         (let [app-dir (:app-dir app)
-                               app-name (:app-name app)
-                               project-config (get-in app [:project-config-filedesc :edn])
+                       (fn [{:keys [app-dir app-name]
+                             :as app}]
+                         (h1 app-name " being compiled")
+                         (let [project-config (get-in app [:project-config-filedesc :edn])
                                repo (get-in project-config [:publication :repo-url])
                                base-branch (get-in project-config [:publication target-branch-env])
                                cc-uri (get-in project-config [:publication clever-uri-env])
@@ -427,31 +424,37 @@
                                                         [:publication :compile-uber-jar])
                                jar-entrypoint (get-in project-config
                                                       [:publication :uber-jar :entrypoint])
-                               java-opts (get-in project-config
-                                                 [:publication :uber-jar :java-opts])]
-                           (-> (deploy app-dir
-                                       app-name
-                                       paths
-                                       shadow-deploy-alias
-                                       css-files
-                                       compiled-css-path
-                                       compile-jar
-                                       compile-uber-jar
-                                       jar-entrypoint
-                                       java-opts
-                                       env
-                                       current-branch
-                                       repo
-                                       base-branch)
-                               (assoc :cc-uri cc-uri)
-                               (assoc :env env)
-                               (assoc :publish-clojars? publish-clojars?)
-                               (assoc :publish-cc? publish-cc?)
-                               (assoc :repo repo)
-                               (assoc :target-branch base-branch)
-                               (assoc :app-name app-name)
-                               (assoc :as-lib as-lib)
-                               (assoc :pom-xml-license pom-xml-license))))
+                               java-opts (get-in project-config [:publication :uber-jar :java-opts])
+                               res (-> (deploy app-dir
+                                               app-name
+                                               paths
+                                               shadow-deploy-alias
+                                               css-files
+                                               compiled-css-path
+                                               compile-jar
+                                               compile-uber-jar
+                                               jar-entrypoint
+                                               java-opts
+                                               env
+                                               current-branch
+                                               repo
+                                               base-branch)
+                                       (assoc :cc-uri cc-uri)
+                                       (assoc :env env)
+                                       (assoc :publish-clojars? publish-clojars?)
+                                       (assoc :publish-cc? publish-cc?)
+                                       (assoc :repo repo)
+                                       (assoc :target-branch base-branch)
+                                       (assoc :app-name app-name)
+                                       (assoc :as-lib as-lib)
+                                       (assoc :pom-xml-license pom-xml-license))]
+                           (if (every? #(or (= :success (:status %)) (= :skipped (:status %)))
+                                       (concat
+                                        (vals (select-keys res [:shadow-cljs :css :jar :uber-jar]))
+                                        [{:status (:status res)}]))
+                             (h1-valid app-name " compiled")
+                             (h1-error app-name " failed compilation with: " res))
+                           res))
                        subapps)]
                   (if (every? (fn [res]
                                 (every? #(or (= :success (:status %)) (= :skipped (:status %)))
@@ -459,9 +462,16 @@
                                          (vals (select-keys res [:shadow-cljs :css :jar :uber-jar]))
                                          [{:status (:status res)}])))
                               deploy-res)
-                    (let [push-res (mapv #(-> %
-                                              (publish-apps verbose?)
-                                              (assoc :app-name (:app-name %)))
+                    (let [push-res (mapv (fn [{:keys [app-name]
+                                               :as app}]
+                                           (h1 app-name " deploying")
+                                           (let [res (-> app
+                                                         (publish-apps verbose?)
+                                                         (assoc :app-name app-name))]
+                                             (if (= :success (:status res))
+                                               (h1-valid app-name " deployed")
+                                               (h1-error app-name " failed deployment with: " res))
+                                             res))
                                          deploy-res)]
                       (mapv (fn [res]
                               (cond
