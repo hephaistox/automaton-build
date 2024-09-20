@@ -347,10 +347,7 @@
       {:status :failed
        :msg (str "Push to " target-branch " failed")})
     {:status :skipped
-     :message (str "because compilation status is: " status
-                   " more details: " (with-out-str
-                                       (pp/pprint
-                                        (select-keys app [:shadow-cljs :css :jar :uber-jar]))))}))
+     :message (str "because compilation status is: " status " more details: " (:msg app))}))
 
 (defn run-monorepo
   []
@@ -477,17 +474,20 @@
                                          (vals (select-keys res [:shadow-cljs :css :jar :uber-jar]))
                                          [{:status (:status res)}])))
                               deploy-res)
-                    (let [push-res (mapv (fn [{:keys [app-name]
-                                               :as app}]
-                                           (h1 app-name " deploying")
-                                           (let [res (-> app
-                                                         (publish-apps verbose?)
-                                                         (assoc :app-name app-name))]
-                                             (if (= :success (:status res))
-                                               (h1-valid app-name " deployed")
-                                               (h1-error app-name " failed deployment with: " res))
-                                             res))
-                                         deploy-res)]
+                    (let [push-res (mapv
+                                    (fn [{:keys [app-name]
+                                          :as app}]
+                                      (h1 app-name " deploying")
+                                      (let [res (-> app
+                                                    (publish-apps verbose?)
+                                                    (assoc :app-name app-name))]
+                                        (cond
+                                          (= :success (:status res)) (h1-valid app-name " deployed")
+                                          (= :skipped (:status res))
+                                          (normalln app-name " deployment skipped")
+                                          :else (h1-error app-name " failed deployment with: " res))
+                                        res))
+                                    deploy-res)]
                       (mapv (fn [res]
                               (cond
                                 (= :success (:status res)) (apply h1-valid!
