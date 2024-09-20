@@ -445,10 +445,9 @@
                        subapps)]
                   (if (every? (fn [res]
                                 (every? #(or (= :success (:status %)) (= :skipped (:status %)))
-                                        (concat (vals (select-keys
-                                                       deploy-res
-                                                       [:shadow-cljs :css :jar :uber-jar]))
-                                                [{:status (:status res)}])))
+                                        (concat
+                                         (vals (select-keys res [:shadow-cljs :css :jar :uber-jar]))
+                                         [{:status (:status res)}])))
                               deploy-res)
                     (let [push-res (mapv #(-> %
                                               (publish-apps verbose?)
