@@ -283,7 +283,7 @@
                                                                            pom-xml-license)
                                     {:status :skipped})
                                 (assoc :publish :clojars))]
-        (if (every? (fn [{:keys [status]}] ((= status :skipped))) [publish-cc publish-clojars])
+        (if (every? (fn [{:keys [status]}] (= status :skipped)) [publish-cc publish-clojars])
           {:status :skipped}
           (if (every? (fn [{:keys [status]}] (or (= status :success) (= status :skipped)))
                       [publish-cc publish-clojars])

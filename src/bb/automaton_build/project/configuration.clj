@@ -28,9 +28,5 @@
          default-value)
      (let [value (or (build-conf-prot/read-conf-param (first (conf-state)) key-path)
                      (build-conf-prot/read-conf-param (second (conf-state)) key-path))]
-       (if (nil? value)
-         (do (normalln
-              (format "Read key-path %s returned nil, defaulted to `%s`" key-path default-value))
-             default-value)
-         (do (normalln "Read key-path " key-path " = " value) value)))))
+       (if (nil? value) default-value value))))
   ([key-path] (read-param key-path nil)))
