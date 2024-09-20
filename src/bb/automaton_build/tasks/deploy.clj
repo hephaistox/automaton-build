@@ -202,6 +202,9 @@
                       (partial build-project-compile/shadow-cljs app-dir shadow-deploy-alias))
                      {:status :skipped})
         _ (prn "shadow-res: " shadow-res)
+        _ (prn "app-dir: " app-dir)
+        _ (prn "css-files: " css-files)
+        _ (prn "compiled-css-path: " compiled-css-path)
         css-res (if (and css-files compiled-css-path)
                   (wrap-fn-ex
                    (partial build-project-compile/css app-dir css-files compiled-css-path))
