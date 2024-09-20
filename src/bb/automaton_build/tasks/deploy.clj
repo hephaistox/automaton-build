@@ -215,7 +215,7 @@
         (assoc :css css-res)
         (assoc :jar jar-res)
         (assoc :uber-jar uber-jar-res)
-        (assoc :general {:status :success}))))
+        (assoc :status :success))))
 
 (defn publish-clever-cloud
   [clever-uri app-dir env]
@@ -267,13 +267,13 @@
                jar-entrypoint
                java-opts
                env)
-      {:general {:status :failed
-                 :msg "Couldn't ensure that there is no cache"}})
-    {:general {:status :skipped
-               :data {:repo repo
-                      :target-branch target-branch
-                      :env env}
-               :msg (if (and repo target-branch) "No changes found" "Missing parameters")}}))
+      {:status :failed
+       :msg "Couldn't ensure that there is no cache"})
+    {:status :skipped
+     :data {:repo repo
+            :target-branch target-branch
+            :env env}
+     :msg (if (and repo target-branch) "No changes found" "Missing parameters")}))
 
 (defn publish-apps
   [{:keys [app-name
@@ -423,6 +423,7 @@
                                        current-branch
                                        repo
                                        base-branch)
+                               (#(do (prn "deploy: " %) %))
                                (assoc :cc-uri cc-uri)
                                (assoc :env env)
                                (assoc :publish-clojars? publish-clojars?)
