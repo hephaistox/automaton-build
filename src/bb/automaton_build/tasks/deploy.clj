@@ -77,19 +77,19 @@
       (build-filename/create-dir-path tmp-dir ".git"))))
 
 (defn- replace-repo-git-dir
-  [new-git-dir repo-dir]
+  [new-git-dir repo-dir verbose?]
   (let [dir-to-push-git-dir (build-filename/create-dir-path repo-dir ".git")]
     (build-file/delete-dir dir-to-push-git-dir)
-    (build-headers-files/copy-files new-git-dir dir-to-push-git-dir "*" true {})))
+    (build-headers-files/copy-files new-git-dir dir-to-push-git-dir "*" verbose? {})))
 
 (defn- replace-branch-files
   "Replaces files from target-branch with files from files-dir. Returns directory in which it resides"
-  [files-dir repo-address target-branch]
+  [files-dir repo-address target-branch verbose?]
   (let [target-git-dir (target-branch-git-dir repo-address target-branch)
         dir-with-replaced-files (build-file/create-temp-dir)]
     (when target-git-dir
-      (build-headers-files/copy-files files-dir dir-with-replaced-files "*" true {})
-      (replace-repo-git-dir target-git-dir dir-with-replaced-files)
+      (build-headers-files/copy-files files-dir dir-with-replaced-files "*" verbose? {})
+      (replace-repo-git-dir target-git-dir dir-with-replaced-files verbose?)
       dir-with-replaced-files)))
 
 (defn push-local-dir-to-repo
@@ -102,8 +102,8 @@
   * `tag` (optional) map containg `id` with tag and optional `msg` with corresponding message
   * `force?` (optional default false) if true, will force the changes to be pushed as top commit
   * `target-branch` (optional default current-branch) where to push"
-  ([source-dir repo-address target-branch commit-msg]
-   (if-let [dir-to-push (replace-branch-files source-dir repo-address target-branch)]
+  ([source-dir repo-address target-branch commit-msg verbose?]
+   (if-let [dir-to-push (replace-branch-files source-dir repo-address target-branch verbose?)]
      (let [branch (build-headers-vcs/current-branch dir-to-push)
            {:keys [exit]
             :as res}
@@ -122,7 +122,7 @@
 
 (defn push-current-branch
   "Pushes `app` current changes to it's repository. The changes are pushed to the current branch of user running the function. It is forbidden to push to base-branch of application."
-  [app-dir app-name repo main-branch current-branch message]
+  [app-dir app-name repo main-branch current-branch message verbose?]
   (cond
     (not-every? some? [app-dir repo main-branch current-branch])
     {:status :failed
@@ -142,11 +142,12 @@
                                   repo
                                   current-branch
                                   (when (and message (string? message) (not (str/blank? message)))
-                                    message))))
+                                    message)
+                                  verbose?)))
 
 (defn push-base-branch
   "Pushes app to `base-branch`"
-  [app-name app-dir repo base-branch message]
+  [app-name app-dir repo base-branch message verbose?]
   (let [github-new-changes-link (str "https://github.com/" (first (re-find #"(?<=:)(.*)(?=.git)"
                                                                            repo))
                                      "/tree/" base-branch)
@@ -155,7 +156,7 @@
                         base-branch
                         github-new-changes-link)]
     (h1 message)
-    (let [res (push-local-dir-to-repo app-dir repo base-branch message)]
+    (let [res (push-local-dir-to-repo app-dir repo base-branch message verbose?)]
       (if (= :success (:status res)) (h1-valid message) (h1-error "Push failed " res))
       (= :success (:status res)))))
 
@@ -268,10 +269,15 @@
            cc-uri
            paths
            as-lib
-           pom-xml-license]}]
+           pom-xml-license]}
+   verbose?]
   (if (= :success (:status general))
-    (if
-      (push-base-branch app-name app-dir repo target-branch (build-version/current-version app-dir))
+    (if (push-base-branch app-name
+                          app-dir
+                          repo
+                          target-branch
+                          (build-version/current-version app-dir)
+                          verbose?)
       (let [publish-cc
             (-> (if publish-cc? (publish-clever-cloud cc-uri app-dir env) {:status :skipped})
                 (assoc :publish :cc))
@@ -305,6 +311,7 @@
                                   build-project-map/add-project-config))
         env (get-in cli-opts [:options :env])
         message (get-in cli-opts [:options :message])
+        verbose? (get-in cli-opts [:options :verbose])
         base-branch (get-in monorepo-project-map
                             [:project-config-filedesc :edn :publication :base-branch])
         app-dir (get-in monorepo-project-map [:app-dir])
@@ -333,7 +340,8 @@
                                                             repo
                                                             app-base-branch
                                                             current-branch
-                                                            message)]
+                                                            message
+                                                            verbose?)]
                           (if (= :success (:status push-res))
                             (h1-valid app-name "pushed")
                             (h1-error app-name "push failed with: " push-res))
@@ -381,7 +389,7 @@
                 (if (every? (fn [[_ {:keys [status]}]] (or (= status :skipped) (= status :success)))
                             (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
                   (let [push-res (mapv #(-> %
-                                            publish-apps
+                                            (publish-apps verbose?)
                                             (assoc :app-name (:app-name %)))
                                        deploy-res)]
                     (mapv (fn [res]
