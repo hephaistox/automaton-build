@@ -1,7 +1,8 @@
 (ns automaton-build.tasks.deploy
   (:require
    [automaton-build.code.vcs                 :as build-vcs]
-   [automaton-build.echo.headers             :refer [h1 h1-error h1-error! h1-valid normalln]]
+   [automaton-build.echo.headers             :refer
+                                             [h1 h1-error h1-error! h1-valid h1-valid! normalln]]
    [automaton-build.monorepo.apps            :as build-apps]
    [automaton-build.os.cli-opts              :as build-cli-opts]
    [automaton-build.os.cmds                  :as build-commands]
@@ -11,7 +12,6 @@
    [automaton-build.project.compile          :as build-project-compile]
    [automaton-build.project.deps             :as build-deps]
    [automaton-build.project.map              :as build-project-map]
-   [automaton-build.project.pom-xml          :as build-project-pom-xml]
    [automaton-build.project.publish          :as build-project-publish]
    [automaton-build.project.versioning       :as build-project-versioning]
    [automaton-build.tasks.impl.headers.files :as build-headers-files]
@@ -26,7 +26,6 @@
         "Environment is required, run -e la or -e production"
         :parse-fn
         #(keyword %)]
-       ["-f" "--force" "Do not ask about local apps push" :default true :parse-fn not]
        ["-m" "--message" "Message for local apps push" :parse-fn str]]
       (concat build-cli-opts/help-options build-cli-opts/verbose-options)
       build-cli-opts/parse-cli))
@@ -208,6 +207,7 @@
                                                                java-opts)
                        {:status :skipped})]
     (-> {}
+        (assoc :paths paths)
         (assoc :app-dir app-dir)
         (assoc :class-dir class-dir)
         (assoc :shadow-cljs shadow-res)
@@ -256,14 +256,44 @@
                :msg (if (and repo target-branch) "No changes found" "Missing parameters")}}))
 
 (defn publish-apps
-  [{:keys
-    [app-name app-dir repo target-branch general publish-clojars? publish-cc? jar env cc-uri]}]
+  [{:keys [app-name
+           app-dir
+           repo
+           target-branch
+           general
+           publish-clojars?
+           publish-cc?
+           jar
+           env
+           cc-uri
+           paths
+           as-lib
+           pom-xml-license]}]
   (if (= :success (:status general))
-    (when
+    (if
       (push-base-branch app-name app-dir repo target-branch (build-version/current-version app-dir))
-      (when publish-cc? (publish-clever-cloud cc-uri app-dir env))
-      (when publish-clojars? (build-project-publish/publish-clojars (:jar-path jar) app-dir)))
-    (normalln app-name " publish skipped")))
+      (let [publish-cc
+            (-> (if publish-cc? (publish-clever-cloud cc-uri app-dir env) {:status :skipped})
+                (assoc :publish :cc))
+            publish-clojars (-> (if publish-clojars?
+                                    (build-project-publish/publish-clojars (:jar-path jar)
+                                                                           app-dir
+                                                                           paths
+                                                                           as-lib
+                                                                           pom-xml-license)
+                                    {:status :skipped})
+                                (assoc :publish :clojars))]
+        (if (every? (fn [{:keys [status]}] ((= status :skipped))) [publish-cc publish-clojars])
+          {:status :skipped}
+          (if (every? (fn [{:keys [status]}] (or (= status :success) (= status :skipped)))
+                      [publish-cc publish-clojars])
+            {:status :success
+             :res (filter #(= :success (:status %)) [publish-cc publish-clojars])}
+            {:status :failed
+             :res [publish-cc publish-clojars]})))
+      {:status :failed
+       :msg (str "Push to " target-branch " failed")})
+    {:status :skipped}))
 
 (defn run-monorepo
   []
@@ -274,7 +304,6 @@
                                   build-project-map/add-deps-edn
                                   build-project-map/add-project-config))
         env (get-in cli-opts [:options :env])
-        force (get-in cli-opts [:options :force])
         message (get-in cli-opts [:options :message])
         base-branch (get-in monorepo-project-map
                             [:project-config-filedesc :edn :publication :base-branch])
@@ -342,9 +371,28 @@
                         (assoc
                          :target-branch
                          (get-in % [:project-config-filedesc :edn :publication target-branch-env]))
-                        (assoc :app-name (:app-name %)))
+                        (assoc :app-name (:app-name %))
+                        (assoc :as-lib
+                               (get-in % [:project-config-filedesc :edn :publication :as-lib]))
+                        (assoc
+                         :pom-xml-license
+                         (get-in % [:project-config-filedesc :edn :publication :pom-xml-license])))
                      subapps)]
                 (if (every? (fn [[_ {:keys [status]}]] (or (= status :skipped) (= status :success)))
                             (select-keys deploy-res [:shadow-cljs :css :jar :uber-jar :general]))
-                  (let [push-res (mapv #(publish-apps %) deploy-res)] push-res)
+                  (let [push-res (mapv #(-> %
+                                            publish-apps
+                                            (assoc :app-name (:app-name %)))
+                                       deploy-res)]
+                    (mapv (fn [res]
+                            (cond
+                              (= :success (:status res)) (apply h1-valid!
+                                                                (:app-name res)
+                                                                " successfully deployed to "
+                                                                (mapcat #(str (name (:publish %)))
+                                                                 (filter #(= :success (:status %))
+                                                                         (:res res))))
+                              (= :skipped (:status res)) (normalln (:app-name res) " skipped")
+                              :else (h1-error! (:app-name res) " failed with: " res)))
+                          push-res))
                   (h1-error! "Compilation failed: " deploy-res))))))))))

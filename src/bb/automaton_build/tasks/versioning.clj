@@ -16,13 +16,10 @@
    [automaton-build.os.cli-opts             :as build-cli-opts]
    [automaton-build.os.version              :as build-version]
    [automaton-build.project.dependencies    :as build-dependencies]
-   [automaton-build.project.deps            :as build-deps]
    [automaton-build.project.map             :as build-project-map]
-   [automaton-build.project.pom-xml         :as build-project-pom-xml]
    [automaton-build.project.versioning      :as build-project-versioning]
    [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd success]]
-   [clojure.pprint                          :as pp]
-   [clojure.string                          :as str]))
+   [clojure.pprint                          :as pp]))
 
 (def cli-opts
   (-> [["-e"
@@ -43,15 +40,6 @@
        :version version}
       {:status :failed})
     {:status :skipped}))
-
-(defn generate-pom-xml
-  [app-dir deps-edn excluded-aliases as-lib license version]
-  (let [source-paths (build-deps/extract-paths deps-edn excluded-aliases)]
-    (if-let [pom-res
-             (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license version)]
-      {:status :failed
-       :res pom-res}
-      {:status :success})))
 
 (defn update-deps-version
   "Aligns all apps dependencies in `apps-dirs` to have newest specific app version. So if it's run for automaton-build, all files containing it as dependency will be updated to it's version.edn version"
@@ -77,39 +65,8 @@
           (let [app-dir (:app-dir app)
                 app-name (:app-name app)
                 version-res (update-version app-dir app-name env)]
-            (print (str/join "" (repeat 8 clear-prev-line)))
             (app-result-summary app-name version-res)
             (assoc app :version-update version-res)))
-        subapps))
-
-(defn pom-xml-status
-  [app]
-  (if (= :success (get-in app [:version-update :status]))
-    (let [excluded-aliases (get-in app
-                                   [:project-config-filedesc :edn :publication :excluded-aliases])
-          as-lib (get-in app [:project-config-filedesc :edn :publication :as-lib])
-          pom-xml-license (get-in app [:project-config-filedesc :edn :publication :pom-xml-license])
-          deps-edn (get-in app [:deps :edn])
-          app-dir (:app-dir app)
-          pom-xml-res (if pom-xml-license
-                        (generate-pom-xml app-dir
-                                          deps-edn
-                                          excluded-aliases
-                                          as-lib
-                                          pom-xml-license
-                                          (get-in app [:version-update :version]))
-                        {:status :skipped})]
-      pom-xml-res)
-    {:status :skipped}))
-
-(defn pom-xml-generation
-  [subapps]
-  (h1 "Monorepo apps pom.xml generation")
-  (mapv (fn [app]
-          (normalln (:app-name app) " start pom-xml generation")
-          (let [status (pom-xml-status app)]
-            (app-result-summary (:app-name app) status)
-            (assoc app :pom-xml status)))
         subapps))
 
 (defn align-subapps-deps
@@ -145,11 +102,10 @@
     (= :success (:status result)) (h2-valid! name " success")))
 
 (defn summary-details
-  [{:keys [version-update subapps-update pom-xml app-name]}]
+  [{:keys [version-update subapps-update app-name]}]
   (h2 app-name " details:")
   (detailed-report "Version update" version-update)
-  (detailed-report "Dependencies update" subapps-update)
-  (detailed-report "POM-XML generation" pom-xml))
+  (detailed-report "Dependencies update" subapps-update))
 
 (defn format-files
   "Format project files."
@@ -162,10 +118,9 @@
     (if (success res) (h1-valid "Format project files.") (h1-error "Format project files."))))
 
 (defn run-monorepo
-  "Versioning for monorepo has 3 steps:
+  "Versioning for monorepo has 2 steps:
    1. Set version for each project
-   2. Generate new pom.xml
-   3. Update other subapps references of updated project"
+   2. Update other subapps references of updated project"
   []
   (let [monorepo-project-map (-> (build-project-map/create-project-map "")
                                  build-project-map/add-project-config
@@ -177,7 +132,6 @@
         subapps (->> monorepo-project-map
                      :subprojects
                      (versioning-update env)
-                     pom-xml-generation
                      align-subapps-deps)]
     (format-files (:app-dir monorepo-project-map))
     (normalln)
@@ -185,9 +139,9 @@
     (h1 "Synthesis of results:")
     (normalln)
     (normalln)
-    (mapv (fn [{:keys [subapps-update pom-xml version-update app-name]
+    (mapv (fn [{:keys [subapps-update version-update app-name]
                 :as app}]
-            (let [results [version-update subapps-update pom-xml]]
+            (let [results [version-update subapps-update]]
               (cond
                 (every? (fn [{:keys [status]}] (= :success status)) results)
                 (h1-valid! app-name " success" " ver." (:version version-update))
