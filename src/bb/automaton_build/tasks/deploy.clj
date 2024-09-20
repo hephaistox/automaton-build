@@ -190,22 +190,17 @@
     (let [class-dir (build-filename/absolutize (build-filename/create-dir-path
                                                 app-dir
                                                 (format "target/%s/class/" (name env))))
-          _ (prn "class-dir " class-dir)
           target-jar-filename (build-filename/create-file-path
                                (format "target/%s/%s.jar" (name env) app-name))
-          _ (prn "target-jar-f" target-jar-filename)
           shadow-res (if shadow-deploy-alias
                        (build-project-compile/shadow-cljs app-dir shadow-deploy-alias)
                        {:status :skipped})
-          _ (prn "shadow" shadow-res)
           css-res (if (and css-files compiled-css-path)
                     (build-project-compile/css app-dir css-files compiled-css-path)
                     {:status :skipped})
-          _ (prn "css " css-res)
           jar-res (if compile-jar
                     (build-project-compile/compile-jar class-dir paths target-jar-filename app-dir)
                     {:status :skipped})
-          _ (prn "jar-res" jar-res)
           uber-jar-res (if compile-uber-jar
                          (build-project-compile/compile-uber-jar class-dir
                                                                  paths
@@ -213,8 +208,7 @@
                                                                  app-dir
                                                                  jar-entrypoint
                                                                  java-opts)
-                         {:status :skipped})
-          _ (prn "uber " uber-jar-res)]
+                         {:status :skipped})]
       (-> {}
           (assoc :app-dir app-dir)
           (assoc :class-dir class-dir)
@@ -410,8 +404,8 @@
                                shadow-deploy-alias (get-in project-config
                                                            [:publication :shadow-cljs-deploy-alias])
                                css-files (get-in project-config [:publication :css-files])
-                               compiled-css-path
-                               [:project-config-filedesc :edn :publication :compiled-css-path]
+                               compiled-css-path (get-in project-config
+                                                         [:publication :compiled-css-path])
                                compile-jar (get-in project-config [:publication :compile-jar])
                                compile-uber-jar (get-in project-config
                                                         [:publication :compile-uber-jar])
@@ -433,7 +427,6 @@
                                        current-branch
                                        repo
                                        base-branch)
-                               (#(do (prn "deploy: " %) %))
                                (assoc :cc-uri cc-uri)
                                (assoc :env env)
                                (assoc :publish-clojars? publish-clojars?)

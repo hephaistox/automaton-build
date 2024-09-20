@@ -17,15 +17,9 @@
 
 (defn css
   [app-dir input-css-files output-css-path]
-  (prn (format "app-dir `%s` input-css-files `%s` output-css-path `%s`"
-               app-dir
-               input-css-files
-               output-css-path))
   (let [input-css-file (apply build-fe-css/combine-css-files input-css-files)]
     (-> [[(build-cljs/install-cmd)]]
         (concat (build-fe-css/tailwind-release-cmd input-css-file output-css-path))
-        (#(do (prn "css vec: " %) %))
-        vec
         (build-commands/force-dirs app-dir)
         build-commands/chain-cmds
         build-commands/first-failing)))
