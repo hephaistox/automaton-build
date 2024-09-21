@@ -8,9 +8,11 @@
    [automaton-build.project.impl.clojars-deploy      :as build-deploy-jar]
    [automaton-build.project.pom-xml                  :as build-project-pom-xml]
    [automaton-build.tasks.impl.headers.files         :as build-headers-files]))
+;;TODO not here, but wf-5 is speaking only about landing
 
 (defn generate-pom-xml
   [app-dir as-lib license source-paths]
+  ;;TODO binding *out* for pom.xml
   (if-let [pom-res (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license)]
     {:status :failed
      :res pom-res}
@@ -57,7 +59,7 @@
            (build-headers-files/copy-files target-dir clever-target "*" verbose? {})
            (let [res (build-clever-cloud/deploy clever-repo-dir version)]
              (if (build-commands/success res)
-               {:stauts :success}
+               {:status :success}
                {:status :failed
                 :res res})))
        {:status :failed

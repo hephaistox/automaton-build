@@ -216,6 +216,7 @@
                       {:status :failed
                        :res res}))
                   {:status :skipped})
+        ;;TODO binding for jar-res and uber-jar
         jar-res
         (if compile-jar
           (wrap-fn-ex
