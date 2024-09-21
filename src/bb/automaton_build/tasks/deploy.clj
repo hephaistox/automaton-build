@@ -16,7 +16,6 @@
    [automaton-build.project.versioning       :as build-project-versioning]
    [automaton-build.tasks.impl.headers.files :as build-headers-files]
    [automaton-build.tasks.impl.headers.vcs   :as build-headers-vcs]
-   [clojure.pprint                           :as pp]
    [clojure.string                           :as str]))
 
 (def cli-opts
@@ -34,20 +33,30 @@
 (defn- pull-base-branch
   "Pull base branch, cannot be executed on base branch"
   [app-dir base-branch current-branch]
-  (when-not (= current-branch base-branch)
-    (-> (build-vcs/pull-changes-chain-cmd base-branch)
-        (concat [[(build-vcs/merge-cmd base-branch current-branch)]])
-        (build-commands/force-dirs app-dir)
-        build-commands/chain-cmds
-        build-commands/first-failing
-        build-commands/success)))
+  (if (= current-branch base-branch)
+    {:status :failed
+     :message
+     "current monorepo branch `%s` is same as base-branch: `%s`, please switch to dev branch"}
+    (let [res (-> (build-vcs/pull-changes-chain-cmd base-branch)
+                  (concat [[(build-vcs/merge-cmd base-branch current-branch)]])
+                  (build-commands/force-dirs app-dir)
+                  build-commands/chain-cmds
+                  build-commands/first-failing)]
+      (if (build-commands/success res)
+        {:status :success}
+        {:status :failed
+         :message "Pull of base branch and merge failed"
+         :res res}))))
 
 (defn clean-state?
   [app-dir]
-  (-> (build-vcs/git-changes?-cmd)
-      (build-commands/blocking-cmd app-dir)
-      build-vcs/git-changes?-analyze
-      not))
+  (if (-> (build-vcs/git-changes?-cmd)
+          (build-commands/blocking-cmd app-dir)
+          build-vcs/git-changes?-analyze
+          not)
+    {:status :success}
+    {:status :failed
+     :message "Git status is not empty. First commmit your changes."}))
 
 ;;push branch
 (defn- prepare-cloned-repo-on-branch
@@ -168,7 +177,10 @@
                             [(get-in app [:project-config-filedesc :edn :publication :base-branch])
                              (get-in app [:project-config-filedesc :edn :publication :la-branch])])
                    subapps))]
-    (some #(= current-branch %) base-branches)))
+    (if (some #(= current-branch %) base-branches)
+      {:status :failed
+       :message "Monorepo current branch is same as base branch of subapp"}
+      {:status :success})))
 
 (defn ensure-no-cache
   [new-changes-branch repo]
@@ -437,71 +449,66 @@
           current-branch (build-headers-vcs/current-branch app-dir)
           subapps (->> monorepo-project-map
                        :subprojects)]
-      (if-not (pull-base-branch app-dir base-branch current-branch)
-        (do
-          (h1-error!
-           "Current branch is not up-to-date with base, first pull changes from monorepo main branch")
-          1)
-        (if-not (clean-state? app-dir)
-          (do (h1-error! "Git status is not empty. First commmit your changes.") 1)
-          (if (current-branch-name-invalid? subapps current-branch)
-            (do (h1-error! "Monorepo current branch is same as base branch of subapp") 1)
-            (let [push-current-branch-subapps
-                  (mapv
-                   (fn [{:keys [app-dir app-name]
-                         :as app}]
-                     (h1 app-name " being pushed to " current-branch)
-                     (let [app-base-branch
-                           (get-in app [:project-config-filedesc :edn :publication :base-branch])
-                           repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
-                           push-res (push-current-branch app-dir
-                                                         app-name
-                                                         repo
-                                                         app-base-branch
-                                                         current-branch
-                                                         message
-                                                         verbose?)]
-                       (if (= :success (:status push-res))
-                         (h1-valid app-name "pushed")
-                         (h1-error app-name "push failed with: " push-res))
-                       push-res))
-                   subapps)]
-              (if-not (every? #(= :success (:status %)) push-current-branch-subapps)
-                (do (h1-error! "Local push failed") 1)
-                (let [target-branch-env (cond
-                                          (= :la env) :la-branch
-                                          (= :production env) :base-branch
-                                          :else :imnothere)
-                      clever-uri-env (cond
-                                       (= :la env) :cc-uri-la
-                                       (= :production env) :cc-uri-production
-                                       :else :imnotthere)
-                      push-res (reduce (fn [acc app]
-                                         (if (some (fn [{:keys [status]}] (= :failed status)) acc)
-                                           (conj acc
-                                                 {:app-name (:app-name app)
-                                                  :status :skipped
-                                                  :message "previous app failed"})
-                                           (conj acc
-                                                 (compile-monorepo app
-                                                                   target-branch-env
-                                                                   clever-uri-env
-                                                                   env
-                                                                   current-branch
-                                                                   verbose?))))
-                                       []
-                                       subapps)]
-                  (mapv (fn [res]
-                          (cond
-                            (= :success (:status res)) (apply h1-valid!
-                                                              (:app-name res)
-                                                              " successfully deployed to "
-                                                              (mapcat #(str (name (:publish %)))
-                                                               (filter #(= :success (:status %))
-                                                                       (:res res))))
-                            (= :skipped (:status res))
-                            (normalln (:app-name res) " skipped due to " (:message res))
-                            :else (h1-error! (:app-name res) " failed with: " res)))
-                        push-res))))))))
+      (if-let [failed-res (some (fn [res] (if (not= :success (:status res)) res false))
+                                [(pull-base-branch app-dir base-branch current-branch)
+                                 (clean-state? app-dir)
+                                 (current-branch-name-invalid? subapps current-branch)])]
+        (do (h1-error! "Can't deploy because " failed-res) 1)
+        (let [push-current-branch-subapps
+              (mapv (fn [{:keys [app-dir app-name]
+                          :as app}]
+                      (h1 app-name " being pushed to " current-branch)
+                      (let [app-base-branch
+                            (get-in app [:project-config-filedesc :edn :publication :base-branch])
+                            repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
+                            push-res (push-current-branch app-dir
+                                                          app-name
+                                                          repo
+                                                          app-base-branch
+                                                          current-branch
+                                                          message
+                                                          verbose?)]
+                        (if (= :success (:status push-res))
+                          (h1-valid app-name "pushed")
+                          (h1-error app-name "push failed with: " push-res))
+                        push-res))
+                    subapps)]
+          (if-not (every? #(= :success (:status %)) push-current-branch-subapps)
+            (do (h1-error! "Local push failed") 1)
+            (let [target-branch-env (cond
+                                      (= :la env) :la-branch
+                                      (= :production env) :base-branch
+                                      :else :imnothere)
+                  clever-uri-env (cond
+                                   (= :la env) :cc-uri-la
+                                   (= :production env) :cc-uri-production
+                                   :else :imnotthere)
+                  push-res (reduce (fn [acc app]
+                                     (if (some (fn [{:keys [status]}] (= :failed status)) acc)
+                                       (conj acc
+                                             {:app-name (:app-name app)
+                                              :status :skipped
+                                              :message "previous app failed"})
+                                       (conj acc
+                                             (compile-monorepo app
+                                                               target-branch-env
+                                                               clever-uri-env
+                                                               env
+                                                               current-branch
+                                                               verbose?))))
+                                   []
+                                   subapps)]
+              (mapv (fn [res]
+                      (cond
+                        (= :success (:status res)) (apply h1-valid!
+                                                          (:app-name res)
+                                                          " successfully deployed to "
+                                                          (mapcat #(str (name (:publish %)))
+                                                           (filter #(= :success (:status %))
+                                                                   (:res res))))
+                        (= :skipped (:status res))
+                        (normalln (:app-name res) " skipped due to " (:message res))
+                        :else (h1-error! (:app-name res) " failed with: " res)))
+                    push-res))))))
     0
     (catch Exception e (h1-error! "error happened: " e) 1)))
