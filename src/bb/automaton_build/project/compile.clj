@@ -24,19 +24,19 @@
         build-commands/chain-cmds
         build-commands/first-failing)))
 
-(defn copy-files
-  [src-dir dst-dir]
-  (let [copy-actions (-> src-dir
-                         str
-                         (build-file/search-files "*")
-                         build-file/file-rich-list
-                         (build-file/copy-actions src-dir dst-dir {}))]
-    (filter :exists? copy-actions)))
 
 (defn compile-jar
   "Compile code to jar or uber-jar based on `jar-type`."
   [class-dir app-paths target-jar-path project-dir]
-  (try (build-file/actual-copy (mapcat #(copy-files % class-dir) app-paths))
+  (try (->> app-paths
+            build-file/file-rich-list
+            (mapv (fn [path]
+                    (-> path
+                        (assoc :options
+                               {:replace-existing true
+                                :copy-attributes true})
+                        (assoc :target-dir-path class-dir))))
+            build-file/actual-copy)
        (build-code-artifacts/set-project-root! (build-filename/absolutize project-dir))
        (build-code-artifacts/jar {:class-dir class-dir
                                   :jar-file target-jar-path})
@@ -49,7 +49,15 @@
 (defn compile-uber-jar
   "Compile code to jar or uber-jar based on `jar-type`."
   [class-dir app-paths target-jar-path project-dir jar-main java-opts]
-  (try (build-file/actual-copy (mapcat #(copy-files % class-dir) app-paths))
+  (try (->> app-paths
+            build-file/file-rich-list
+            (mapv (fn [path]
+                    (-> path
+                        (assoc :options
+                               {:replace-existing true
+                                :copy-attributes true})
+                        (assoc :target-dir-path class-dir))))
+            build-file/actual-copy)
        (build-code-artifacts/set-project-root! (build-filename/absolutize project-dir))
        (let [basis (build-code-artifacts/create-basis)]
          (build-code-artifacts/compile-clj {:basis basis

@@ -51,8 +51,9 @@
    Else asks user for new version"
   ([version app-name changes]
    (if (production? version)
-     (build-version/generate-new-version version app-name changes)
-     (first (build-version/split-optional-qualifier version))))
+     {:version (build-version/generate-new-version version app-name changes)
+      :user-defined true}
+     {:version (first (build-version/split-optional-qualifier version))}))
   ([version app-name] (generate-production-version version app-name nil)))
 
 (defn- generate-test-env-version
@@ -63,9 +64,11 @@
    (if (production? version)
      (let [new-version (build-version/generate-new-version version app-name changes)]
        (if (= version new-version)
-         version
-         (build-version/add-optional-qualifier new-version (name target-env))))
-     (generate-new-test-env-version version)))
+         {:version version
+          :user-defined? true}
+         {:version (build-version/add-optional-qualifier new-version (name target-env))
+          :user-defined? true}))
+     {:version (generate-new-test-env-version version)}))
   ([version app-name target-env] (generate-test-env-version version app-name target-env nil)))
 
 

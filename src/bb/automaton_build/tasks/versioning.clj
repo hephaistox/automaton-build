@@ -9,7 +9,9 @@
                                                     h1-valid
                                                     h1-valid!
                                                     h2
+                                                    h2-error
                                                     h2-error!
+                                                    h2-valid
                                                     h2-valid!
                                                     normalln]]
    [automaton-build.monorepo.apps           :as build-apps]
@@ -19,7 +21,8 @@
    [automaton-build.project.map             :as build-project-map]
    [automaton-build.project.versioning      :as build-project-versioning]
    [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd success]]
-   [clojure.pprint                          :as pp]))
+   [clojure.pprint                          :as pp]
+   [clojure.string                          :as str]))
 
 (def cli-opts
   (-> [["-e"
@@ -35,10 +38,11 @@
 (defn update-version
   [app-dir app-name target-env]
   (if-let [version (build-project-versioning/generate-new-app-version target-env app-dir app-name)]
-    (if-let [_save-version (build-version/save-version app-dir version)]
-      {:status :success
-       :version version}
-      {:status :failed})
+    (do (when (:asked? version) (print (str/join "" (repeat 8 clear-prev-line))))
+        (if-let [_save-version (build-version/save-version app-dir (:version version))]
+          {:status :success
+           :version version}
+          {:status :failed}))
     {:status :skipped}))
 
 (defn update-deps-version
@@ -54,20 +58,25 @@
    {:keys [status]
     :as res}]
   (cond
-    (= :success status) (h1-valid app-name " success")
-    (= :skipped status) (do (print clear-prev-line) (h1 app-name " skipped"))
-    :else (h1-error app-name " failed with: " res)))
+    (= :success status) (h2-valid app-name " success")
+    (= :skipped status) (do (print clear-prev-line) (h2 app-name " skipped"))
+    :else (h2-error app-name " failed with: " res)))
 
 (defn versioning-update
   [env subapps]
   (h1 "Monorepo apps version setting")
-  (mapv (fn [app]
-          (let [app-dir (:app-dir app)
-                app-name (:app-name app)
-                version-res (update-version app-dir app-name env)]
-            (app-result-summary app-name version-res)
-            (assoc app :version-update version-res)))
-        subapps))
+  (let [subapps-res (mapv (fn [app]
+                            (let [app-dir (:app-dir app)
+                                  app-name (:app-name app)
+                                  version-res (update-version app-dir app-name env)]
+                              (h2 app-name " versioning...")
+                              (app-result-summary app-name version-res)
+                              (assoc app :version-update version-res)))
+                          subapps)]
+    (when (every? #(= :success (:status %)) subapps-res)
+      (print (str/join "" (repeat (count subapps) clear-prev-line)))
+      (h1-valid "Monorepo apps version setting"))
+    subapps-res))
 
 (defn align-subapps-deps
   [subapps]
