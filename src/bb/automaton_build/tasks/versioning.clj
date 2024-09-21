@@ -73,7 +73,7 @@
                               (app-result-summary app-name version-res)
                               (assoc app :version-update version-res)))
                           subapps)]
-    (when (every? #(= :success (:status %)) subapps-res)
+    (when (every? #(= :success (:status (:version-update %))) subapps-res)
       (print (str/join "" (repeat (count subapps) clear-prev-line)))
       (h1-valid "Monorepo apps version setting"))
     subapps-res))
@@ -83,25 +83,31 @@
   (h1 "Monorepo apps dependencies update of set versions")
   (let [apps-to-update
         (remove nil?
-                (mapv (fn [app]
-                        (let [as-lib (get-in app
-                                             [:project-config-filedesc :edn :publication :as-lib])]
-                          (when (and as-lib (= :success (get-in app [:version-update :status])))
-                            (update-deps-version as-lib (get-in app [:version-update :version])))))
-                      subapps))]
+                (mapv
+                 (fn [app]
+                   (let [as-lib (get-in app [:project-config-filedesc :edn :publication :as-lib])]
+                     (when (and as-lib (= :success (get-in app [:version-update :status])))
+                       (update-deps-version as-lib
+                                            (get-in app [:version-update :version :version])))))
+                 subapps))]
     (if (empty? apps-to-update)
       (normalln "no apps found for depenedency update")
-      (mapv (fn [{:keys [app-dir]
-                  :as app}]
-              (normalln (:app-name app) " dependencies update started")
-              (let [deps-update-res (build-dependencies/update-deps! "" app-dir apps-to-update)
-                    status (if (:error deps-update-res)
-                             {:status :failed
-                              :res deps-update-res}
-                             {:status :success})]
-                (app-result-summary (:app-name app) status)
-                (assoc app :subapps-update status)))
-            subapps))))
+      (let [subapps-res (mapv (fn [{:keys [app-dir]
+                                    :as app}]
+                                (normalln (:app-name app) " dependencies update started")
+                                (let [deps-update-res
+                                      (build-dependencies/update-deps! "" app-dir apps-to-update)
+                                      status (if (:error deps-update-res)
+                                               {:status :failed
+                                                :res deps-update-res}
+                                               {:status :success})]
+                                  (app-result-summary (:app-name app) status)
+                                  (assoc app :subapps-update status)))
+                              subapps)]
+        (when (every? #(= :success (:status (:subapps-update %))) subapps-res)
+          (print (str/join "" (repeat (count subapps) clear-prev-line)))
+          (h1-valid "Monorepo apps dependencies update of set versions"))
+        subapps-res))))
 
 (defn- detailed-report
   [name result]
@@ -153,7 +159,7 @@
             (let [results [version-update subapps-update]]
               (cond
                 (every? (fn [{:keys [status]}] (= :success status)) results)
-                (h1-valid! app-name " success" " ver." (:version version-update))
+                (h1-valid! app-name " success" " ver." (:version (:version version-update)))
                 (every? (fn [{:keys [status]}] (= :skipped status)) results) (normalln app-name
                                                                                        " skipped")
                 (some (fn [{:keys [status]}] (= :failed status)) results)
