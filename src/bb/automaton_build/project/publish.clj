@@ -53,6 +53,7 @@
          clever-target (build-filename/create-dir-path clever-repo-dir "target")]
      (if (= :success (:status clever-repo-res))
        (do (build-file/delete-path clever-target)
+           (build-file/ensure-dir-exists clever-target)
            (build-headers-files/copy-files target-dir clever-target "*" verbose? {})
            (let [res (build-clever-cloud/deploy clever-repo-dir version)]
              (if (build-commands/success res)
