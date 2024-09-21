@@ -65,14 +65,18 @@
 (defn versioning-update
   [env subapps]
   (h1 "Monorepo apps version setting")
-  (mapv (fn [app]
-          (let [app-dir (:app-dir app)
-                app-name (:app-name app)
-                version-res (update-version app-dir app-name env)]
-            (h2 app-name " versioning...")
-            (app-result-summary app-name version-res)
-            (assoc app :version-update version-res)))
-        subapps))
+  (let [subapps-res (mapv (fn [app]
+                            (let [app-dir (:app-dir app)
+                                  app-name (:app-name app)
+                                  version-res (update-version app-dir app-name env)]
+                              (h2 app-name " versioning...")
+                              (app-result-summary app-name version-res)
+                              (assoc app :version-update version-res)))
+                          subapps)]
+    (when (every? #(= :success (:status %)) subapps-res)
+      (print (str/join "" (repeat (count subapps) clear-prev-line)))
+      (h1-valid "Monorepo apps version setting"))
+    subapps-res))
 
 (defn align-subapps-deps
   [subapps]
