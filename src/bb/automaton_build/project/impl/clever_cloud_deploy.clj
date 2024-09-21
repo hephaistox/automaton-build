@@ -16,6 +16,7 @@
   [target-dir uri repo-name]
   (let [clever-repo-dir (build-filename/create-dir-path target-dir repo-name)]
     (build-file/delete-path clever-repo-dir)
+    (build-file/ensure-dir-exists clever-repo-dir)
     (let [clone-res (-> (build-vcs/shallow-clone-repo-branch-cmd uri "master" repo-name)
                         (build-commands/blocking-cmd target-dir))]
       (if (-> clone-res
