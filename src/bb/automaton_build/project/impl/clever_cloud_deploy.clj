@@ -17,14 +17,13 @@
   [target-dir uri repo-name]
   (let [clever-repo-dir (build-filename/create-dir-path target-dir repo-name)]
     (build-file/delete-path clever-repo-dir)
-    (build-filename/create-dir-path clever-repo-dir)
-    (if (-> (build-vcs/shallow-clone-repo-branch-cmd uri "master" "repo")
+    (if (-> (build-vcs/shallow-clone-repo-branch-cmd uri "master" repo-name)
             (build-commands/blocking-cmd target-dir)
-            (build-commands/success))
-      (h1-valid "Clever repo cloned succesfully")
-      (h1-error!
-       "Clever repo clone failed, please make sure you have locally acess to the clever cloud repositories."))
-    clever-repo-dir))
+            build-commands/success)
+      {:status :success
+       :filepath clever-repo-dir}
+      {:status :failed
+       :filepath clever-repo-dir})))
 
 (defn deploy
   "Deploys to clever-cloud, returns true if succesfull.

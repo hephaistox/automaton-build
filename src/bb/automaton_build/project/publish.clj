@@ -1,6 +1,7 @@
 (ns automaton-build.project.publish
   (:require
    [automaton-build.os.cmds                          :as build-commands]
+   [automaton-build.os.file                          :as build-file]
    [automaton-build.os.filename                      :as build-filename]
    [automaton-build.project.configuration            :as build-project-conf]
    [automaton-build.project.impl.clever-cloud-deploy :as build-clever-cloud]
@@ -46,24 +47,25 @@
 
 (defn publish-clever-cloud
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
-  ([repo-uri target-dir clever-dir version]
-   (prn "clever-uri: " repo-uri)
-   (prn "clever-dir: " clever-dir)
-   (let [clever-repo-dir (build-clever-cloud/clone-repo clever-dir repo-uri "repo")]
-     (build-headers-files/copy-files target-dir
-                                     (build-filename/create-dir-path clever-repo-dir "target")
-                                     "*"
-                                     false
-                                     {})
-     (let [res (build-clever-cloud/deploy clever-repo-dir version)]
-       (if (build-commands/success res)
-         {:stauts :success}
-         {:status :failed
-          :res res}))))
-  ([repo-uri target-dir]
+  ([repo-uri target-dir clever-dir version verbose?]
+   (let [clever-repo-res (build-clever-cloud/clone-repo clever-dir repo-uri "repo")
+         clever-repo-dir (:filepath clever-repo-res)
+         clever-target (build-filename/create-dir-path clever-repo-dir "target")]
+     (if (= :success (:status clever-repo-res))
+       (do (build-file/delete-path clever-target)
+           (build-headers-files/copy-files target-dir clever-target "*" verbose? {})
+           (let [res (build-clever-cloud/deploy clever-repo-dir version)]
+             (if (build-commands/success res)
+               {:stauts :success}
+               {:status :failed
+                :res res})))
+       {:status :failed
+        :message "Cloning CC failed"})))
+  ([repo-uri target-dir verbose?]
    (publish-clever-cloud repo-uri
                          target-dir
                          (->> ".clever"
                               (build-filename/create-dir-path ".")
                               build-filename/absolutize)
-                         "Automatically pushed version")))
+                         "Automatically pushed version"
+                         verbose?)))
