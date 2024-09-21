@@ -50,6 +50,7 @@
 (defn publish-clever-cloud
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
   ([repo-uri target-dir clever-dir version verbose?]
+   (prn "repo uri" repo-uri "\n target-dir: " target-dir "\n clever-dir: " clever-dir)
    (let [clever-repo-res (build-clever-cloud/clone-repo clever-dir repo-uri "repo")
          clever-repo-dir (:filepath clever-repo-res)
          clever-target (build-filename/create-dir-path clever-repo-dir "target")]
