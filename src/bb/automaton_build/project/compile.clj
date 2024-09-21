@@ -52,11 +52,13 @@
   (try (->> app-paths
             build-file/file-rich-list
             (mapv (fn [path]
-                    (-> path
-                        (assoc :options
-                               {:replace-existing true
-                                :copy-attributes true})
-                        (assoc :target-dir-path class-dir))))
+                    (let [copy-action (-> path
+                                          (assoc :options
+                                                 {:replace-existing true
+                                                  :copy-attributes true})
+                                          (assoc :target-dir-path class-dir))]
+                      (prn "copy-action: " copy-action)
+                      copy-action)))
             build-file/actual-copy)
        (build-code-artifacts/set-project-root! (build-filename/absolutize project-dir))
        (let [basis (build-code-artifacts/create-basis)]

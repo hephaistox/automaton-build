@@ -197,7 +197,8 @@
 (defn compile*
   [app-dir
    app-name
-   paths
+   deps-edn
+   excluded-aliases
    shadow-deploy-alias
    css-files
    compiled-css-path
@@ -206,7 +207,9 @@
    jar-entrypoint
    java-opts
    env]
-  (let [class-dir (build-filename/absolutize
+  (let [paths (mapv #(build-filename/absolutize (build-filename/create-dir-path app-dir %))
+                    (build-deps/extract-paths deps-edn excluded-aliases))
+        class-dir (build-filename/absolutize
                    (build-filename/create-dir-path app-dir (format "target/%s/class/" (name env))))
         target-jar-filename (build-filename/create-file-path
                              (format "target/%s/%s.jar" (name env) app-name))
@@ -245,6 +248,7 @@
                        {:status :skipped})]
     (-> {}
         (assoc :app-dir app-dir)
+        (assoc :paths paths)
         (assoc :class-dir class-dir)
         (assoc :shadow-cljs shadow-res)
         (assoc :css css-res)
@@ -275,7 +279,8 @@
   It's done currently not as a workflow, only because workflow can't be used in another workflow and we have a logic we want to preserve here"
   [dir
    app-name
-   paths
+   deps-edn
+   excluded-aliases
    shadow-deploy-alias
    css-files
    compiled-css-path
@@ -294,7 +299,8 @@
     (if-let [app-dir (ensure-no-cache current-branch repo)]
       (compile* app-dir
                 app-name
-                paths
+                deps-edn
+                excluded-aliases
                 shadow-deploy-alias
                 css-files
                 compiled-css-path
@@ -382,8 +388,6 @@
         pom-xml-license (get-in project-config [:publication :pom-xml-license])
         excluded-aliases (get-in project-config [:publication :excluded-aliases])
         deps-edn (get-in app [:deps :edn])
-        paths (mapv #(build-filename/absolutize (build-filename/create-dir-path app-dir %))
-                    (build-deps/extract-paths deps-edn excluded-aliases))
         shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
         css-files (get-in project-config [:publication :css-files])
         compiled-css-path (get-in project-config [:publication :compiled-css-path])
@@ -393,7 +397,8 @@
         java-opts (get-in project-config [:publication :uber-jar :java-opts])
         compile-res (-> (compile-app app-dir
                                      app-name
-                                     paths
+                                     deps-edn
+                                     excluded-aliases
                                      shadow-deploy-alias
                                      css-files
                                      compiled-css-path
