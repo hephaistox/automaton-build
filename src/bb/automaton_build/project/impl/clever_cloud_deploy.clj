@@ -5,11 +5,10 @@
 
    Alternatively it could be done by using clever CLI, but currently we don't need any features that can't be done by simply manipulating the repository in the git. Which is a simpler option in terms of complexity (no need for API to check), while still being flexible (a lot of options to manipulate in git). Additionally this doesn't require to install the clever cloud cli."
   (:require
-   [automaton-build.code.vcs     :as build-vcs]
-   [automaton-build.echo.headers :refer [h1-error! h1-valid]]
-   [automaton-build.os.cmds      :as build-commands]
-   [automaton-build.os.file      :as build-file]
-   [automaton-build.os.filename  :as build-filename]))
+   [automaton-build.code.vcs    :as build-vcs]
+   [automaton-build.os.cmds     :as build-commands]
+   [automaton-build.os.file     :as build-file]
+   [automaton-build.os.filename :as build-filename]))
 
 
 (defn clone-repo
@@ -17,13 +16,15 @@
   [target-dir uri repo-name]
   (let [clever-repo-dir (build-filename/create-dir-path target-dir repo-name)]
     (build-file/delete-path clever-repo-dir)
-    (if (-> (build-vcs/shallow-clone-repo-branch-cmd uri "master" repo-name)
-            (build-commands/blocking-cmd target-dir)
-            build-commands/success)
-      {:status :success
-       :filepath clever-repo-dir}
-      {:status :failed
-       :filepath clever-repo-dir})))
+    (let [clone-res (-> (build-vcs/shallow-clone-repo-branch-cmd uri "master" repo-name)
+                        (build-commands/blocking-cmd target-dir))]
+      (if (-> clone-res
+              build-commands/success)
+        {:status :success
+         :filepath clever-repo-dir}
+        {:status :failed
+         :res clone-res
+         :filepath clever-repo-dir}))))
 
 (defn deploy
   "Deploys to clever-cloud, returns true if succesfull.

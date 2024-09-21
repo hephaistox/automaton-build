@@ -60,7 +60,8 @@
                {:status :failed
                 :res res})))
        {:status :failed
-        :message "Cloning CC failed"})))
+        :message "Cloning CC failed"
+        :res (:res clever-repo-res)})))
   ([repo-uri target-dir verbose?]
    (publish-clever-cloud repo-uri
                          target-dir
