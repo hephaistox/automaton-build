@@ -1,15 +1,18 @@
 (ns automaton-build.project.publish
   (:require
    [automaton-build.os.cmds                          :as build-commands]
+   [automaton-build.os.file                          :as build-file]
    [automaton-build.os.filename                      :as build-filename]
    [automaton-build.project.configuration            :as build-project-conf]
    [automaton-build.project.impl.clever-cloud-deploy :as build-clever-cloud]
    [automaton-build.project.impl.clojars-deploy      :as build-deploy-jar]
    [automaton-build.project.pom-xml                  :as build-project-pom-xml]
    [automaton-build.tasks.impl.headers.files         :as build-headers-files]))
+;;TODO not here, but wf-5 is speaking only about landing
 
 (defn generate-pom-xml
   [app-dir as-lib license source-paths]
+  ;;TODO binding *out* for pom.xml
   (if-let [pom-res (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license)]
     {:status :failed
      :res pom-res}
@@ -46,22 +49,27 @@
 
 (defn publish-clever-cloud
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
-  ([repo-uri target-dir clever-dir version]
-   (let [clever-repo-dir (build-clever-cloud/clone-repo clever-dir repo-uri "repo")]
-     (build-headers-files/copy-files target-dir
-                                     (build-filename/create-dir-path clever-repo-dir "target")
-                                     "*"
-                                     false
-                                     {})
-     (let [res (build-clever-cloud/deploy clever-repo-dir version)]
-       (if (build-commands/success res)
-         {:stauts :success}
-         {:status :failed
-          :res res}))))
-  ([repo-uri target-dir]
+  ([repo-uri target-dir clever-dir version verbose?]
+   (let [clever-repo-res (build-clever-cloud/clone-repo clever-dir repo-uri "repo")
+         clever-repo-dir (:filepath clever-repo-res)
+         clever-target (build-filename/create-dir-path clever-repo-dir "target")]
+     (if (= :success (:status clever-repo-res))
+       (do (build-file/delete-path clever-target)
+           (build-file/ensure-dir-exists clever-target)
+           (build-headers-files/copy-files target-dir clever-target "*" verbose? {})
+           (let [res (build-clever-cloud/deploy clever-repo-dir version)]
+             (if (build-commands/success res)
+               {:status :success}
+               {:status :failed
+                :res res})))
+       {:status :failed
+        :message "Cloning CC failed"
+        :res (:res clever-repo-res)})))
+  ([repo-uri target-dir verbose?]
    (publish-clever-cloud repo-uri
                          target-dir
                          (->> ".clever"
                               (build-filename/create-dir-path ".")
                               build-filename/absolutize)
-                         "Automatically pushed version")))
+                         "Automatically pushed version"
+                         verbose?)))

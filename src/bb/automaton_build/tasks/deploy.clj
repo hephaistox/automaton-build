@@ -216,6 +216,7 @@
                       {:status :failed
                        :res res}))
                   {:status :skipped})
+        ;;TODO binding for jar-res and uber-jar
         jar-res
         (if compile-jar
           (wrap-fn-ex
@@ -240,7 +241,7 @@
         (assoc :status :success))))
 
 (defn publish-clever-cloud
-  [clever-uri app-dir env]
+  [clever-uri app-dir env verbose?]
   (build-project-publish/publish-clever-cloud clever-uri
                                               (->> (name env)
                                                    (build-filename/create-dir-path app-dir "target")
@@ -248,7 +249,8 @@
                                               (->> ".clever"
                                                    (build-filename/create-dir-path app-dir)
                                                    build-filename/absolutize)
-                                              (build-version/current-version app-dir)))
+                                              (build-version/current-version app-dir)
+                                              verbose?))
 
 (defn compile-app
   "Deploys app in isolation to ensure no cache which requires that your state should be clean and current branch is not a base branch
@@ -321,7 +323,7 @@
                           (build-version/current-version app-dir)
                           verbose?)
       (let [publish-cc (-> (if publish-cc?
-                               (publish-clever-cloud cc-uri app-dir env)
+                               (publish-clever-cloud cc-uri app-dir env verbose?)
                                {:status :skipped
                                 :message ":publication :cc project.edn is missing"})
                            (assoc :publish :cc))
