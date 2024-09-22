@@ -1,6 +1,6 @@
 (ns automaton-build.project.publish
   (:require
-   [automaton-build.echo.headers                     :refer [normalln]]
+   [automaton-build.echo.headers                     :refer [build-writter normalln]]
    [automaton-build.os.cmds                          :as build-commands]
    [automaton-build.os.file                          :as build-file]
    [automaton-build.os.filename                      :as build-filename]
@@ -34,10 +34,14 @@
       (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
         (normalln (:msg pom-xml-status)))
       (if (= :success (:status pom-xml-status))
-        (let [deploy-res (build-commands/blocking-cmd (build-deploy-jar/deploy-cmd jar-path)
-                                                      app-dir)]
+        (let [s (build-writter)
+              deploy-res (binding [*out* s
+                                   *err* s]
+                           (build-commands/blocking-cmd (build-deploy-jar/deploy-cmd jar-path)
+                                                        app-dir))]
           (if (build-commands/success deploy-res)
-            {:status :success}
+            {:status :success
+             :msg (str s)}
             {:status :failed
              :res deploy-res}))
         {:status :failed
