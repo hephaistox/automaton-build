@@ -1,5 +1,6 @@
 (ns automaton-build.project.publish
   (:require
+   [automaton-build.echo.headers                     :refer [normalln]]
    [automaton-build.os.cmds                          :as build-commands]
    [automaton-build.os.file                          :as build-file]
    [automaton-build.os.filename                      :as build-filename]
@@ -7,16 +8,12 @@
    [automaton-build.project.impl.clever-cloud-deploy :as build-clever-cloud]
    [automaton-build.project.impl.clojars-deploy      :as build-deploy-jar]
    [automaton-build.project.pom-xml                  :as build-project-pom-xml]
-   [automaton-build.tasks.impl.headers.files         :as build-headers-files]))
-;;TODO not here, but wf-5 is speaking only about landing
+   [automaton-build.tasks.impl.headers.files         :as build-headers-files]
+   [clojure.string                                   :as str]))
 
 (defn generate-pom-xml
   [app-dir as-lib license source-paths]
-  ;;TODO binding *out* for pom.xml
-  (if-let [pom-res (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license)]
-    {:status :failed
-     :res pom-res}
-    {:status :success}))
+  (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license))
 
 (defn pom-xml-status
   [app-dir as-lib pom-xml-license paths]
@@ -30,12 +27,15 @@
 
 (defn publish-clojars
   "Publish jar to clojars"
-  [jar-path app-dir paths as-lib pom-xml-license]
+  [jar-path app-dir paths as-lib pom-xml-license verbose?]
   (if (and (build-project-conf/read-param [:clojars-username])
            (build-project-conf/read-param [:clojars-password]))
     (let [pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
+      (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
+        (normalln (:msg pom-xml-status)))
       (if (= :success (:status pom-xml-status))
-        (let [deploy-res (build-commands/blocking-cmd (build-deploy-jar/deploy jar-path) app-dir)]
+        (let [deploy-res (build-commands/blocking-cmd (build-deploy-jar/deploy-cmd jar-path)
+                                                      app-dir)]
           (if (build-commands/success deploy-res)
             {:status :success}
             {:status :failed
@@ -50,7 +50,6 @@
 (defn publish-clever-cloud
   "Publish uber-jar to Clever Cloud. [clever docs](https://developers.clever-cloud.com/doc/cli/)"
   ([repo-uri target-dir clever-dir version verbose?]
-   (prn "repo uri" repo-uri "\n target-dir: " target-dir "\n clever-dir: " clever-dir)
    (let [clever-repo-res (build-clever-cloud/clone-repo clever-dir repo-uri "repo")
          clever-repo-dir (:filepath clever-repo-res)
          clever-target (build-filename/create-dir-path clever-repo-dir "target")]
