@@ -231,7 +231,6 @@
                       {:status :failed
                        :res res}))
                   {:status :skipped})
-        ;;TODO binding for jar-res and uber-jar
         jar-res
         (if compile-jar
           (wrap-fn-ex
@@ -460,7 +459,8 @@
                                  (clean-state? app-dir)
                                  (current-branch-name-invalid? subapps current-branch)])]
         (do (h1-error! "Can't deploy because " failed-res) 1)
-        (let [push-current-branch-subapps
+        (let [_ (h1 "Pushing all monorepo apps to " current-branch)
+              push-current-branch-subapps
               (mapv (fn [{:keys [app-dir app-name]
                           :as app}]
                       (h1 app-name " being pushed to " current-branch)

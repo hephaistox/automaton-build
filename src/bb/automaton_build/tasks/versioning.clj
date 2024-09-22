@@ -150,9 +150,7 @@
                      align-subapps-deps)]
     (format-files (:app-dir monorepo-project-map))
     (normalln)
-    (normalln)
     (h1 "Synthesis of results:")
-    (normalln)
     (normalln)
     (mapv (fn [{:keys [subapps-update version-update app-name]
                 :as app}]
