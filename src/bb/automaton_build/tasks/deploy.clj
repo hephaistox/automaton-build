@@ -350,7 +350,8 @@
                                                                            app-dir
                                                                            paths
                                                                            as-lib
-                                                                           pom-xml-license)
+                                                                           pom-xml-license
+                                                                           verbose?)
                                     {:status :skipped
                                      :message ":publication :clojars project.edn is missing"})
                                 (assoc :publish :clojars))]
