@@ -199,31 +199,6 @@
   (let [tmp-dir (build-file/create-temp-dir)]
     (when (build-headers-vcs/clone-repo-branch tmp-dir repo new-changes-branch false) tmp-dir)))
 
-(defn prepare-deploy-data
-  [app current-branch env target-branch-env clever-uri-env]
-  (let [project-config (get-in app [:project-config-filedesc :edn])
-        repo (get-in project-config [:publication :repo-url])]
-    {:app-name (:app-name app)
-     :repo repo
-     :class-dir (format "target/%s/class/" (name env))
-     :target-jar (format "target/%s/%s.jar" (name env) (:app-name app))
-     :cacheless-app-dir (ensure-no-cache current-branch repo)
-     :initial-app-dir (:app-dir app)
-     :base-branch (get-in project-config [:publication target-branch-env])
-     :cc-uri (get-in project-config [:publication clever-uri-env])
-     :publish-clojars? (get-in project-config [:publication :clojars])
-     :publish-cc? (get-in project-config [:publication :cc])
-     :as-lib (get-in project-config [:publication :as-lib])
-     :pom-xml-license (get-in project-config [:publication :pom-xml-license])
-     :excluded-aliases (get-in project-config [:publication :excluded-aliases])
-     :deps-edn (get-in app [:deps :edn])
-     :shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
-     :css-files (get-in project-config [:publication :css-files])
-     :compiled-css-path (get-in project-config [:publication :compiled-css-path])
-     :compile-jar (get-in project-config [:publication :compile-jar])
-     :compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
-     :jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
-     :java-opts (get-in project-config [:publication :uber-jar :java-opts])}))
 
 (defn pom-xml-status
   [app-dir as-lib pom-xml-license paths]
@@ -423,6 +398,39 @@
        :reason "version.edn of app did not change"}
       :else {:deploy? true})))
 
+(defn prepare-deploy-data
+  [app current-branch env target-branch-env clever-uri-env verbose?]
+  (h2 (:app-name app) "...")
+  (let [app-name (:app-name app)
+        project-config (get-in app [:project-config-filedesc :edn])
+        repo (get-in project-config [:publication :repo-url])
+        app-deploy-data
+        {:app-name app-name
+         :repo repo
+         :class-dir (format "target/%s/class/" (name env))
+         :target-jar (format "target/%s/%s.jar" (name env) (:app-name app))
+         :cacheless-app-dir (ensure-no-cache current-branch repo)
+         :initial-app-dir (:app-dir app)
+         :base-branch (get-in project-config [:publication target-branch-env])
+         :cc-uri (get-in project-config [:publication clever-uri-env])
+         :publish-clojars? (get-in project-config [:publication :clojars])
+         :publish-cc? (get-in project-config [:publication :cc])
+         :as-lib (get-in project-config [:publication :as-lib])
+         :pom-xml-license (get-in project-config [:publication :pom-xml-license])
+         :excluded-aliases (get-in project-config [:publication :excluded-aliases])
+         :deps-edn (get-in app [:deps :edn])
+         :shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
+         :css-files (get-in project-config [:publication :css-files])
+         :compiled-css-path (get-in project-config [:publication :compiled-css-path])
+         :compile-jar (get-in project-config [:publication :compile-jar])
+         :compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
+         :jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
+         :java-opts (get-in project-config [:publication :uber-jar :java-opts])}
+        deploy?-res (should-deploy? app-deploy-data env)]
+    (if (:deploy? deploy?-res)
+      (do (h2-valid app-name " will be deployed") app-deploy-data)
+      (do (print clear-prev-line) (normalln app-name " is skipped " (when verbose? deploy?-res))))))
+
 (defn deploy-monorepo-apps
   "If one app failes in the deploy chain, rest of apps is skipped"
   [env verbose? apps-to-deploy]
@@ -436,17 +444,6 @@
                            []
                            apps-to-deploy)]
     deploy-res))
-
-(defn deployable-app
-  [{:keys [app-name]
-    :as app}
-   env
-   verbose?]
-  (h2 app-name)
-  (let [deploy?-res (should-deploy? app env)]
-    (if (:deploy? deploy?-res)
-      (do (h2-valid app-name " will be deployed") app)
-      (do (print clear-prev-line) (normalln app-name " is skipped " (when verbose? deploy?-res))))))
 
 (defn run-monorepo
   []
@@ -483,13 +480,14 @@
                       (push-monorepo-changes-to-subapps current-branch subapps message verbose?)))]
         (do (h1-error! "Can't deploy because " failed-res) 1)
         (do (h1 "Analyzing apps that should be deployed...")
-            (let [apps-to-deploy
-                  (->>
-                    subapps
-                    (mapv
-                     #(prepare-deploy-data % current-branch env target-branch-env clever-uri-env))
-                    (mapv #(deployable-app % env verbose?))
-                    (remove nil?))
+            (let [apps-to-deploy (->> subapps
+                                      (mapv #(prepare-deploy-data %
+                                                                  current-branch
+                                                                  env
+                                                                  target-branch-env
+                                                                  clever-uri-env
+                                                                  verbose?))
+                                      (remove nil?))
                   _ (h1 "Deployment of chosen apps")
                   deploy-res (deploy-monorepo-apps env verbose? apps-to-deploy)]
               (normalln)
