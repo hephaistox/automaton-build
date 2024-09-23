@@ -42,35 +42,6 @@
       (concat build-cli-opts/help-options build-cli-opts/verbose-options)
       build-cli-opts/parse-cli))
 
-(defn- pull-base-branch
-  "Pull base branch, cannot be executed on base branch"
-  [app-dir base-branch current-branch]
-  (if (= current-branch base-branch)
-    {:status :failed
-     :message
-     "current monorepo branch `%s` is same as base-branch: `%s`, please switch to dev branch"}
-    (let [res (-> (build-vcs/pull-changes-chain-cmd base-branch)
-                  (concat [[(build-vcs/merge-cmd base-branch current-branch)]])
-                  (build-commands/force-dirs app-dir)
-                  build-commands/chain-cmds
-                  build-commands/first-failing)]
-      (if (build-commands/success res)
-        {:status :success}
-        {:status :failed
-         :message "Pull of base branch and merge failed"
-         :res res}))))
-
-(defn clean-state?
-  [app-dir]
-  (if (-> (build-vcs/git-changes?-cmd)
-          (build-commands/blocking-cmd app-dir)
-          build-vcs/git-changes?-analyze
-          not)
-    {:status :success}
-    {:status :failed
-     :message "Git status is not empty. First commmit your changes."}))
-
-;;push branch
 (defn- prepare-cloned-repo-on-branch
   "Clone the repo in diectory `tmp-dir`, the repo at `repo-address` is copied on branch `branch-name`
   Params:
@@ -166,6 +137,63 @@
                                   (when (and message (string? message) (not (str/blank? message)))
                                     message)
                                   verbose?)))
+
+(defn- pull-base-branch
+  "Pull base branch, cannot be executed on base branch"
+  [app-dir base-branch current-branch]
+  (if (= current-branch base-branch)
+    {:status :failed
+     :message
+     "current monorepo branch `%s` is same as base-branch: `%s`, please switch to dev branch"}
+    (let [res (-> (build-vcs/pull-changes-chain-cmd base-branch)
+                  (concat [[(build-vcs/merge-cmd base-branch current-branch)]])
+                  (build-commands/force-dirs app-dir)
+                  build-commands/chain-cmds
+                  build-commands/first-failing)]
+      (if (build-commands/success res)
+        {:status :success}
+        {:status :failed
+         :message "Pull of base branch and merge failed"
+         :res res}))))
+
+(defn- clean-state?
+  [app-dir]
+  (if (-> (build-vcs/git-changes?-cmd)
+          (build-commands/blocking-cmd app-dir)
+          build-vcs/git-changes?-analyze
+          not)
+    {:status :success}
+    {:status :failed
+     :message "Git status is not empty. First commmit your changes."}))
+
+(defn- push-monorepo-changes-to-subapps
+  [current-branch subapps message verbose?]
+  (h1 "Pushing all monorepo apps to " current-branch)
+  (let [res (mapv (fn [{:keys [app-dir app-name]
+                        :as app}]
+                    (h2 app-name " being pushed to " current-branch)
+                    (let [app-base-branch
+                          (get-in app [:project-config-filedesc :edn :publication :base-branch])
+                          repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
+                          push-res (push-current-branch app-dir
+                                                        app-name
+                                                        repo
+                                                        app-base-branch
+                                                        current-branch
+                                                        message
+                                                        verbose?)]
+                      (if (= :success (:status push-res))
+                        (h2-valid app-name "pushed")
+                        (h2-error app-name "push failed with: " push-res))
+                      push-res))
+                  subapps)]
+    (if (every? #(= :success (:status %)) res)
+      (do (clear-lines (count subapps))
+          (h1-valid "Pushed all monorepo apps to " current-branch)
+          {:status :success})
+      res)))
+
+
 
 (defn push-base-branch
   "Pushes app to `base-branch`"
@@ -268,7 +296,6 @@
 
 (defn deploy-clojars
   [{:keys [cacheless-app-dir
-           app-dir
            as-lib
            pom-xml-license
            deps-edn
@@ -284,7 +311,7 @@
         class-dir (build-filename/absolutize (build-filename/create-dir-path cacheless-app-dir
                                                                              class-dir))
         target-jar-filename (build-filename/create-file-path target-jar)
-        pom-xml-res (generate-pom-xml app-dir as-lib pom-xml-license paths verbose?)
+        pom-xml-res (generate-pom-xml cacheless-app-dir as-lib pom-xml-license paths verbose?)
         shadow-res (if shadow-deploy-alias
                      (build-project-compile/shadow-cljs cacheless-app-dir shadow-deploy-alias)
                      {:status :skipped})
@@ -301,16 +328,16 @@
 
 
 (defn deploy-app
-  [{:keys [publish-cc? publish-clojars? app-name app-dir repo base-branch]
+  [{:keys [publish-cc? publish-clojars? app-name cacheless-app-dir repo base-branch]
     :as app}
    env
    verbose?]
   (h2 app-name " deployment process started")
   (if (push-base-branch app-name
-                        app-dir
+                        cacheless-app-dir
                         repo
                         base-branch
-                        (build-version/current-version app-dir)
+                        (build-version/current-version cacheless-app-dir)
                         verbose?)
     (let [_ (h3 app-name
                 " deployment to:"
@@ -339,32 +366,6 @@
     {:status :failed
      :msg (str "Push to " base-branch " failed")}))
 
-(defn push-monorepo-changes-to-subapps
-  [current-branch subapps message verbose?]
-  (h1 "Pushing all monorepo apps to " current-branch)
-  (let [res (mapv (fn [{:keys [app-dir app-name]
-                        :as app}]
-                    (h2 app-name " being pushed to " current-branch)
-                    (let [app-base-branch
-                          (get-in app [:project-config-filedesc :edn :publication :base-branch])
-                          repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
-                          push-res (push-current-branch app-dir
-                                                        app-name
-                                                        repo
-                                                        app-base-branch
-                                                        current-branch
-                                                        message
-                                                        verbose?)]
-                      (if (= :success (:status push-res))
-                        (h2-valid app-name "pushed")
-                        (h2-error app-name "push failed with: " push-res))
-                      push-res))
-                  subapps)]
-    (if (every? #(= :success (:status %)) res)
-      (do (clear-lines (count subapps))
-          (h1-valid "Pushed all monorepo apps to " current-branch)
-          {:status :success})
-      res)))
 
 (defn should-deploy?
   [app env]
@@ -400,7 +401,7 @@
 
 (defn prepare-deploy-data
   [app current-branch env target-branch-env clever-uri-env verbose?]
-  (h2 (:app-name app) "...")
+  (h2 (str (:app-name app) "..."))
   (let [app-name (:app-name app)
         project-config (get-in app [:project-config-filedesc :edn])
         repo (get-in project-config [:publication :repo-url])
@@ -428,8 +429,8 @@
          :java-opts (get-in project-config [:publication :uber-jar :java-opts])}
         deploy?-res (should-deploy? app-deploy-data env)]
     (if (:deploy? deploy?-res)
-      (do (h2-valid app-name " will be deployed") app-deploy-data)
-      (do (print clear-prev-line) (normalln app-name " is skipped " (when verbose? deploy?-res))))))
+      (do (h2-valid app-name "will be deployed") app-deploy-data)
+      (do (print clear-prev-line) (normalln app-name "is skipped " (when verbose? deploy?-res))))))
 
 (defn deploy-monorepo-apps
   "If one app failes in the deploy chain, rest of apps is skipped"
