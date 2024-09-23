@@ -241,8 +241,7 @@
 
 (defn generate-pom-xml
   [app-dir as-lib pom-xml-license paths verbose?]
-  (let [_ (normalln "pom-xml generation")
-        pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
+  (let [pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
     (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
       (normalln (:msg pom-xml-status)))
     pom-xml-status))
@@ -356,12 +355,15 @@
                                 [cc clojars])]
         (do (h2-error! app-name " deployment failed:" failed-res)
             {:status :failed
+             :app-name app-name
              :res failed-res})
         (do (print clear-prev-line)
             (h2-valid app-name " deployment suceeded")
             {:status :success
+             :app-name app-name
              :res [cc clojars]})))
     {:status :failed
+     :app-name app-name
      :msg (str "Push to " base-branch " failed")}))
 
 
@@ -493,8 +495,8 @@
               (normalln)
               (mapv (fn [res]
                       (cond
-                        (= :success (:status res))
-                        (apply h1-valid! (:app-name res) " successfully deployed")
+                        (= :success (:status res)) (h1-valid! (:app-name res)
+                                                              " successfully deployed")
                         (= :skipped (:status res))
                         (normalln (:app-name res) " skipped due to " (:message res))
                         :else (h1-error! (:app-name res) " failed with: " res)))

@@ -73,7 +73,7 @@
                           app-paths)
           s (build-writter)
           ;; This require is needed to go around this issue: https://github.com/babashka/pods/issues/72
-          _ (require 'clojure.tools.build.tasks.uber :reload)]
+          _ (require 'clojure.tools.build.api :reload)]
       (->> app-paths
            build-file/file-rich-list
            (mapv (fn [path]
