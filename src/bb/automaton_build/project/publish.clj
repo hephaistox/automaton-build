@@ -8,12 +8,13 @@
    [automaton-build.project.impl.clever-cloud-deploy :as build-clever-cloud]
    [automaton-build.project.impl.clojars-deploy      :as build-deploy-jar]
    [automaton-build.project.pom-xml                  :as build-project-pom-xml]
-   [automaton-build.tasks.impl.headers.files         :as build-headers-files]))
+   [automaton-build.tasks.impl.headers.files         :as build-headers-files]
+   [clojure.string                                   :as str]))
 
 (defn generate-pom-xml
   [app-dir as-lib license source-paths]
   (let [s# (new java.io.StringWriter)
-        _ (require 'clojure.tools.deps.util.io :reload)
+        ;; _ (require 'clojure.tools.deps.util.io :reload)
         res (binding [*out* s#
                       *err* s#]
               (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license))]
@@ -51,11 +52,9 @@
   (if (and (build-project-conf/read-param [:clojars-username])
            (build-project-conf/read-param [:clojars-password]))
     (let [_ (normalln "pom-xml generation")
-          _ (normalln "paths: " paths)
           pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
-      (prn "after setting status")
-      #_(when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
-          (normalln (:msg pom-xml-status)))
+      (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
+        (normalln (:msg pom-xml-status)))
       (if (= :success (:status pom-xml-status))
         (let [_ (normalln "deploy itself")
               s (build-writter)
