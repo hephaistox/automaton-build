@@ -13,7 +13,11 @@
 
 (defn generate-pom-xml
   [app-dir as-lib license source-paths]
-  (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license))
+  (let [s# (new java.io.StringWriter)
+        res (binding [*out* s#
+                      *err* s#]
+              (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license))]
+    (merge res {:msg (str s#)})))
 
 (defn pom-xml-status
   [app-dir as-lib pom-xml-license paths]
@@ -32,6 +36,8 @@
            (build-project-conf/read-param [:clojars-password]))
     (let [_ (normalln "pom-xml generation")
           pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
+      (prn "verbose? "
+           (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status)))))
       (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
         (normalln (:msg pom-xml-status)))
       (if (= :success (:status pom-xml-status))
