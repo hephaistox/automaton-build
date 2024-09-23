@@ -67,35 +67,38 @@
 (defn compile-uber-jar
   "Compile code to jar or uber-jar based on `jar-type`."
   [class-dir app-paths target-jar-path project-dir jar-main java-opts]
-  (try (let [app-paths (mapv #(build-filename/absolutize (build-filename/create-dir-path project-dir
-                                                                                         %))
-                             app-paths)
-             s (build-writter)]
-         (->> app-paths
-              build-file/file-rich-list
-              (mapv (fn [path]
-                      (let [copy-action (-> path
-                                            (assoc :options
-                                                   {:replace-existing true
-                                                    :copy-attributes true})
-                                            (assoc :target-dir-path class-dir))]
-                        copy-action)))
-              build-file/actual-copy)
-         (binding [*out* s
-                   *err* s]
-           (build-code-artifacts/set-project-root! (build-filename/absolutize project-dir))
-           (let [basis (build-code-artifacts/create-basis)]
-             (build-code-artifacts/compile-clj {:basis basis
-                                                :class-dir class-dir
-                                                :java-opts java-opts})
-             (build-code-artifacts/uber {:class-dir class-dir
-                                         :uber-file target-jar-path
-                                         :basis basis
-                                         :main jar-main})))
-         {:status :success
-          :msg (str s)
-          :jar-path target-jar-path})
-       (catch Exception e
-         {:status :failed
-          :exception e})))
+  (try
+    (let [app-paths (mapv #(build-filename/absolutize (build-filename/create-dir-path project-dir
+                                                                                      %))
+                          app-paths)
+          s (build-writter)
+          ;; This require is needed to go around this issue: https://github.com/babashka/pods/issues/72
+          _ (require 'clojure.tools.deps.util.io :reload)]
+      (->> app-paths
+           build-file/file-rich-list
+           (mapv (fn [path]
+                   (let [copy-action (-> path
+                                         (assoc :options
+                                                {:replace-existing true
+                                                 :copy-attributes true})
+                                         (assoc :target-dir-path class-dir))]
+                     copy-action)))
+           build-file/actual-copy)
+      (binding [*out* s
+                *err* s]
+        (build-code-artifacts/set-project-root! (build-filename/absolutize project-dir))
+        (let [basis (build-code-artifacts/create-basis)]
+          (build-code-artifacts/compile-clj {:basis basis
+                                             :class-dir class-dir
+                                             :java-opts java-opts})
+          (build-code-artifacts/uber {:class-dir class-dir
+                                      :uber-file target-jar-path
+                                      :basis basis
+                                      :main jar-main})))
+      {:status :success
+       :msg (str s)
+       :jar-path target-jar-path})
+    (catch Exception e
+      {:status :failed
+       :exception e})))
 

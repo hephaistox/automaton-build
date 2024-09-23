@@ -201,7 +201,7 @@
   (let [github-new-changes-link (str "https://github.com/" (first (re-find #"(?<=:)(.*)(?=.git)"
                                                                            repo))
                                      "/tree/" base-branch)
-        message (format "Push: `%s` to branch: `%s`. \nChanges can be seen here `%s`"
+        message (format "Push: `%s` to branch: `%s`. Changes can be seen here `%s`"
                         app-name
                         base-branch
                         github-new-changes-link)]
@@ -339,11 +339,7 @@
                         base-branch
                         (build-version/current-version cacheless-app-dir)
                         verbose?)
-    (let [_ (h3 app-name
-                " deployment to:"
-                (when publish-cc? " cc ")
-                (when publish-clojars? " clojars "))
-          cc (if publish-cc?
+    (let [cc (if publish-cc?
                (assoc (deploy-cc app env verbose?) :name "clever cloud")
                {:name "clever cloud"
                 :message ":publication :cc project.edn is missing"
@@ -357,10 +353,10 @@
                                       :as res}]
                                   (when (= status :failed) res))
                                 [cc clojars])]
-        (do (h3-error app-name " deployment failed:" failed-res)
+        (do (h2-error app-name " deployment failed:" failed-res)
             {:status :failed
              :res failed-res})
-        (do (h3-valid app-name " deployment suceeded")
+        (do (h2-valid app-name " deployment suceeded")
             {:status :success
              :res [cc clojars]})))
     {:status :failed
@@ -413,7 +409,7 @@
          :cacheless-app-dir (ensure-no-cache current-branch repo)
          :initial-app-dir (:app-dir app)
          :base-branch (get-in project-config [:publication target-branch-env])
-         :cc-uri (get-in project-config [:publication clever-uri-env])
+         :clever-uri (get-in project-config [:publication clever-uri-env])
          :publish-clojars? (get-in project-config [:publication :clojars])
          :publish-cc? (get-in project-config [:publication :cc])
          :as-lib (get-in project-config [:publication :as-lib])
