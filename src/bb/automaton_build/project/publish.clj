@@ -13,10 +13,27 @@
 (defn generate-pom-xml
   [app-dir as-lib license source-paths]
   (let [s# (new java.io.StringWriter)
+        _ (require 'clojure.tools.deps.util.io :reload)
         res (binding [*out* s#
                       *err* s#]
               (build-project-pom-xml/generate-pom-xml as-lib source-paths app-dir license))]
     res))
+
+(comment
+  (require 'clojure.tools.deps.util.io :reload)
+  (build-project-pom-xml/generate-pom-xml 'org.clojars.hephaistox/automaton-core
+                                          ["src" "src/clj" "src/cljs"]
+                                          "automaton/automaton_core"
+                                          {:name "CC BY-NC 4.0"
+                                           :url
+                                           "https://cretivecommons.org/licenses/by-nc/4.0/deed.en"})
+  (generate-pom-xml "automaton/automaton_core"
+                    'org.clojars.hephaistox/automaton-core
+                    {:name "CC BY-NC 4.0"
+                     :url "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
+                    ["dupa/src/cljc" "dontexist/src/clj" "whatever/src/cljs"])
+  ;
+)
 
 (defn pom-xml-status
   [app-dir as-lib pom-xml-license paths]

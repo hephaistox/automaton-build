@@ -29,7 +29,10 @@
 (defn compile-jar
   "Compile code to jar or uber-jar based on `jar-type`."
   [class-dir app-paths target-jar-path project-dir]
-  (try (let [s (build-writter)]
+  (try (let [app-paths (mapv #(build-filename/absolutize (build-filename/create-dir-path project-dir
+                                                                                         %))
+                             app-paths)
+             s (build-writter)]
          (->> app-paths
               build-file/file-rich-list
               (mapv (fn [path]
@@ -54,7 +57,10 @@
 (defn compile-uber-jar
   "Compile code to jar or uber-jar based on `jar-type`."
   [class-dir app-paths target-jar-path project-dir jar-main java-opts]
-  (try (let [s (build-writter)]
+  (try (let [app-paths (mapv #(build-filename/absolutize (build-filename/create-dir-path project-dir
+                                                                                         %))
+                             app-paths)
+             s (build-writter)]
          (->> app-paths
               build-file/file-rich-list
               (mapv (fn [path]
