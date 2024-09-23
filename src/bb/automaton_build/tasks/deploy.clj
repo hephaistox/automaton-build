@@ -345,12 +345,13 @@
                                 :message ":publication :cc project.edn is missing"})
                            (assoc :publish :cc))
             publish-clojars (-> (if publish-clojars?
-                                    (build-project-publish/publish-clojars (:jar-path jar)
-                                                                           app-dir
-                                                                           paths
-                                                                           as-lib
-                                                                           pom-xml-license
-                                                                           verbose?)
+                                    (do (h1 app-name " publih to clojars")
+                                        (build-project-publish/publish-clojars (:jar-path jar)
+                                                                               app-dir
+                                                                               paths
+                                                                               as-lib
+                                                                               pom-xml-license
+                                                                               verbose?))
                                     {:status :skipped
                                      :message ":publication :clojars project.edn is missing"})
                                 (assoc :publish :clojars))]

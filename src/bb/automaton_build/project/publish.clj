@@ -30,11 +30,13 @@
   [jar-path app-dir paths as-lib pom-xml-license verbose?]
   (if (and (build-project-conf/read-param [:clojars-username])
            (build-project-conf/read-param [:clojars-password]))
-    (let [pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
+    (let [_ (normalln "pom-xml generation")
+          pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
       (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
         (normalln (:msg pom-xml-status)))
       (if (= :success (:status pom-xml-status))
-        (let [s (build-writter)
+        (let [_ (normalln "deploy itself")
+              s (build-writter)
               deploy-res (binding [*out* s
                                    *err* s]
                            (build-commands/blocking-cmd (build-deploy-jar/deploy-cmd jar-path)
