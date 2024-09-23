@@ -207,8 +207,7 @@
    jar-entrypoint
    java-opts
    env]
-  (let [paths (mapv #(build-filename/absolutize (build-filename/create-dir-path app-dir %))
-                    (build-deps/extract-paths deps-edn excluded-aliases))
+  (let [paths (build-deps/extract-paths deps-edn excluded-aliases)
         class-dir (build-filename/absolutize
                    (build-filename/create-dir-path app-dir (format "target/%s/class/" (name env))))
         target-jar-filename (build-filename/create-file-path
