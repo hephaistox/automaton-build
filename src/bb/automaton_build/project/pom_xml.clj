@@ -36,15 +36,3 @@
         (catch Exception e
           {:status :failed
            :ex e}))))
-
-
-(comment
-  (require '[clojure.string :as str])
-  (defn printerrln
-    "println to *err*"
-    [& msgs]
-    (binding [*out* *err*
-              *print-readably* nil]
-      (pr (str (str/join " " msgs) (System/getProperty "line.separator")))
-      (flush)))
-  (let [s (build-writter) binded (binding [*err* s] (printerrln "hello"))] (str s)))
