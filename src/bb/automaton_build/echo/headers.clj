@@ -4,7 +4,8 @@
   Each content is modified to wrap the `width` of the terminal, and is modified to have a left margin."
   (:require
    [automaton-build.echo.common :as build-echo-common]
-   [automaton-build.os.text     :as build-text]))
+   [automaton-build.os.text     :as build-text]
+   [clojure.string              :as str]))
 
 (defn- current-left-margin
   "Returns the string of the margin to add."
@@ -187,6 +188,8 @@
 (defn current-time-str "Returns current time string." [] (build-echo-common/current-time-str))
 
 (def clear-prev-line (str build-text/move-oneup build-text/clear-eol))
+
+(defn clear-lines [n] (print (str/join "" (repeat n clear-prev-line))))
 
 (defn build-writter [] (build-echo-common/build-writter))
 

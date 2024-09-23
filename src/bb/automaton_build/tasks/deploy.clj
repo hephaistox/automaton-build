@@ -1,8 +1,19 @@
 (ns automaton-build.tasks.deploy
   (:require
    [automaton-build.code.vcs                 :as build-vcs]
-   [automaton-build.echo.headers             :refer
-                                             [h1 h1-error h1-error! h1-valid h1-valid! normalln]]
+   [automaton-build.echo.headers             :refer [clear-lines
+                                                     clear-prev-line
+                                                     h1
+                                                     h1-error!
+                                                     h1-valid
+                                                     h1-valid!
+                                                     h2
+                                                     h2-error
+                                                     h2-valid
+                                                     h3
+                                                     h3-error
+                                                     h3-valid
+                                                     normalln]]
    [automaton-build.monorepo.apps            :as build-apps]
    [automaton-build.os.cli-opts              :as build-cli-opts]
    [automaton-build.os.cmds                  :as build-commands]
@@ -12,6 +23,7 @@
    [automaton-build.project.compile          :as build-project-compile]
    [automaton-build.project.deps             :as build-deps]
    [automaton-build.project.map              :as build-project-map]
+   [automaton-build.project.pom-xml          :as build-project-pom-xml]
    [automaton-build.project.publish          :as build-project-publish]
    [automaton-build.project.versioning       :as build-project-versioning]
    [automaton-build.tasks.impl.headers.files :as build-headers-files]
@@ -30,35 +42,6 @@
       (concat build-cli-opts/help-options build-cli-opts/verbose-options)
       build-cli-opts/parse-cli))
 
-(defn- pull-base-branch
-  "Pull base branch, cannot be executed on base branch"
-  [app-dir base-branch current-branch]
-  (if (= current-branch base-branch)
-    {:status :failed
-     :message
-     "current monorepo branch `%s` is same as base-branch: `%s`, please switch to dev branch"}
-    (let [res (-> (build-vcs/pull-changes-chain-cmd base-branch)
-                  (concat [[(build-vcs/merge-cmd base-branch current-branch)]])
-                  (build-commands/force-dirs app-dir)
-                  build-commands/chain-cmds
-                  build-commands/first-failing)]
-      (if (build-commands/success res)
-        {:status :success}
-        {:status :failed
-         :message "Pull of base branch and merge failed"
-         :res res}))))
-
-(defn clean-state?
-  [app-dir]
-  (if (-> (build-vcs/git-changes?-cmd)
-          (build-commands/blocking-cmd app-dir)
-          build-vcs/git-changes?-analyze
-          not)
-    {:status :success}
-    {:status :failed
-     :message "Git status is not empty. First commmit your changes."}))
-
-;;push branch
 (defn- prepare-cloned-repo-on-branch
   "Clone the repo in diectory `tmp-dir`, the repo at `repo-address` is copied on branch `branch-name`
   Params:
@@ -155,6 +138,63 @@
                                     message)
                                   verbose?)))
 
+(defn- pull-base-branch
+  "Pull base branch, cannot be executed on base branch"
+  [app-dir base-branch current-branch]
+  (if (= current-branch base-branch)
+    {:status :failed
+     :message
+     "current monorepo branch `%s` is same as base-branch: `%s`, please switch to dev branch"}
+    (let [res (-> (build-vcs/pull-changes-chain-cmd base-branch)
+                  (concat [[(build-vcs/merge-cmd base-branch current-branch)]])
+                  (build-commands/force-dirs app-dir)
+                  build-commands/chain-cmds
+                  build-commands/first-failing)]
+      (if (build-commands/success res)
+        {:status :success}
+        {:status :failed
+         :message "Pull of base branch and merge failed"
+         :res res}))))
+
+(defn- clean-state?
+  [app-dir]
+  (if (-> (build-vcs/git-changes?-cmd)
+          (build-commands/blocking-cmd app-dir)
+          build-vcs/git-changes?-analyze
+          not)
+    {:status :success}
+    {:status :failed
+     :message "Git status is not empty. First commmit your changes."}))
+
+(defn- push-monorepo-changes-to-subapps
+  [current-branch subapps message verbose?]
+  (h1 "Pushing all monorepo apps to " current-branch)
+  (let [res (mapv (fn [{:keys [app-dir app-name]
+                        :as app}]
+                    (h2 app-name " being pushed to " current-branch)
+                    (let [app-base-branch
+                          (get-in app [:project-config-filedesc :edn :publication :base-branch])
+                          repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
+                          push-res (push-current-branch app-dir
+                                                        app-name
+                                                        repo
+                                                        app-base-branch
+                                                        current-branch
+                                                        message
+                                                        verbose?)]
+                      (if (= :success (:status push-res))
+                        (h2-valid app-name "pushed")
+                        (h2-error app-name "push failed with: " push-res))
+                      push-res))
+                  subapps)]
+    (if (every? #(= :success (:status %)) res)
+      (do (clear-lines (count subapps))
+          (h1-valid "Pushed all monorepo apps to " current-branch)
+          {:status :success})
+      res)))
+
+
+
 (defn push-base-branch
   "Pushes app to `base-branch`"
   [app-name app-dir repo base-branch message verbose?]
@@ -165,9 +205,9 @@
                         app-name
                         base-branch
                         github-new-changes-link)]
-    (h1 message)
+    (h3 message)
     (let [res (push-local-dir-to-repo app-dir repo base-branch message verbose?)]
-      (if (= :success (:status res)) (h1-valid message) (h1-error "Push failed " res))
+      (if (= :success (:status res)) (h3-valid message) (h3-error "Push failed " res))
       (= :success (:status res)))))
 
 (defn current-branch-name-invalid?
@@ -182,259 +222,229 @@
        :message "Monorepo current branch is same as base branch of subapp"}
       {:status :success})))
 
-(defn ensure-no-cache
+(defn- ensure-no-cache
   [new-changes-branch repo]
   (let [tmp-dir (build-file/create-temp-dir)]
     (when (build-headers-vcs/clone-repo-branch tmp-dir repo new-changes-branch false) tmp-dir)))
 
-(defn- wrap-fn-ex
-  [f]
-  (try (f)
-       (catch Exception e
-         {:status :failed
-          :ex e})))
 
-(defn compile*
-  [app-dir
-   app-name
-   deps-edn
-   excluded-aliases
-   shadow-deploy-alias
-   css-files
-   compiled-css-path
-   compile-jar
-   compile-uber-jar
-   jar-entrypoint
-   java-opts
-   env]
+(defn pom-xml-status
+  [app-dir as-lib pom-xml-license paths]
+  (if (and app-dir as-lib pom-xml-license)
+    (build-project-pom-xml/generate-pom-xml as-lib paths app-dir pom-xml-license)
+    {:status :failed
+     :app-dir app-dir
+     :as-lib as-lib
+     :pom-xml-license pom-xml-license
+     :msg "Missing required-params"}))
+
+(defn generate-pom-xml
+  [app-dir as-lib pom-xml-license paths verbose?]
+  (let [_ (normalln "pom-xml generation")
+        pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
+    (when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
+      (normalln (:msg pom-xml-status)))
+    pom-xml-status))
+
+(defn deploy-cc
+  [{:keys [cacheless-app-dir
+           deps-edn
+           excluded-aliases
+           shadow-deploy-alias
+           css-files
+           compiled-css-path
+           clever-uri
+           jar-entrypoint
+           target-jar
+           class-dir
+           java-opts]
+    :as _app}
+   env
+   verbose?]
   (let [paths (build-deps/extract-paths deps-edn excluded-aliases)
-        class-dir (build-filename/absolutize
-                   (build-filename/create-dir-path app-dir (format "target/%s/class/" (name env))))
-        target-jar-filename (build-filename/create-file-path
-                             (format "target/%s/%s.jar" (name env) app-name))
+        class-dir (build-filename/absolutize (build-filename/create-dir-path cacheless-app-dir
+                                                                             class-dir))
+        target-jar-filename (build-filename/create-file-path target-jar)
         shadow-res (if shadow-deploy-alias
-                     (let [res (wrap-fn-ex (partial build-project-compile/shadow-cljs
-                                                    app-dir
-                                                    shadow-deploy-alias))]
-                       (if (build-commands/success res)
-                         {:status :success}
-                         {:status :failed
-                          :res res}))
+                     (build-project-compile/shadow-cljs cacheless-app-dir shadow-deploy-alias)
                      {:status :skipped})
         css-res (if (and css-files compiled-css-path)
-                  (let [res
-                        (wrap-fn-ex
-                         (partial build-project-compile/css app-dir css-files compiled-css-path))]
-                    (if (build-commands/success res)
-                      {:status :success}
-                      {:status :failed
-                       :res res}))
+                  (build-project-compile/css cacheless-app-dir css-files compiled-css-path)
+                  {:status :skipped})
+        uber-jar-res (build-project-compile/compile-uber-jar class-dir
+                                                             paths
+                                                             target-jar-filename
+                                                             cacheless-app-dir
+                                                             jar-entrypoint
+                                                             java-opts)]
+    (if-let [failed-res (some (fn [res] (when (= :failed (:status res)) res))
+                              [shadow-res css-res uber-jar-res])]
+      {:status :failed
+       :res failed-res}
+      ;;TODO can we get rid of this env?
+      (build-project-publish/publish-clever-cloud
+       clever-uri
+       (->> (name env)
+            (build-filename/create-dir-path cacheless-app-dir "target")
+            build-filename/absolutize)
+       (->> ".clever"
+            (build-filename/create-dir-path cacheless-app-dir)
+            build-filename/absolutize)
+       (build-version/current-version cacheless-app-dir)
+       verbose?))))
+
+
+(defn deploy-clojars
+  [{:keys [cacheless-app-dir
+           as-lib
+           pom-xml-license
+           deps-edn
+           excluded-aliases
+           shadow-deploy-alias
+           css-files
+           compiled-css-path
+           class-dir
+           target-jar]
+    :as _app}
+   verbose?]
+  (let [paths (build-deps/extract-paths deps-edn excluded-aliases)
+        class-dir (build-filename/absolutize (build-filename/create-dir-path cacheless-app-dir
+                                                                             class-dir))
+        target-jar-filename (build-filename/create-file-path target-jar)
+        pom-xml-res (generate-pom-xml cacheless-app-dir as-lib pom-xml-license paths verbose?)
+        shadow-res (if shadow-deploy-alias
+                     (build-project-compile/shadow-cljs cacheless-app-dir shadow-deploy-alias)
+                     {:status :skipped})
+        css-res (if (and css-files compiled-css-path)
+                  (build-project-compile/css cacheless-app-dir css-files compiled-css-path)
                   {:status :skipped})
         jar-res
-        (if compile-jar
-          (wrap-fn-ex
-           (partial build-project-compile/compile-jar class-dir paths target-jar-filename app-dir))
-          {:status :skipped})
-        uber-jar-res (if compile-uber-jar
-                       (wrap-fn-ex (partial build-project-compile/compile-uber-jar
-                                            class-dir
-                                            paths
-                                            target-jar-filename
-                                            app-dir
-                                            jar-entrypoint
-                                            java-opts))
-                       {:status :skipped})]
-    (-> {}
-        (assoc :app-dir app-dir)
-        (assoc :paths paths)
-        (assoc :class-dir class-dir)
-        (assoc :shadow-cljs shadow-res)
-        (assoc :css css-res)
-        (assoc :jar jar-res)
-        (assoc :uber-jar uber-jar-res)
-        (assoc :status :success))))
-
-(defn publish-clever-cloud
-  [clever-uri app-dir env verbose?]
-  (build-project-publish/publish-clever-cloud clever-uri
-                                              (->> (name env)
-                                                   (build-filename/create-dir-path app-dir "target")
-                                                   build-filename/absolutize)
-                                              (->> ".clever"
-                                                   (build-filename/create-dir-path app-dir)
-                                                   build-filename/absolutize)
-                                              (build-version/current-version app-dir)
-                                              verbose?))
-
-(defn compile-app
-  "Deploys app in isolation to ensure no cache which requires that your state should be clean and current branch is not a base branch
-
-   The process of deployment is:
-   1. Compile jar
-   2. Push changes to app target branch for that environment
-   3. Deploy app
-
-  It's done currently not as a workflow, only because workflow can't be used in another workflow and we have a logic we want to preserve here"
-  [dir
-   app-name
-   deps-edn
-   excluded-aliases
-   shadow-deploy-alias
-   css-files
-   compiled-css-path
-   compile-jar
-   compile-uber-jar
-   jar-entrypoint
-   java-opts
-   env
-   current-branch
-   repo
-   target-branch]
-  (if (and repo
-           target-branch
-           (build-project-versioning/correct-environment? dir env)
-           (build-project-versioning/version-changed? dir repo target-branch))
-    (if-let [app-dir (ensure-no-cache current-branch repo)]
-      (compile* app-dir
-                app-name
-                deps-edn
-                excluded-aliases
-                shadow-deploy-alias
-                css-files
-                compiled-css-path
-                compile-jar
-                compile-uber-jar
-                jar-entrypoint
-                java-opts
-                env)
+        (build-project-compile/compile-jar class-dir paths target-jar-filename cacheless-app-dir)]
+    (if-let [failed-res (some (fn [res] (when (= :failed (:status res)) res))
+                              [pom-xml-res shadow-res css-res jar-res])]
       {:status :failed
-       :msg "Couldn't ensure that there is no cache"})
-    {:status :skipped
-     :data {:repo repo
-            :target-branch target-branch
-            :env env}
-     :msg (if (and repo target-branch) "No changes found" "Missing parameters")}))
+       :res failed-res}
+      (build-project-publish/publish-clojars (:jar-path jar-res) cacheless-app-dir))))
 
-(defn publish-app
-  [{:keys [app-name
-           app-dir
-           repo
-           target-branch
-           status
-           publish-clojars?
-           publish-cc?
-           jar
-           env
-           cc-uri
-           paths
-           as-lib
-           pom-xml-license]
+
+(defn deploy-app
+  [{:keys [publish-cc? publish-clojars? app-name cacheless-app-dir repo base-branch]
     :as app}
+   env
    verbose?]
-  (if (= :success status)
-    (if (push-base-branch app-name
-                          app-dir
-                          repo
-                          target-branch
-                          (build-version/current-version app-dir)
-                          verbose?)
-      (let [publish-cc (-> (if publish-cc?
-                               (publish-clever-cloud cc-uri app-dir env verbose?)
-                               {:status :skipped
-                                :message ":publication :cc project.edn is missing"})
-                           (assoc :publish :cc))
-            publish-clojars (-> (if publish-clojars?
-                                    (do (h1 app-name " publih to clojars")
-                                        (build-project-publish/publish-clojars (:jar-path jar)
-                                                                               app-dir
-                                                                               paths
-                                                                               as-lib
-                                                                               pom-xml-license
-                                                                               verbose?))
-                                    {:status :skipped
-                                     :message ":publication :clojars project.edn is missing"})
-                                (assoc :publish :clojars))]
-        (if (every? (fn [{:keys [status]}] (= status :skipped)) [publish-cc publish-clojars])
-          {:status :skipped
-           :message (str "clever cloud skipped: " (:message publish-cc)
-                         " | clojars skipped: " (:message publish-clojars))}
-          (if (every? (fn [{:keys [status]}] (or (= status :success) (= status :skipped)))
-                      [publish-cc publish-clojars])
-            {:status :success
-             :res (filter #(= :success (:status %)) [publish-cc publish-clojars])}
+  (h2 app-name " deployment process started")
+  (if (push-base-branch app-name
+                        cacheless-app-dir
+                        repo
+                        base-branch
+                        (build-version/current-version cacheless-app-dir)
+                        verbose?)
+    (let [_ (h3 app-name
+                " deployment to:"
+                (when publish-cc? " cc ")
+                (when publish-clojars? " clojars "))
+          cc (if publish-cc?
+               (assoc (deploy-cc app env verbose?) :name "clever cloud")
+               {:name "clever cloud"
+                :message ":publication :cc project.edn is missing"
+                :status :skipped})
+          clojars (if publish-clojars?
+                    (assoc (deploy-clojars app verbose?) :name "clojars")
+                    {:name "clojars"
+                     :message ":publication :clojars project.edn is missing"
+                     :status :skipped})]
+      (if-let [failed-res (some (fn [{:keys [status]
+                                      :as res}]
+                                  (when (= status :failed) res))
+                                [cc clojars])]
+        (do (h3-error app-name " deployment failed:" failed-res)
             {:status :failed
-             :res [publish-cc publish-clojars]})))
-      {:status :failed
-       :msg (str "Push to " target-branch " failed")})
-    {:status :skipped
-     :message (str "because compilation status is: " status " more details: " (:msg app))}))
+             :res failed-res})
+        (do (h3-valid app-name " deployment suceeded")
+            {:status :success
+             :res [cc clojars]})))
+    {:status :failed
+     :msg (str "Push to " base-branch " failed")}))
 
-(defn compile-monorepo
-  [{:keys [app-name app-dir]
-    :as app}
-   target-branch-env
-   clever-uri-env
-   env
-   current-branch
-   verbose?]
-  (h1 app-name " being compiled")
-  (let [project-config (get-in app [:project-config-filedesc :edn])
+
+(defn should-deploy?
+  [app env]
+  ;;TODO correct-environment check doesn't fill right here
+  ;;But have in mind moving it to inital check doesn't make sense as here we decide if it should be deployed or not
+  ;;Or maybe we should not deploy in that case? To think about, what happens if we don't want to deploy automaton-web and it's version is differnet than our env? Maybe this check only makes sense when there was a change?
+  ;;
+  ;; TODO cacheless-app-dir, is not really deploy? false, but more deploy failed.. it's technical issue if we can't create temp directory
+  (let [target-branch (:base-branch app)
+        repo (:repo app)
+        dir (:initial-app-dir app)
+        publish-clojars? (:publish-clojars? app)
+        publish-cc? (:publish-cc? app)]
+    (cond
+      (or (nil? repo) (nil? target-branch)) {:deploy? false
+                                             :reason "Missing parameters"
+                                             :data {:repo repo
+                                                    :target-branch target-branch
+                                                    :env env}}
+      (and (nil? publish-clojars?) (nil? publish-cc?)) {:deploy? false
+                                                        :reason "Deployment target missing"
+                                                        :data {:publish-clojars? publish-clojars?
+                                                               :publish-cc? publish-cc?}}
+      (nil? (:cacheless-app-dir app)) {:deploy? false
+                                       :reason "Couldn't ensure that there is no cache"}
+      (not (build-project-versioning/correct-environment? dir env))
+      {:deploy? false
+       :reason "version.edn of app is not aligned with chosen environment"}
+      (not (build-project-versioning/version-changed? dir repo target-branch))
+      {:deploy? false
+       :reason "version.edn of app did not change"}
+      :else {:deploy? true})))
+
+(defn prepare-deploy-data
+  [app current-branch env target-branch-env clever-uri-env verbose?]
+  (h2 (str (:app-name app) "..."))
+  (let [app-name (:app-name app)
+        project-config (get-in app [:project-config-filedesc :edn])
         repo (get-in project-config [:publication :repo-url])
-        base-branch (get-in project-config [:publication target-branch-env])
-        cc-uri (get-in project-config [:publication clever-uri-env])
-        publish-clojars? (get-in project-config [:publication :clojars])
-        publish-cc? (get-in project-config [:publication :cc])
-        as-lib (get-in project-config [:publication :as-lib])
-        pom-xml-license (get-in project-config [:publication :pom-xml-license])
-        excluded-aliases (get-in project-config [:publication :excluded-aliases])
-        deps-edn (get-in app [:deps :edn])
-        shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
-        css-files (get-in project-config [:publication :css-files])
-        compiled-css-path (get-in project-config [:publication :compiled-css-path])
-        compile-jar (get-in project-config [:publication :compile-jar])
-        compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
-        jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
-        java-opts (get-in project-config [:publication :uber-jar :java-opts])
-        compile-res (-> (compile-app app-dir
-                                     app-name
-                                     deps-edn
-                                     excluded-aliases
-                                     shadow-deploy-alias
-                                     css-files
-                                     compiled-css-path
-                                     compile-jar
-                                     compile-uber-jar
-                                     jar-entrypoint
-                                     java-opts
-                                     env
-                                     current-branch
-                                     repo
-                                     base-branch)
-                        (assoc :cc-uri cc-uri)
-                        (assoc :env env)
-                        (assoc :publish-clojars? publish-clojars?)
-                        (assoc :publish-cc? publish-cc?)
-                        (assoc :repo repo)
-                        (assoc :target-branch base-branch)
-                        (assoc :app-name app-name)
-                        (assoc :as-lib as-lib)
-                        (assoc :pom-xml-license pom-xml-license))]
-    (if (every? #(or (= :success (:status %)) (= :skipped (:status %)))
-                (concat (vals (select-keys compile-res [:shadow-cljs :css :jar :uber-jar]))
-                        [{:status (:status compile-res)}]))
-      (do (h1-valid app-name " compiled")
-          (h1 app-name " deploying")
-          (let [res (-> compile-res
-                        (publish-app verbose?)
-                        (assoc :app-name app-name))]
-            (cond
-              (= :success (:status res)) (h1-valid app-name " deployed")
-              (= :skipped (:status res)) (normalln app-name " deployment skipped")
-              :else (h1-error app-name " failed deployment with: " res))
-            res))
-      (do (h1-error app-name " failed compilation with: " compile-res)
-          {:status :failed
-           :res compile-res}))))
+        app-deploy-data
+        {:app-name app-name
+         :repo repo
+         :class-dir (format "target/%s/class/" (name env))
+         :target-jar (format "target/%s/%s.jar" (name env) (:app-name app))
+         :cacheless-app-dir (ensure-no-cache current-branch repo)
+         :initial-app-dir (:app-dir app)
+         :base-branch (get-in project-config [:publication target-branch-env])
+         :cc-uri (get-in project-config [:publication clever-uri-env])
+         :publish-clojars? (get-in project-config [:publication :clojars])
+         :publish-cc? (get-in project-config [:publication :cc])
+         :as-lib (get-in project-config [:publication :as-lib])
+         :pom-xml-license (get-in project-config [:publication :pom-xml-license])
+         :excluded-aliases (get-in project-config [:publication :excluded-aliases])
+         :deps-edn (get-in app [:deps :edn])
+         :shadow-deploy-alias (get-in project-config [:publication :shadow-cljs-deploy-alias])
+         :css-files (get-in project-config [:publication :css-files])
+         :compiled-css-path (get-in project-config [:publication :compiled-css-path])
+         :compile-jar (get-in project-config [:publication :compile-jar])
+         :compile-uber-jar (get-in project-config [:publication :compile-uber-jar])
+         :jar-entrypoint (get-in project-config [:publication :uber-jar :entrypoint])
+         :java-opts (get-in project-config [:publication :uber-jar :java-opts])}
+        deploy?-res (should-deploy? app-deploy-data env)]
+    (if (:deploy? deploy?-res)
+      (do (h2-valid app-name "will be deployed") app-deploy-data)
+      (do (print clear-prev-line) (normalln app-name "is skipped " (when verbose? deploy?-res))))))
+
+(defn deploy-monorepo-apps
+  "If one app failes in the deploy chain, rest of apps is skipped"
+  [env verbose? apps-to-deploy]
+  (let [deploy-res (reduce (fn [acc app]
+                             (if (some (fn [{:keys [status]}] (= :failed status)) acc)
+                               (conj acc
+                                     {:app-name (:app-name app)
+                                      :status :skipped
+                                      :message "previous app failed"})
+                               (conj acc (deploy-app app env verbose?))))
+                           []
+                           apps-to-deploy)]
+    deploy-res))
 
 (defn run-monorepo
   []
@@ -450,71 +460,52 @@
           verbose? (get-in cli-opts [:options :verbose])
           base-branch (get-in monorepo-project-map
                               [:project-config-filedesc :edn :publication :base-branch])
+          target-branch-env (cond
+                              (= :la env) :la-branch
+                              (= :production env) :base-branch
+                              :else :imnothere)
+          clever-uri-env (cond
+                           (= :la env) :cc-uri-la
+                           (= :production env) :cc-uri-production
+                           :else :imnotthere)
           app-dir (get-in monorepo-project-map [:app-dir])
           current-branch (build-headers-vcs/current-branch app-dir)
           subapps (->> monorepo-project-map
                        :subprojects)]
-      (if-let [failed-res (some (fn [res] (if (not= :success (:status res)) res false))
-                                [(pull-base-branch app-dir base-branch current-branch)
-                                 (clean-state? app-dir)
-                                 (current-branch-name-invalid? subapps current-branch)])]
+      (if-let [failed-res
+               (some (fn [res] (if (not= :success (:status res)) res false))
+                     (list
+                      (pull-base-branch app-dir base-branch current-branch)
+                      (clean-state? app-dir)
+                      (current-branch-name-invalid? subapps current-branch)
+                      (push-monorepo-changes-to-subapps current-branch subapps message verbose?)))]
         (do (h1-error! "Can't deploy because " failed-res) 1)
-        (let [_ (h1 "Pushing all monorepo apps to " current-branch)
-              push-current-branch-subapps
-              (mapv (fn [{:keys [app-dir app-name]
-                          :as app}]
-                      (h1 app-name " being pushed to " current-branch)
-                      (let [app-base-branch
-                            (get-in app [:project-config-filedesc :edn :publication :base-branch])
-                            repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
-                            push-res (push-current-branch app-dir
-                                                          app-name
-                                                          repo
-                                                          app-base-branch
-                                                          current-branch
-                                                          message
-                                                          verbose?)]
-                        (if (= :success (:status push-res))
-                          (h1-valid app-name "pushed")
-                          (h1-error app-name "push failed with: " push-res))
-                        push-res))
-                    subapps)]
-          (if-not (every? #(= :success (:status %)) push-current-branch-subapps)
-            (do (h1-error! "Local push failed") 1)
-            (let [target-branch-env (cond
-                                      (= :la env) :la-branch
-                                      (= :production env) :base-branch
-                                      :else :imnothere)
-                  clever-uri-env (cond
-                                   (= :la env) :cc-uri-la
-                                   (= :production env) :cc-uri-production
-                                   :else :imnotthere)
-                  push-res (reduce (fn [acc app]
-                                     (if (some (fn [{:keys [status]}] (= :failed status)) acc)
-                                       (conj acc
-                                             {:app-name (:app-name app)
-                                              :status :skipped
-                                              :message "previous app failed"})
-                                       (conj acc
-                                             (compile-monorepo app
-                                                               target-branch-env
-                                                               clever-uri-env
-                                                               env
-                                                               current-branch
-                                                               verbose?))))
-                                   []
-                                   subapps)]
-              (mapv (fn [res]
-                      (cond
-                        (= :success (:status res)) (apply h1-valid!
-                                                          (:app-name res)
-                                                          " successfully deployed to "
-                                                          (mapcat #(str (name (:publish %)))
-                                                           (filter #(= :success (:status %))
-                                                                   (:res res))))
-                        (= :skipped (:status res))
-                        (normalln (:app-name res) " skipped due to " (:message res))
-                        :else (h1-error! (:app-name res) " failed with: " res)))
-                    push-res))))))
+        (do (h1 "Analyzing apps that should be deployed...")
+            (let [apps-to-deploy (->> subapps
+                                      (mapv #(prepare-deploy-data %
+                                                                  current-branch
+                                                                  env
+                                                                  target-branch-env
+                                                                  clever-uri-env
+                                                                  verbose?))
+                                      (remove nil?))
+                  _ (h1 "Deployment of chosen apps")
+                  deploy-res (deploy-monorepo-apps env verbose? apps-to-deploy)]
+              (normalln)
+              (h1 "Synthesis: ")
+              (normalln)
+              (remove nil?
+                      (mapv (fn [res]
+                              (cond
+                                (= :success (:status res)) (apply h1-valid!
+                                                                  (:app-name res)
+                                                                  " successfully deployed to "
+                                                                  (mapcat #(str (name (:publish %)))
+                                                                   (filter #(= :success (:status %))
+                                                                           (:res res))))
+                                (= :skipped (:status res))
+                                (normalln (:app-name res) " skipped due to " (:message res))
+                                :else (h1-error! (:app-name res) " failed with: " res)))
+                            deploy-res))))))
     0
     (catch Exception e (h1-error! "error happened: " e) 1)))

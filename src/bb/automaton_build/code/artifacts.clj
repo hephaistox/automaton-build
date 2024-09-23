@@ -1,8 +1,7 @@
 (ns automaton-build.code.artifacts
   "A proxy to library for building artifacts in Clojure projects."
   (:require
-   [clojure.tools.build.api :as clj-build-api]
-   [clojure.tools.deps.util.io]))
+   [clojure.tools.build.api :as clj-build-api]))
 
 (defn create-basis
   "Create a basis from a set of deps sources and aliases."
