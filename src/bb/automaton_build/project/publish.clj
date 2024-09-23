@@ -34,6 +34,7 @@
   (if (and (build-project-conf/read-param [:clojars-username])
            (build-project-conf/read-param [:clojars-password]))
     (let [_ (normalln "pom-xml generation")
+          _ (normalln "paths: " paths)
           pom-xml-status (pom-xml-status app-dir as-lib pom-xml-license paths)]
       (prn "after setting status")
       #_(when (and verbose? (:msg pom-xml-status) (not (str/blank? (:msg pom-xml-status))))
