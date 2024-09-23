@@ -9,6 +9,7 @@
                                                      h1-valid!
                                                      h2
                                                      h2-error
+                                                     h2-error!
                                                      h2-valid
                                                      h3
                                                      h3-error
@@ -353,10 +354,11 @@
                                       :as res}]
                                   (when (= status :failed) res))
                                 [cc clojars])]
-        (do (h2-error app-name " deployment failed:" failed-res)
+        (do (h2-error! app-name " deployment failed:" failed-res)
             {:status :failed
              :res failed-res})
-        (do (h2-valid app-name " deployment suceeded")
+        (do (print clear-prev-line)
+            (h2-valid app-name " deployment suceeded")
             {:status :success
              :res [cc clojars]})))
     {:status :failed
@@ -431,16 +433,15 @@
 (defn deploy-monorepo-apps
   "If one app failes in the deploy chain, rest of apps is skipped"
   [env verbose? apps-to-deploy]
-  (let [deploy-res (reduce (fn [acc app]
-                             (if (some (fn [{:keys [status]}] (= :failed status)) acc)
-                               (conj acc
-                                     {:app-name (:app-name app)
-                                      :status :skipped
-                                      :message "previous app failed"})
-                               (conj acc (deploy-app app env verbose?))))
-                           []
-                           apps-to-deploy)]
-    deploy-res))
+  (reduce (fn [acc app]
+            (if (some (fn [{:keys [status]}] (= :failed status)) acc)
+              (conj acc
+                    {:app-name (:app-name app)
+                     :status :skipped
+                     :message "previous app failed"})
+              (conj acc (deploy-app app env verbose?))))
+          []
+          apps-to-deploy))
 
 (defn run-monorepo
   []
@@ -490,18 +491,13 @@
               (normalln)
               (h1 "Synthesis: ")
               (normalln)
-              (remove nil?
-                      (mapv (fn [res]
-                              (cond
-                                (= :success (:status res)) (apply h1-valid!
-                                                                  (:app-name res)
-                                                                  " successfully deployed to "
-                                                                  (mapcat #(str (name (:publish %)))
-                                                                   (filter #(= :success (:status %))
-                                                                           (:res res))))
-                                (= :skipped (:status res))
-                                (normalln (:app-name res) " skipped due to " (:message res))
-                                :else (h1-error! (:app-name res) " failed with: " res)))
-                            deploy-res))))))
+              (mapv (fn [res]
+                      (cond
+                        (= :success (:status res))
+                        (apply h1-valid! (:app-name res) " successfully deployed")
+                        (= :skipped (:status res))
+                        (normalln (:app-name res) " skipped due to " (:message res))
+                        :else (h1-error! (:app-name res) " failed with: " res)))
+                    deploy-res)))))
     0
     (catch Exception e (h1-error! "error happened: " e) 1)))
