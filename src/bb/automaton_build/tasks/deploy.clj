@@ -419,7 +419,7 @@
   (h2 (str (:app-name app) "..."))
   (let [app-name (:app-name app)
         project-config (get-in app [:project-config-filedesc :edn])
-        repo (get-in project-config [:publication :repo-url])
+        repo (:repo-url app)
         app-deploy-data
         {:app-name app-name
          :repo repo
