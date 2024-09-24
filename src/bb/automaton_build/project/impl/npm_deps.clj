@@ -13,18 +13,19 @@
 
 (defn update-npm-deps!
   "Update all `deps` in `dir`. Returns nil when successful otherwise a map with `:error`"
-  [dir deps]
-  (when (seq deps)
-    (let [res (blocking-cmd ["npm"
-                             "install"
-                             "--prefix"
-                             "."
-                             (str/join " "
-                                       (mapv (fn [dep] (str (:name dep) "@" (:version dep))) deps))]
-                            dir)]
-      (when-not (= 0 (:exit res))
-        {:error (:err res)
-         :data res}))))
+  ([dir deps] (update-npm-deps! dir "." deps))
+  ([dir target-dir deps]
+   (when (seq deps)
+     (let [res (blocking-cmd
+                ["npm"
+                 "install"
+                 "--prefix"
+                 (or target-dir ".")
+                 (str/join " " (mapv (fn [dep] (str (:name dep) "@" (:version dep))) deps))]
+                dir)]
+       (when-not (= 0 (:exit res))
+         {:error (:err res)
+          :data res})))))
 
 (defn- npm-install-check
   "NPM install is required because npm outdated will return malformed output if the packages are not installed in node_modules"

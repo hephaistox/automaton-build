@@ -1,12 +1,7 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.9.1217"}}
+ {:antq {:deps {com.github.liquidz/antq {:git/url "https://github.com/Kaspazza/antq"
+                                         :sha "a2606c7dc0edfae1990e367242b28accf2ded115"}}
          :main-opts ["-m" "antq.core"]}
-  :bb-deps {:extra-deps {cheshire/cheshire {:mvn/version "5.13.0"}
-                         djblue/portal {:mvn/version "0.57.2"}
-                         io.github.clojure/tools.build {:mvn/version "0.10.5"}
-                         metosin/malli {:mvn/version "0.16.1"}
-                         org.clojure/tools.cli {:mvn/version "1.1.230"}}}
-  :build {:extra-deps {}}
   :codox
   {:exec-args
    {:description "`automaton-build` is a library to ease project cicd: build, test, deployemnt..."
@@ -23,9 +18,13 @@
                                            :sha "9d36f36ff541dac680a05010e4348c744333f191"}
                 org.clojure/tools.namespace {:mvn/version "1.5.0"}
                 org.clojure/tools.reader {:mvn/version "1.5.0"}}
-   :extra-paths ["test/unit/clj" "test/unit/bb" "test/unit/resources" "test/la/clj" "test/la/bb"]
+   :extra-paths ["test/unit/bb" "test/unit/resources" "test/la/bb"]
    :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn" "-Dhephaistox-in-test=true"]
    :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/unit" "-d" "test/la"]}
+  :deploy {:exec-args {:installer :remote}
+           :exec-fn deps-deploy.deps-deploy/deploy
+           :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
+                                             :mvn/version "0.2.2"}}}
   :env-development-repl
   {:extra-deps {djblue/portal {:mvn/version "0.57.2"}
                 org.clojure/core.async {:mvn/version "1.6.681"}}
@@ -46,17 +45,12 @@
         cheshire/cheshire {:mvn/version "5.13.0"}
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
         codox/codox {:mvn/version "0.10.8"}
-        com.github.liquidz/antq {:mvn/version "2.9.1217"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
         djblue/portal {:mvn/version "0.57.2"}
         hiccup/hiccup {:mvn/version "2.0.0-RC3"}
-        io.dominic/vizns {:git/url "https://github.com/SevereOverfl0w/vizns"
-                          :sha "36fed24e3673f0562fbc53d4c5d932c51fb0ac53"}
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
         markdown-clj/markdown-clj {:mvn/version "1.12.1"}
         metosin/malli {:mvn/version "0.16.1"}
-        slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
-                             :mvn/version "0.2.2"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :ns-default automaton-build.core
- :paths ["src/clj" "src/bb"]}
+ :paths ["src/bb"]}

@@ -48,17 +48,17 @@
 (deftest create-empty-branch-test
   (is (->> (with-out-str (sut/create-empty-branch (build-file/create-temp-dir)
                                                   "git@github.com:hephaistox/test-repo.git" "foo"
-                                                  "main" false))
+                                                  "main" true))
            (re-find #"Branch `main` cloning is successfull"))
       "An existing repo prints cloning messages only.")
   (is (->> (with-out-str (sut/create-empty-branch (build-file/create-temp-dir)
                                                   "git@github.com:hephaistox/test-repo.git" "foo"
-                                                  "main" false))
+                                                  "main" true))
            (re-find #"(?m)cloning is successfull"))
       "An existing repo is downloaded")
   (is (re-find #"Impossible to clone."
                (with-out-str (sut/create-empty-branch (build-file/create-temp-dir)
                                                       "git@github.com:hephaistox/test-repo.git"
                                                       "foo"
-                                                      "master" false)))
+                                                      "master" true)))
       "A non existing base dir is said to be impossible to clone."))

@@ -54,7 +54,6 @@
             (some #(or (= (:name %) (:name dep)) (hephaistox-pre-release? dep)) excluded-deps))
           deps))
 
-#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn update-dep!
   "Update single `dep` conforming to `dependency-schema`"
   [dep]
@@ -65,9 +64,12 @@
 (defn update-deps!
   "Update all `deps` in `dir` (`deps` should conform to `dependency-schema`).
    Similar to `update-dep!` fn, but more performant in case of multiple deps to update."
-  [dir deps]
-  (let [{:keys [clj-dep npm]} (group-by #(:type %) deps)
-        clj-deps-res (when (and clj-dep (seq clj-dep)) (build-project-clj/update-deps! dir clj-dep))
-        npm-deps-res (when (and npm (seq npm)) (build-project-npm/update-npm-deps! dir npm))
-        res [clj-deps-res npm-deps-res]]
-    (when-not (every? #(nil? %) res) (some #(when (:error %) %) res))))
+  ([dir target-dir deps]
+   (let [{:keys [clj-dep npm]} (group-by #(:type %) deps)
+         clj-deps-res (when (and clj-dep (seq clj-dep))
+                        (build-project-clj/update-deps! dir target-dir clj-dep))
+         npm-deps-res (when (and npm (seq npm))
+                        (build-project-npm/update-npm-deps! dir target-dir npm))
+         res [clj-deps-res npm-deps-res]]
+     (when-not (every? #(nil? %) res) (some #(when (:error %) %) res))))
+  ([dir deps] (update-deps! dir nil deps)))

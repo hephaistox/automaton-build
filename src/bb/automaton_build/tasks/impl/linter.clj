@@ -52,7 +52,7 @@
     (false? status) (h2-error! "Linter has failed")))
 
 (comment
-  (require '[automaton-build.os.edn-utils-bb :as build-edn])
+  (require '[automaton-build.os.edn-utils :as build-edn])
   (lint (build-edn/read-edn "deps.edn") false)
   ;
 )
