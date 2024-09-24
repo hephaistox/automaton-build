@@ -8,7 +8,7 @@
    [automaton-build.monorepo.shadow-cljs     :as monorepo-shadow-cljs]
    [automaton-build.monorepo.tailwind-config :as monorepo-tailwind-config]
    [automaton-build.os.cli-opts              :as build-cli-opts]
-   [automaton-build.os.edn-utils-bb          :as build-edn]
+   [automaton-build.os.edn-utils             :as build-edn]
    [automaton-build.os.file                  :as build-file]
    [automaton-build.os.filename              :as build-filename]
    [automaton-build.project.deps             :as build-deps]
@@ -54,12 +54,12 @@
         subapps (:subprojects monorepo-project-map)
         monorepo-dir (:app-dir monorepo-project-map)
         main-deps-edn (get-in monorepo-project-map [:deps :edn])
-        static-paths (get-in
-                      monorepo-project-map
-                      [:project-config-filedesc :edn :monorepo :generate-deps :paths :static])
-        test-runner-configs (get-in
-                             monorepo-project-map
-                             [:project-config-filedesc :edn :monorepo :generate-deps :test-runner])]
+        static-paths
+        (get-in monorepo-project-map
+                [:project-config-filedesc :edn :monorepo :default :generate-deps :paths :static])
+        test-runner-configs
+        (get-in monorepo-project-map
+                [:project-config-filedesc :edn :monorepo :default :generate-deps :test-runner])]
     (if-let [new-monorepo-deps (create-monorepo-deps monorepo-dir
                                                      main-deps-edn
                                                      subapps
@@ -203,5 +203,5 @@
               (= (:status v) :skipped) (normalln k " - skipped")
               :else (h1-error! "Malformed output: " stat)))
           (if (every? (fn [[_k v]] (or (= (:status v) :ok) (= (:status v) :skipped))) status)
-            (h1-valid! "Monorepo files generated successfull")
-            (h1-error! "Some of files generation has failed")))))))
+            (do (h1-valid! "Monorepo files generated successfull") 0)
+            (do (h1-error! "Some of files generation has failed") 1)))))))

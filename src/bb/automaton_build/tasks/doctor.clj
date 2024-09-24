@@ -3,7 +3,7 @@
   (:require
    [automaton-build.code.formatter           :as build-formatter]
    [automaton-build.data.schema              :as build-data-schema]
-   [automaton-build.doc.mermaid-bb           :as build-mermaid-bb]
+   [automaton-build.doc.mermaid              :as build-mermaid]
    [automaton-build.echo.headers             :refer [h1
                                                      h1-error
                                                      h1-error!
@@ -74,7 +74,7 @@
 (defn mermaid-installed
   "Check mermaid is installed."
   [app-dir]
-  (doctor-cmd (build-mermaid-bb/mermaid-pull-cli-cmd)
+  (doctor-cmd (build-mermaid/mermaid-pull-cli-cmd)
               app-dir
               "mermaid is valid"
               "mermaid is not properly setup."))
@@ -96,7 +96,7 @@
       "erDiagram\nCUSTOMER ||--o{ ORDER : places\nORDER ||--|{ LINE-ITEM : contains\nCUSTOMER }|..|{ DELIVERY-ADDRESS : uses")
      tmp-dir (build-file/create-temp-dir)
      {:keys [output-file cmd]}
-     (build-mermaid-bb/mermaid-build-image-cmd mermaid-filename user-id group-id tmp-dir)
+     (build-mermaid/mermaid-build-image-cmd mermaid-filename user-id group-id tmp-dir)
      res (blocking-cmd cmd app-dir "Should not appear" false)]
     (if (build-file/is-existing-file? output-file)
       {:message "mmdc is valid"

@@ -1,8 +1,8 @@
 (ns automaton-build.project.deps
   "Project `deps.edn` file."
   (:require
-   [automaton-build.os.edn-utils-bb :as build-edn]
-   [automaton-build.os.filename     :as build-filename]))
+   [automaton-build.os.edn-utils :as build-edn]
+   [automaton-build.os.filename  :as build-filename]))
 
 (defn deps-edn
   "Read project `deps.edn`."
@@ -74,7 +74,7 @@
 (defn lib-path
   "Creates a map where key is app library reference and value is it's local directory"
   [base-dir app]
-  (let [k (get-in app [:project-config-filedesc :edn :publication :as-lib])
+  (let [k (:as-lib app)
         v {:local/root (build-filename/relativize (:app-dir app)
                                                   (build-filename/absolutize base-dir))}]
     (when k {k v})))

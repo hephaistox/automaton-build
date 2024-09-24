@@ -1,8 +1,8 @@
 (ns automaton-build.code.files-test
   (:require
-   [automaton-build.code.files      :as sut]
-   [automaton-build.os.edn-utils-bb :as build-edn]
-   [clojure.test                    :refer [deftest is]]))
+   [automaton-build.code.files   :as sut]
+   [automaton-build.os.edn-utils :as build-edn]
+   [clojure.test                 :refer [deftest is]]))
 
 (deftest project-dirs-test
   (is (empty? (sut/project-dirs "" {})) "If no path is provided, not dir is.")

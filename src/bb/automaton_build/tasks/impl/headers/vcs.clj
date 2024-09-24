@@ -21,20 +21,30 @@
   (build-vcs/remote-branch-exists? remote-branches local-branch))
 
 (defn clone-repo-branch
-  "Clone `branch` in the `repo-url` in the directory `target-dir`."
-  [target-dir repo-url branch verbose]
-  (if-not (str/blank? branch)
-    (let [s (new java.io.StringWriter)
-          _ (h2 "Clone repo with branch" (uri-str branch))
-          res (binding [*out* s]
-                (-> (build-vcs/shallow-clone-repo-branch-cmd repo-url branch)
-                    (blocking-cmd target-dir "Impossible to clone." verbose)))]
-      (if (success res)
-        (h2-valid "Branch" (uri-str branch) "cloning is successfull.")
-        (h2-error "Branch" (uri-str branch) "cloning is not successfull."))
-      (let [s (str s)] (when-not (str/blank? s) (print s)))
-      (success res))
-    (h2-error! "No branch provided.")))
+  "`repo-url` in the directory `target-dir`, if provided clones to specific `branch`"
+  ([target-dir repo-url verbose]
+   (let [s (new java.io.StringWriter)
+         res (binding [*out* s]
+               (-> (build-vcs/shallow-clone-repo-branch-cmd repo-url)
+                   (blocking-cmd target-dir "Impossible to clone." verbose)))]
+     (if (success res)
+       (when verbose (h2-valid "Cloning is successfull."))
+       (h2-error "Cloning is not successfull."))
+     (let [s (str s)] (when-not (str/blank? s) (print s)))
+     (success res)))
+  ([target-dir repo-url branch verbose]
+   (if-not (str/blank? branch)
+     (let [s (new java.io.StringWriter)
+           _ (when verbose (h2 "Clone repo with branch" (uri-str branch)))
+           res (binding [*out* s]
+                 (-> (build-vcs/shallow-clone-repo-branch-cmd repo-url branch)
+                     (blocking-cmd target-dir "Impossible to clone." verbose)))]
+       (if (success res)
+         (when verbose (h2-valid "Branch" (uri-str branch) "cloning is successfull."))
+         (h2-error "Branch" (uri-str branch) "cloning is not successfull."))
+       (let [s (str s)] (when-not (str/blank? s) (print s)))
+       (success res))
+     (h2-error! "No branch provided."))))
 
 (defn new-branch-and-switch
   "In the repository in directory `repo-dir`, creates a new branch."
@@ -65,10 +75,11 @@
 
 (defn current-branch
   "Returns the string of the current branch."
-  []
-  (-> (build-vcs/current-branch-cmd)
-      (blocking-cmd "." "Current branch command has failed" false)
-      build-vcs/current-branch-analyze))
+  ([] (current-branch "."))
+  ([app-dir]
+   (-> (build-vcs/current-branch-cmd)
+       (blocking-cmd app-dir "Current branch command has failed" false)
+       build-vcs/current-branch-analyze)))
 
 (defn latest-commit-sha
   "Returns the string of the current branch."

@@ -1,6 +1,6 @@
 (ns automaton-build.tasks.impl.report-aliases-test
   (:require
-   [automaton-build.os.edn-utils-bb           :as build-edn]
+   [automaton-build.os.edn-utils              :as build-edn]
    [automaton-build.tasks.impl.report-aliases :as sut]
    [clojure.test                              :refer [deftest is]]))
 

@@ -5,11 +5,10 @@
 (defn add-monorepo-subprojects
   "Add monorepo subprojects."
   [monorepo-config monorepo-name]
-  (let [app-dirs (->> (get-in monorepo-config
-                              [:project-config-filedesc :edn :monorepo monorepo-name :apps])
-                      (mapv :app-dir))]
-    (-> monorepo-config
-        (assoc :subprojects (mapv (fn [app-dir] {:app-dir app-dir}) app-dirs)))))
+  (-> monorepo-config
+      (assoc :subprojects
+             (get-in monorepo-config
+                     [:project-config-filedesc :edn :monorepo monorepo-name :apps]))))
 
 (defn apply-to-subprojects
   "Apply each function `f` to subprojects."
