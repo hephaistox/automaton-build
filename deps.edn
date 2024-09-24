@@ -1,6 +1,6 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:git/url "https://github.com/Kaspazza/antq"
-                                         :sha "a2606c7dc0edfae1990e367242b28accf2ded115"}}
+ {:antq {:deps {com.github.liquidz/antq {:git/url "https://github.com/hephaistox/antq"
+                                         :sha "a92a8fe950934f6167d8750cc2e9fdb546c676ff"}}
          :main-opts ["-m" "antq.core"]}
   :codox
   {:exec-args

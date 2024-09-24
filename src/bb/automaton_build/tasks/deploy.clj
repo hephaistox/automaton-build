@@ -229,7 +229,7 @@
                         base-branch
                         github-new-changes-link)]
     (h3 message)
-    (let [res (push-local-with-tag app-dir repo base-branch tag message verbose?)]
+    (let [res (push-local-with-tag app-dir repo base-branch tag tag verbose?)]
       (if (= :success (:status res)) (h3-valid message) (h3-error "Push failed " res))
       (= :success (:status res)))))
 
