@@ -2,31 +2,32 @@
   "Prepare project for proper commit."
   (:refer-clojure :exclude [format])
   (:require
-   [automaton-build.code.cljs                 :as build-cljs]
-   [automaton-build.code.formatter            :as build-formatter]
-   [automaton-build.code.vcs                  :as build-vcs]
-   [automaton-build.echo.headers              :refer [build-writter
-                                                      errorln
-                                                      h1
-                                                      h1-error
-                                                      h1-error!
-                                                      h1-valid
-                                                      h1-valid!
-                                                      h2
-                                                      h2-error
-                                                      h2-valid
-                                                      normalln
-                                                      print-writter]]
-   [automaton-build.monorepo.apps             :as build-apps]
-   [automaton-build.os.cli-opts               :as build-cli-opts]
-   [automaton-build.os.exit-codes             :as build-exit-codes]
-   [automaton-build.project.map               :as build-project-map]
-   [automaton-build.tasks.impl.commit         :as build-tasks-commit]
-   [automaton-build.tasks.impl.headers.cmds   :refer [blocking-cmd success]]
-   [automaton-build.tasks.impl.headers.shadow :as build-headers-shadow]
-   [automaton-build.tasks.impl.linter         :as build-linter]
-   [automaton-build.tasks.impl.report-aliases :as build-tasks-report-aliases]
-   [automaton-build.tasks.impl.reports-fw     :as build-tasks-reports-fw]))
+   [automaton-build.code.cljs                     :as build-cljs]
+   [automaton-build.code.formatter                :as build-formatter]
+   [automaton-build.code.vcs                      :as build-vcs]
+   [automaton-build.echo.headers                  :refer [build-writter
+                                                          errorln
+                                                          h1
+                                                          h1-error
+                                                          h1-error!
+                                                          h1-valid
+                                                          h1-valid!
+                                                          h2
+                                                          h2-error
+                                                          h2-valid
+                                                          normalln
+                                                          print-writter]]
+   [automaton-build.monorepo.apps                 :as build-apps]
+   [automaton-build.os.cli-opts                   :as build-cli-opts]
+   [automaton-build.os.exit-codes                 :as build-exit-codes]
+   [automaton-build.project.map                   :as build-project-map]
+   [automaton-build.tasks.generate-monorepo-files :as generate-monorepo-files]
+   [automaton-build.tasks.impl.commit             :as build-tasks-commit]
+   [automaton-build.tasks.impl.headers.cmds       :refer [blocking-cmd success]]
+   [automaton-build.tasks.impl.headers.shadow     :as build-headers-shadow]
+   [automaton-build.tasks.impl.linter             :as build-linter]
+   [automaton-build.tasks.impl.report-aliases     :as build-tasks-report-aliases]
+   [automaton-build.tasks.impl.reports-fw         :as build-tasks-reports-fw]))
 
 ;; ********************************************************************************
 ;; Task parameters
@@ -44,6 +45,7 @@
         :update-fn
         (fn [opt arg] (conj opt (keyword arg)))]
        ["-b" "--tests-backend" "Do not execute frontend tests" :default true :parse-fn not]
+       ["-g" "--generate-files" "Do not execute generation of files" :default false :parse-fn not]
        ["-p" "--pretty-format" "Do not execute formatting" :default true :parse-fn not]
        ["-a" "--aliases" "Do not execute aliases check" :default true :parse-fn not]
        ["-w" "--words-forbidden" "Do not execute forbidden words check" :default true :parse-fn not]
@@ -222,7 +224,12 @@
                                   (build-apps/apply-to-subprojects
                                    build-project-map/add-project-config
                                    build-project-map/add-deps-edn))]
-     (run* monorepo-project-map test-aliases))))
+     (if (or (true? (get-in cli-opts [:options :generate-files]))
+             (and (every? (fn [[_k v]] (not= (:status v) :fail))
+                          (generate-monorepo-files/generate-files monorepo-project-map))
+                  (true? (clean-state (:app-dir monorepo-project-map)))))
+       (run* monorepo-project-map test-aliases)
+       (do (h1-error! "State is not clean") 1)))))
 
 
 (comment

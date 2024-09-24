@@ -2,7 +2,7 @@
   "Proxy to antq library"
   (:require
    [automaton-build.os.cmds                 :refer [blocking-cmd]]
-   [automaton-build.os.edn-utils-bb         :as build-edn]
+   [automaton-build.os.edn-utils            :as build-edn]
    [automaton-build.os.filename             :as build-filename]
    [automaton-build.tasks.impl.headers.cmds :as echo-cmds]
    [clojure.set                             :as set]))
@@ -20,7 +20,7 @@
          res
          :msg
          "Antq outdated deps search failed with an error, make sure you have :antq alias in your deps.edn
-            :antq {:deps {com.github.liquidz/antq {:mvn/version \"2.8.1206\"}}
+            :antq {:deps {com.github.liquidz/antq {:mvn/version \"VERSION_HERE\"}}
             :main-opts [\"-m\" \"antq.core\"]}")))
     (catch Exception e {:err e})))
 

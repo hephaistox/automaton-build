@@ -46,12 +46,14 @@
       "The git changes executes without exception."))
 
 (deftest clone-file-chain-cmd-test
-  (let [{:keys [chain-cmd file-path]} (sut/clone-file-chain-cmd
-                                       "git@github.com:hephaistox/test-repo.git"
-                                       (build-file/create-temp-dir "test_vcs")
-                                       "main" "README.md")
+  (let [file-path (build-file/create-temp-dir "test_vcs")
+        file-name "README.md"
+        chain-cmd (sut/clone-file-chain-cmd "git@github.com:hephaistox/test-repo.git" file-path
+                                            "main" file-name)
         chain-res (chain-cmds chain-cmd "Unexpected error during" false)
-        file-desc (build-file/read-file file-path)]
+        file-desc (-> file-path
+                      (build-filename/create-file-path file-name)
+                      build-file/read-file)]
     (is (every? :exit chain-res) "Check the commands have been successful")
     (is (nil? (:exception file-desc)) "No error has been found.")
     (is (string? (:raw-content file-desc)) "Check the commands have been successful")))

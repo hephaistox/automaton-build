@@ -1,6 +1,5 @@
 (ns automaton-build.project.publish
   (:require
-   [automaton-build.echo.headers                     :refer [build-writter normalln]]
    [automaton-build.os.cmds                          :as build-commands]
    [automaton-build.os.file                          :as build-file]
    [automaton-build.os.filename                      :as build-filename]
@@ -14,7 +13,7 @@
   [jar-path app-dir]
   (if (and (build-project-conf/read-param [:clojars-username])
            (build-project-conf/read-param [:clojars-password]))
-    (let [s (build-writter)
+    (let [s (new java.io.StringWriter)
           deploy-res (binding [*out* s
                                *err* s]
                        (build-commands/blocking-cmd (build-deploy-jar/deploy-cmd jar-path)
@@ -24,6 +23,11 @@
          :msg (str s)}
         {:status :failed
          :msg (str s)
+         :suggestion
+         "make sure you have alias in your deps.edn with
+           :deploy {:exec-args {:installer :remote}
+           :exec-fn deps-deploy.deps-deploy/deploy
+           :extra-deps {slipset/deps-deploy {:mvn/version \"MVN version\"}}}"
          :res deploy-res}))
     {:status :failed
      :message

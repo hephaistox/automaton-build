@@ -13,11 +13,11 @@
   * major version has to be changed in the major-version in `build_config.edn` (many sources of truth and build_config shouldn't be a place that is used as variable that change often)
   * counting commits from a branch to base a minor version on it (Many edgecases where commits don't match the version, initial commits, PRs having more than one commit...)"
   (:require
-   [automaton-build.echo.headers    :refer [normalln]]
-   [automaton-build.os.cli-input-bb :as build-cli-input]
-   [automaton-build.os.edn-utils-bb :as build-edn]
-   [automaton-build.os.filename     :as build-filename]
-   [clojure.string                  :as str]))
+   [automaton-build.echo.headers :refer [normalln]]
+   [automaton-build.os.cli-input :as build-cli-input]
+   [automaton-build.os.edn-utils :as build-edn]
+   [automaton-build.os.filename  :as build-filename]
+   [clojure.string               :as str]))
 
 (defn version-file ([] "version.edn") ([dir] (build-filename/create-file-path dir (version-file))))
 

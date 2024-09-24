@@ -1,4 +1,4 @@
-(ns automaton-build.os.edn-utils-bb
+(ns automaton-build.os.edn-utils
   "Adapter to read an edn file."
   (:require
    [automaton-build.code.formatter :as build-formatter]

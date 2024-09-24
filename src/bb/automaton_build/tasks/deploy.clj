@@ -86,6 +86,27 @@
       (replace-repo-git-dir target-git-dir dir-with-replaced-files verbose?)
       dir-with-replaced-files)))
 
+(defn push-local-with-tag
+  [source-dir repo-address target-branch tag commit-msg verbose?]
+  (if-let [dir-to-push (replace-branch-files source-dir repo-address target-branch verbose?)]
+    (let [branch (build-headers-vcs/current-branch dir-to-push)
+          {:keys [exit]
+           :as res}
+          (-> (or commit-msg "automatic commit")
+              build-vcs/commit-chain-cmd
+              (concat [[(build-vcs/tag tag commit-msg)]])
+              (concat [[(build-vcs/push-cmd branch true)]])
+              (concat [[(build-vcs/push-tag tag)]])
+              (build-commands/force-dirs dir-to-push)
+              build-commands/chain-cmds
+              build-commands/first-failing)]
+      (case exit
+        (1 0 nil) {:status :success}
+        :else {:status :failed
+               :data res}))
+    {:status :failed
+     :message "Copying local failes for push has failed"}))
+
 (defn push-local-dir-to-repo
   "Commit and push `target-branch` with files from `source-dir`.
   Params:
@@ -96,23 +117,23 @@
   * `tag` (optional) map containg `id` with tag and optional `msg` with corresponding message
   * `force?` (optional default false) if true, will force the changes to be pushed as top commit
   * `target-branch` (optional default current-branch) where to push"
-  ([source-dir repo-address target-branch commit-msg verbose?]
-   (if-let [dir-to-push (replace-branch-files source-dir repo-address target-branch verbose?)]
-     (let [branch (build-headers-vcs/current-branch dir-to-push)
-           {:keys [exit]
-            :as res}
-           (-> (or commit-msg "automatic commit")
-               build-vcs/commit-chain-cmd
-               (concat [[(build-vcs/push-cmd branch true)]])
-               (build-commands/force-dirs dir-to-push)
-               build-commands/chain-cmds
-               build-commands/first-failing)]
-       (case exit
-         (1 0 nil) {:status :success}
-         :else {:status :failed
-                :data res}))
-     {:status :failed
-      :message "Copying local failes for push has failed"})))
+  [source-dir repo-address target-branch commit-msg verbose?]
+  (if-let [dir-to-push (replace-branch-files source-dir repo-address target-branch verbose?)]
+    (let [branch (build-headers-vcs/current-branch dir-to-push)
+          {:keys [exit]
+           :as res}
+          (-> (or commit-msg "automatic commit")
+              build-vcs/commit-chain-cmd
+              (concat [[(build-vcs/push-cmd branch true)]])
+              (build-commands/force-dirs dir-to-push)
+              build-commands/chain-cmds
+              build-commands/first-failing)]
+      (case exit
+        (1 0 nil) {:status :success}
+        :else {:status :failed
+               :data res}))
+    {:status :failed
+     :message "Copying local failes for push has failed"}))
 
 (defn push-current-branch
   "Pushes `app` current changes to it's repository. The changes are pushed to the current branch of user running the function. It is forbidden to push to base-branch of application."
@@ -198,7 +219,7 @@
 
 (defn push-base-branch
   "Pushes app to `base-branch`"
-  [app-name app-dir repo base-branch message verbose?]
+  [app-name app-dir repo base-branch tag verbose?]
   (let [github-new-changes-link (str "https://github.com/" (first (re-find #"(?<=:)(.*)(?=.git)"
                                                                            repo))
                                      "/tree/" base-branch)
@@ -207,7 +228,7 @@
                         base-branch
                         github-new-changes-link)]
     (h3 message)
-    (let [res (push-local-dir-to-repo app-dir repo base-branch message verbose?)]
+    (let [res (push-local-with-tag app-dir repo base-branch tag message verbose?)]
       (if (= :success (:status res)) (h3-valid message) (h3-error "Push failed " res))
       (= :success (:status res)))))
 
@@ -281,7 +302,6 @@
                               [shadow-res css-res uber-jar-res])]
       {:status :failed
        :res failed-res}
-      ;;TODO can we get rid of this env?
       (build-project-publish/publish-clever-cloud
        clever-uri
        (->> (name env)
@@ -369,11 +389,6 @@
 
 (defn should-deploy?
   [app env]
-  ;;TODO correct-environment check doesn't fill right here
-  ;;But have in mind moving it to inital check doesn't make sense as here we decide if it should be deployed or not
-  ;;Or maybe we should not deploy in that case? To think about, what happens if we don't want to deploy automaton-web and it's version is differnet than our env? Maybe this check only makes sense when there was a change?
-  ;;
-  ;; TODO cacheless-app-dir, is not really deploy? false, but more deploy failed.. it's technical issue if we can't create temp directory
   (let [target-branch (:base-branch app)
         repo (:repo app)
         dir (:initial-app-dir app)

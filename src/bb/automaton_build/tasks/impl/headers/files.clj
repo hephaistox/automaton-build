@@ -2,7 +2,7 @@
   "Read files with headers log."
   (:require
    [automaton-build.echo.headers            :refer [errorln exceptionln normalln uri-str]]
-   [automaton-build.os.edn-utils-bb         :as build-edn]
+   [automaton-build.os.edn-utils            :as build-edn]
    [automaton-build.os.file                 :as build-file]
    [automaton-build.os.filename             :as build-filename]
    [automaton-build.project.config          :as build-project-config]

@@ -2,8 +2,8 @@
   "Shadow-cljs.edn proxy."
   (:refer-clojure :exclude [read])
   (:require
-   [automaton-build.os.edn-utils-bb :as build-edn]
-   [automaton-build.os.filename     :as build-filename]))
+   [automaton-build.os.edn-utils :as build-edn]
+   [automaton-build.os.filename  :as build-filename]))
 
 (def shadow-cljs-filename "shadow-cljs.edn")
 

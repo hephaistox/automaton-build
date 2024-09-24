@@ -145,8 +145,10 @@
 
 (defn tag
   "Creates a tag under name `version` and message `tag-msg`."
-  [version tag-msg]
-  ["git" "tag" "-f" "-a" version "-m" (msg-tokenize tag-msg)])
+  ([version] ["git" "tag" "-f" "-a" version])
+  ([version tag-msg] ["git" "tag" "-f" "-a" version "-m" (msg-tokenize tag-msg)]))
+
+(defn push-tag [tag] ["git" "push" "origin" tag])
 
 (defn tag-push-chain-cmd
   [branch-name dir version tag-msg force?]

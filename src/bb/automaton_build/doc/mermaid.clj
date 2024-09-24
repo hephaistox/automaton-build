@@ -1,4 +1,4 @@
-(ns automaton-build.doc.mermaid-bb
+(ns automaton-build.doc.mermaid
   "Create mermaid images.
 
   Proxy to [mermaid cli](https://www.npmjs.com/package/@mermaid-js/mermaid-cli)"

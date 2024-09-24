@@ -1,5 +1,6 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.9.1217"}}
+ {:antq {:deps {com.github.liquidz/antq {:git/url "https://github.com/Kaspazza/antq"
+                                         :sha "a2606c7dc0edfae1990e367242b28accf2ded115"}}
          :main-opts ["-m" "antq.core"]}
   :codox
   {:exec-args
@@ -22,7 +23,8 @@
    :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/unit" "-d" "test/la"]}
   :deploy {:exec-args {:installer :remote}
            :exec-fn deps-deploy.deps-deploy/deploy
-           :extra-deps {slipset/deps-deploy {:git/url "https://github.com/Kaspazza/deps-deploy"
+           :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
+                                             :git/url "https://github.com/Kaspazza/deps-deploy"
                                              :sha "7b4b72d124f788c9e4a876e0ba55899fd9091f1d"}}}
   :env-development-repl
   {:extra-deps {djblue/portal {:mvn/version "0.57.2"}
@@ -44,7 +46,6 @@
         cheshire/cheshire {:mvn/version "5.13.0"}
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
         codox/codox {:mvn/version "0.10.8"}
-        com.github.liquidz/antq {:mvn/version "2.9.1217"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
         djblue/portal {:mvn/version "0.57.2"}
         hiccup/hiccup {:mvn/version "2.0.0-RC3"}

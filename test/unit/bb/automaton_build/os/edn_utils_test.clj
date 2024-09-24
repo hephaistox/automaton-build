@@ -1,8 +1,8 @@
-(ns automaton-build.os.edn-utils-bb-test
+(ns automaton-build.os.edn-utils-test
   (:require
-   [automaton-build.os.edn-utils-bb :as sut]
-   [automaton-build.os.file         :as build-file]
-   [clojure.test                    :refer [deftest is]]))
+   [automaton-build.os.edn-utils :as sut]
+   [automaton-build.os.file      :as build-file]
+   [clojure.test                 :refer [deftest is]]))
 
 (deftest read-edn-test
   (is (= {:filename "non-existing-file"
