@@ -1,8 +1,8 @@
 (ns automaton-build.project.deps
   "Project `deps.edn` file."
   (:require
-   [automaton-build.os.edn-utils-bb :as build-edn]
-   [automaton-build.os.filename     :as build-filename]))
+   [automaton-build.os.edn-utils :as build-edn]
+   [automaton-build.os.filename  :as build-filename]))
 
 (defn deps-edn
   "Read project `deps.edn`."

@@ -2,7 +2,7 @@
   "Workflow 2 is starting a local development environment"
   (:require
    [automaton-build.code.cljs                    :as build-cljs]
-   [automaton-build.doc.mermaid-bb               :as build-mermaid-bb]
+   [automaton-build.doc.mermaid                  :as build-mermaid]
    [automaton-build.echo.actions                 :refer
                                                  [action errorln exceptionln normalln uri-str]]
    [automaton-build.fe.css                       :as build-fe-css]
@@ -99,13 +99,13 @@
   "Returns filenames of mermaid files to update, exclude `failed-files`."
   [mermaid-all failed-files normalln]
   (let [app-dir ""
-        mermaid-files (->> (build-mermaid-bb/ls-mermaid app-dir)
+        mermaid-files (->> (build-mermaid/ls-mermaid app-dir)
                            (remove failed-files)
                            vec)
         changed-files (if mermaid-all
                         mermaid-files
                         (-> mermaid-files
-                            (build-mermaid-bb/files-to-recompile generated-image-extension)
+                            (build-mermaid/files-to-recompile generated-image-extension)
                             vec))]
     (when verbose (normalln "Detected mermaid files: ") (normalln mermaid-files))
     (when-not (empty? failed-files)
@@ -136,7 +136,7 @@
                       (recur failed-files
                              (build-new-mermaid-file-list false failed-files normalln)))
                   (let [{:keys [command target-path]} (-> (first files-to-do)
-                                                          (build-mermaid-bb/build-mermaid-image-cmd
+                                                          (build-mermaid/build-mermaid-image-cmd
                                                            generated-image-extension
                                                            id
                                                            group-id))

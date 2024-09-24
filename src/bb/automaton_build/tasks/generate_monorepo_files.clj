@@ -8,7 +8,7 @@
    [automaton-build.monorepo.shadow-cljs     :as monorepo-shadow-cljs]
    [automaton-build.monorepo.tailwind-config :as monorepo-tailwind-config]
    [automaton-build.os.cli-opts              :as build-cli-opts]
-   [automaton-build.os.edn-utils-bb          :as build-edn]
+   [automaton-build.os.edn-utils             :as build-edn]
    [automaton-build.os.file                  :as build-file]
    [automaton-build.os.filename              :as build-filename]
    [automaton-build.project.deps             :as build-deps]
@@ -203,5 +203,5 @@
               (= (:status v) :skipped) (normalln k " - skipped")
               :else (h1-error! "Malformed output: " stat)))
           (if (every? (fn [[_k v]] (or (= (:status v) :ok) (= (:status v) :skipped))) status)
-            (h1-valid! "Monorepo files generated successfull")
-            (h1-error! "Some of files generation has failed")))))))
+            (do (h1-valid! "Monorepo files generated successfull") 0)
+            (do (h1-error! "Some of files generation has failed") 1)))))))

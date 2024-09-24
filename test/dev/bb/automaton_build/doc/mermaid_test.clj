@@ -1,6 +1,6 @@
-(ns automaton-build.doc.mermaid-bb-test
+(ns automaton-build.doc.mermaid-test
   (:require
-   [automaton-build.doc.mermaid-bb          :as sut]
+   [automaton-build.doc.mermaid             :as sut]
    [automaton-build.os.file                 :as build-file]
    [automaton-build.os.filename             :as build-filename]
    [automaton-build.os.user                 :as build-user]

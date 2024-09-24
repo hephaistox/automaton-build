@@ -1,4 +1,4 @@
-(ns automaton-build.os.json-bb
+(ns automaton-build.os.json
   "Everything about json manipulation"
   (:require
    [automaton-build.os.file :as build-file]

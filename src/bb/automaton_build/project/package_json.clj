@@ -2,7 +2,7 @@
   (:require
    [automaton-build.data.map    :as build-data-map]
    [automaton-build.os.filename :as build-filename]
-   [automaton-build.os.json-bb  :as build-json-bb]))
+   [automaton-build.os.json     :as build-json]))
 
 (def package-json "package.json")
 
@@ -36,10 +36,9 @@
   Params:
   * `dir` the directory of the application"
   [dir]
-  (let [package-filepath (package-json-path dir)] (build-json-bb/read-file package-filepath)))
+  (let [package-filepath (package-json-path dir)] (build-json/read-file package-filepath)))
 
 (defn write-package-json
   "Saves package-json content to a json file in `target-dir` with `content`."
   [target-dir content]
-  (build-json-bb/write-file (package-json-path target-dir)
-                            (build-data-map/sorted-map-nested content)))
+  (build-json/write-file (package-json-path target-dir) (build-data-map/sorted-map-nested content)))
