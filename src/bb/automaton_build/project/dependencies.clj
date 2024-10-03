@@ -61,11 +61,6 @@
     :clj-dep (build-project-clj/update-dep! dep)
     :npm (build-project-npm/update-dep! dep)))
 
-(comment
-  (update-dep! {:type :clj-dep})
-  ;
-)
-
 (defn update-deps!
   "Update all `deps` in `dir` (`deps` should conform to `dependency-schema`).
    Similar to `update-dep!` fn, but more performant in case of multiple deps to update."

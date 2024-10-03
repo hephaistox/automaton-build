@@ -12,7 +12,9 @@
    [:frontend {:optional true}
     [:map
      [:run-aliases {:optional true}
-      [:vector :keyword]]]]
+      [:vector :keyword]]
+     [:css {:optional true}
+      :string]]]
    [:code {:optional true}
     [:map {:closed true}
      [:forbidden-words [:vector :string]]]]
@@ -32,12 +34,28 @@
       [:gha
        [:map {:closed true}
         [:version :string]]]
+      [:generate-deps {:optional true}
+       [:map
+        [:paths [:map [:static [:vector :string]]]]
+        [:test-runner [:vector [:map [:alias :keyword] [:match :string] [:regex :string]]]]]]
       [:apps
        [:vector
         [:map {:closed true}
-         [:app-dir :string]]]]]]]
+         [:app-dir :string]
+         [:repo-url :string]
+         [:as-lib :symbol]]]]]]]
    [:publication {:optional true}
-    [:map [:as-lib :symbol]]]])
+    [:map
+     [:base-branch :string]
+     [:la-branch :string]
+     [:clojars {:optional true}
+      :boolean]
+     [:cc {:optional true}
+      :boolean]
+     [:excluded-aliases {:optional true}
+      [:vector :keyword]]
+     [:pom-xml-license {:optional true}
+      [:map [:name :string] [:url :string]]]]]])
 
 (def project-cfg-filename "project.edn")
 

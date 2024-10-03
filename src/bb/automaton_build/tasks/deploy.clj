@@ -11,6 +11,7 @@
                                                      h2-error
                                                      h2-error!
                                                      h2-valid
+                                                     h2-valid!
                                                      h3
                                                      h3-error
                                                      h3-valid
@@ -196,7 +197,7 @@
                     (h2 app-name " being pushed to " current-branch)
                     (let [app-base-branch
                           (get-in app [:project-config-filedesc :edn :publication :base-branch])
-                          repo (get-in app [:project-config-filedesc :edn :publication :repo-url])
+                          repo (:repo-url app)
                           push-res (push-current-branch app-dir
                                                         app-name
                                                         repo
@@ -228,7 +229,7 @@
                         base-branch
                         github-new-changes-link)]
     (h3 message)
-    (let [res (push-local-with-tag app-dir repo base-branch tag message verbose?)]
+    (let [res (push-local-with-tag app-dir repo base-branch tag tag verbose?)]
       (if (= :success (:status res)) (h3-valid message) (h3-error "Push failed " res))
       (= :success (:status res)))))
 
@@ -377,8 +378,7 @@
             {:status :failed
              :app-name app-name
              :res failed-res})
-        (do (print clear-prev-line)
-            (h2-valid app-name " deployment suceeded")
+        (do (h2-valid! app-name " deployment suceeded")
             {:status :success
              :app-name app-name
              :res [cc clojars]})))
@@ -419,7 +419,7 @@
   (h2 (str (:app-name app) "..."))
   (let [app-name (:app-name app)
         project-config (get-in app [:project-config-filedesc :edn])
-        repo (get-in project-config [:publication :repo-url])
+        repo (:repo-url app)
         app-deploy-data
         {:app-name app-name
          :repo repo
@@ -431,7 +431,7 @@
          :clever-uri (get-in project-config [:publication clever-uri-env])
          :publish-clojars? (get-in project-config [:publication :clojars])
          :publish-cc? (get-in project-config [:publication :cc])
-         :as-lib (get-in project-config [:publication :as-lib])
+         :as-lib (:as-lib app)
          :pom-xml-license (get-in project-config [:publication :pom-xml-license])
          :excluded-aliases (get-in project-config [:publication :excluded-aliases])
          :deps-edn (get-in app [:deps :edn])

@@ -45,7 +45,7 @@
         :update-fn
         (fn [opt arg] (conj opt (keyword arg)))]
        ["-b" "--tests-backend" "Do not execute frontend tests" :default true :parse-fn not]
-       ["-g" "--generate-files" "Do not execute generation of files" :default false :parse-fn not]
+       ["-g" "--generate-files" "Do not execute generation of files" :default true :parse-fn not]
        ["-p" "--pretty-format" "Do not execute formatting" :default true :parse-fn not]
        ["-a" "--aliases" "Do not execute aliases check" :default true :parse-fn not]
        ["-w" "--words-forbidden" "Do not execute forbidden words check" :default true :parse-fn not]
@@ -224,7 +224,7 @@
                                   (build-apps/apply-to-subprojects
                                    build-project-map/add-project-config
                                    build-project-map/add-deps-edn))]
-     (if (or (true? (get-in cli-opts [:options :generate-files]))
+     (if (or (false? (get-in cli-opts [:options :generate-files]))
              (and (every? (fn [[_k v]] (not= (:status v) :fail))
                           (generate-monorepo-files/generate-files monorepo-project-map))
                   (true? (clean-state (:app-dir monorepo-project-map)))))

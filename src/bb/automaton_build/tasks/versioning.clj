@@ -83,13 +83,13 @@
   (h1 "Monorepo apps dependencies update of set versions")
   (let [apps-to-update
         (remove nil?
-                (mapv
-                 (fn [app]
-                   (let [as-lib (get-in app [:project-config-filedesc :edn :publication :as-lib])]
-                     (when (and as-lib (= :success (get-in app [:version-update :status])))
-                       (update-deps-version as-lib
-                                            (get-in app [:version-update :version :version])))))
-                 subapps))]
+                (mapv (fn [app]
+                        (let [as-lib (:as-lib app)]
+                          (when (and as-lib (= :success (get-in app [:version-update :status])))
+                            (update-deps-version as-lib
+                                                 (get-in app
+                                                         [:version-update :version :version])))))
+                      subapps))]
     (if (empty? apps-to-update)
       (normalln "no apps found for depenedency update")
       (let [subapps-res (mapv (fn [{:keys [app-dir]

@@ -3,12 +3,10 @@
  :deps {:excluded-libs
         [{:doc "0.16.3 has deprecated warnings, fix is already in main merged but not released yet"
           :name "metosin/malli"}]}
- :publication {:as-lib org.clojars.hephaistox/automaton-build
-               :base-branch "main"
+ :publication {:base-branch "main"
                :clojars true
                :excluded-aliases
                [:antq :codox :env-development-repl :env-development-test :common-test :deploy]
                :la-branch "la"
                :pom-xml-license {:name "CC BY-NC 4.0"
-                                 :url "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}
-               :repo-url "git@github.com:hephaistox/automaton-build.git"}}
+                                 :url "https://creativecommons.org/licenses/by-nc/4.0/deed.en"}}}

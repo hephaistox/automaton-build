@@ -5,7 +5,6 @@
    [automaton-build.os.filename                      :as build-filename]
    [automaton-build.project.configuration            :as build-project-conf]
    [automaton-build.project.impl.clever-cloud-deploy :as build-clever-cloud]
-   [automaton-build.project.impl.clojars-deploy      :as build-deploy-jar]
    [automaton-build.tasks.impl.headers.files         :as build-headers-files]))
 
 (defn publish-clojars
@@ -16,7 +15,7 @@
     (let [s (new java.io.StringWriter)
           deploy-res (binding [*out* s
                                *err* s]
-                       (build-commands/blocking-cmd (build-deploy-jar/deploy-cmd jar-path)
+                       (build-commands/blocking-cmd ["clojure" "-X:deploy" ":artifact" jar-path]
                                                     app-dir))]
       (if (build-commands/success deploy-res)
         {:status :success

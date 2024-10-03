@@ -22,7 +22,7 @@
   "Returns `deps` without `sub-apps` libraries"
   [sub-apps deps]
   (->> sub-apps
-       (map #(get-in % [:project-config-filedesc :edn :publication :as-lib]))
+       (map :as-lib)
        (apply dissoc deps)))
 
 (defn generate-deps

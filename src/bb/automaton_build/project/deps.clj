@@ -74,7 +74,7 @@
 (defn lib-path
   "Creates a map where key is app library reference and value is it's local directory"
   [base-dir app]
-  (let [k (get-in app [:project-config-filedesc :edn :publication :as-lib])
+  (let [k (:as-lib app)
         v {:local/root (build-filename/relativize (:app-dir app)
                                                   (build-filename/absolutize base-dir))}]
     (when k {k v})))

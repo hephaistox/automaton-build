@@ -54,12 +54,12 @@
         subapps (:subprojects monorepo-project-map)
         monorepo-dir (:app-dir monorepo-project-map)
         main-deps-edn (get-in monorepo-project-map [:deps :edn])
-        static-paths (get-in
-                      monorepo-project-map
-                      [:project-config-filedesc :edn :monorepo :generate-deps :paths :static])
-        test-runner-configs (get-in
-                             monorepo-project-map
-                             [:project-config-filedesc :edn :monorepo :generate-deps :test-runner])]
+        static-paths
+        (get-in monorepo-project-map
+                [:project-config-filedesc :edn :monorepo :default :generate-deps :paths :static])
+        test-runner-configs
+        (get-in monorepo-project-map
+                [:project-config-filedesc :edn :monorepo :default :generate-deps :test-runner])]
     (if-let [new-monorepo-deps (create-monorepo-deps monorepo-dir
                                                      main-deps-edn
                                                      subapps
