@@ -23,10 +23,10 @@ jobs:
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@12.5
         with:
-          cli: 1.11.4.1474             # Clojure CLI based on tools.deps
-          bb: 1.3.191                  # Babashka
-          clj-kondo: 2024.08.01        # Clj-kondo
-          cljfmt: 0.10.2               # cljfmt
+          cli: 1.12.0.1479             # Clojure CLI based on tools.deps
+          bb: 1.4.192                  # Babashka
+          clj-kondo: 2024.09.27        # Clj-kondo
+          cljfmt: 0.13.0               # cljfmt
           zprint: 1.2.9                # zprint
       - name: Cache clojure dependencies
         uses: actions/cache@v4

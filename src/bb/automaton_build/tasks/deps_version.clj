@@ -1,21 +1,25 @@
 (ns automaton-build.tasks.deps-version
   "Task for managing outdated dependencies"
   (:require
-   [automaton-build.echo.headers         :refer [clear-prev-line
-                                                 h1
-                                                 h1-error
-                                                 h1-error!
-                                                 h1-valid
-                                                 h2
-                                                 h2-valid
-                                                 normalln]]
-   [automaton-build.monorepo.apps        :as build-apps]
-   [automaton-build.os.cli-opts          :as build-cli-opts]
-   [automaton-build.os.text              :as build-text]
-   [automaton-build.project.dependencies :as build-dependencies]
-   [automaton-build.project.map          :as build-project-map]
-   [clojure.pprint                       :as pp]
-   [clojure.string                       :as str]))
+   [automaton-build.code.cljs                     :as build-cljs]
+   [automaton-build.echo.headers                  :refer [clear-prev-line
+                                                          h1
+                                                          h1-error
+                                                          h1-error!
+                                                          h1-valid
+                                                          h1-valid!
+                                                          h2
+                                                          h2-valid
+                                                          normalln]]
+   [automaton-build.monorepo.apps                 :as build-apps]
+   [automaton-build.os.cli-opts                   :as build-cli-opts]
+   [automaton-build.os.cmds                       :refer [blocking-cmd success]]
+   [automaton-build.os.text                       :as build-text]
+   [automaton-build.project.dependencies          :as build-dependencies]
+   [automaton-build.project.map                   :as build-project-map]
+   [automaton-build.tasks.generate-monorepo-files :as generate-monorepo-files]
+   [clojure.pprint                                :as pp]
+   [clojure.string                                :as str]))
 
 (def cli-opts
   (-> []
@@ -126,7 +130,6 @@
       build-project-map/add-project-config
       run*))
 
-
 (defn run-monorepo
   "Start task for all projects in monorepo"
   []
@@ -140,11 +143,13 @@
                                  (build-apps/apply-to-subprojects
                                   build-project-map/add-project-config))]
     (if (get-in monorepo-project-map [:project-config-filedesc :invalid?])
-      (h1-error! "No project file found for monorepo.")
+      (do (h1-error! "No project file found for monorepo.") 1)
       (let [projects (:subprojects monorepo-project-map)]
         (if (empty? projects)
-          (h1-error! "No monorepo apps has been found")
-          (do
-            (doseq [project projects] (run* project))
-            (normalln
-             "[temporary] to update also files in the monorepo root, run `bb heph-task generate-files`")))))))
+          (do (h1-error! "No monorepo apps has been found") 1)
+          (do (doseq [project projects] (run* project))
+              (if (and (every? (fn [[_k v]] (not= (:status v) :fail))
+                               (generate-monorepo-files/generate-files monorepo-project-map))
+                       (success (blocking-cmd (build-cljs/install-cmd) "")))
+                (do (h1-valid! "Monorepo deps updated successfull") 0)
+                (do (h1-error! "Monorepo deps update failed") 1))))))))

@@ -1,6 +1,5 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:git/url "https://github.com/hephaistox/antq"
-                                         :sha "a92a8fe950934f6167d8750cc2e9fdb546c676ff"}}
+ {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.10.1241"}}
          :main-opts ["-m" "antq.core"]}
   :codox
   {:exec-args
@@ -26,7 +25,7 @@
            :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
                                              :mvn/version "0.2.2"}}}
   :env-development-repl
-  {:extra-deps {djblue/portal {:mvn/version "0.57.2"}
+  {:extra-deps {djblue/portal {:mvn/version "0.57.3"}
                 org.clojure/core.async {:mvn/version "1.6.681"}}
    :extra-paths ["env/development/resources" "env/development/src/clj" "env/development/src/cljc"]
    :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
@@ -46,7 +45,7 @@
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
         codox/codox {:mvn/version "0.10.8"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
-        djblue/portal {:mvn/version "0.57.2"}
+        djblue/portal {:mvn/version "0.57.3"}
         hiccup/hiccup {:mvn/version "2.0.0-RC3"}
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
         markdown-clj/markdown-clj {:mvn/version "1.12.1"}
