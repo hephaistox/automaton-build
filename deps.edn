@@ -1,5 +1,5 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.10.1241"}}
+ {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.11.1250"}}
          :main-opts ["-m" "antq.core"]}
   :codox
   {:exec-args
@@ -14,7 +14,7 @@
   :common-test
   {:exec-fn cognitect.test-runner.api/test
    :extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
-                                           :sha "9d36f36ff541dac680a05010e4348c744333f191"}
+                                           :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}
                 org.clojure/tools.namespace {:mvn/version "1.5.0"}
                 org.clojure/tools.reader {:mvn/version "1.5.0"}}
    :extra-paths ["test/unit/bb" "test/unit/resources" "test/la/bb"]
@@ -25,7 +25,7 @@
            :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
                                              :mvn/version "0.2.2"}}}
   :env-development-repl
-  {:extra-deps {djblue/portal {:mvn/version "0.57.3"}
+  {:extra-deps {djblue/portal {:mvn/version "0.58.2"}
                 org.clojure/core.async {:mvn/version "1.6.681"}}
    :extra-paths ["env/development/resources" "env/development/src/clj" "env/development/src/cljc"]
    :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
@@ -33,7 +33,7 @@
   :env-development-test
   {:exec-fn cognitect.test-runner.api/test
    :extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
-                                           :sha "9d36f36ff541dac680a05010e4348c744333f191"}
+                                           :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}
                 org.clojure/tools.namespace {:mvn/version "1.5.0"}
                 org.clojure/tools.reader {:mvn/version "1.5.0"}}
    :extra-paths ["test/dev/bb" "test/dev/clj" "test/dev/resources"]
@@ -45,10 +45,10 @@
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
         codox/codox {:mvn/version "0.10.8"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
-        djblue/portal {:mvn/version "0.57.3"}
+        djblue/portal {:mvn/version "0.58.2"}
         hiccup/hiccup {:mvn/version "2.0.0-RC3"}
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
-        markdown-clj/markdown-clj {:mvn/version "1.12.1"}
+        markdown-clj/markdown-clj {:mvn/version "1.12.2"}
         metosin/malli {:mvn/version "0.16.1"}
         zprint/zprint {:mvn/version "1.2.9"}}
  :ns-default automaton-build.core

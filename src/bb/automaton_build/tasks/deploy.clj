@@ -95,9 +95,9 @@
            :as res}
           (-> (or commit-msg "automatic commit")
               build-vcs/commit-chain-cmd
-              (concat [[(build-vcs/tag tag commit-msg)]])
-              (concat [[(build-vcs/push-cmd branch true)]])
-              (concat [[(build-vcs/push-tag tag)]])
+              (concat [[(build-vcs/tag tag commit-msg)]
+                       [(build-vcs/push-cmd branch true)]
+                       [(build-vcs/push-tag tag)]])
               (build-commands/force-dirs dir-to-push)
               build-commands/chain-cmds
               build-commands/first-failing)]
