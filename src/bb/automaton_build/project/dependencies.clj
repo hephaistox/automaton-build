@@ -7,7 +7,6 @@
 
 (defn type-schema "Type of dependency registry" [] [:or [:clj-dep :keyword] [:npm :keyword]])
 
-#_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn dependency-schema
   "Defines required keys for dependency update.
    Requires:
