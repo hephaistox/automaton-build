@@ -1,5 +1,5 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.11.1250"}}
+ {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.11.1260"}}
          :main-opts ["-m" "antq.core"]}
   :codox
   {:exec-args
@@ -25,8 +25,8 @@
            :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
                                              :mvn/version "0.2.2"}}}
   :env-development-repl
-  {:extra-deps {djblue/portal {:mvn/version "0.58.2"}
-                org.clojure/core.async {:mvn/version "1.6.681"}}
+  {:extra-deps {djblue/portal {:mvn/version "0.58.5"}
+                org.clojure/core.async {:mvn/version "1.7.701"}}
    :extra-paths ["env/development/resources" "env/development/src/clj" "env/development/src/cljc"]
    :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
    :main-opts ["-m" "automaton-build.repl.entry-point"]}
@@ -39,15 +39,15 @@
    :extra-paths ["test/dev/bb" "test/dev/clj" "test/dev/resources"]
    :jvm-opts ["-Dhephaistox-in-test=true"]
    :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/dev"]}}
- :deps {babashka/fs {:mvn/version "0.5.22"}
+ :deps {babashka/fs {:mvn/version "0.5.23"}
         babashka/process {:mvn/version "0.5.22"}
         cheshire/cheshire {:mvn/version "5.13.0"}
-        clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
+        clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.2"}
         codox/codox {:mvn/version "0.10.8"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
-        djblue/portal {:mvn/version "0.58.2"}
-        hiccup/hiccup {:mvn/version "2.0.0-RC3"}
-        io.github.clojure/tools.build {:mvn/version "0.10.5"}
+        djblue/portal {:mvn/version "0.58.5"}
+        hiccup/hiccup {:mvn/version "2.0.0-RC4"}
+        io.github.clojure/tools.build {:mvn/version "0.10.6"}
         markdown-clj/markdown-clj {:mvn/version "1.12.2"}
         metosin/malli {:mvn/version "0.16.1"}
         zprint/zprint {:mvn/version "1.2.9"}}
