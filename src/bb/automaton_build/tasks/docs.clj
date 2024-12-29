@@ -22,6 +22,7 @@
    [automaton-build.os.cmds                  :as build-commands]
    [automaton-build.os.file                  :as build-file]
    [automaton-build.os.filename              :as build-filename]
+   [automaton-build.os.version               :as build-version]
    [automaton-build.project.map              :as build-project-map]
    [automaton-build.tasks.impl.headers.cmds  :refer
                                              [blocking-cmd chain-cmds clj-parameterize success]]
@@ -172,9 +173,9 @@
   "For application stored in `app-dir`, build and publish the doc website with version `version` in the branch `doc-branch`.
 
     All files (most probably images) matching `resource-filters` are copied also."
-  [app-dir project-config version resource-filters doc-branch remote?]
+  [app-dir repo-url project-config version resource-filters doc-branch remote?]
   (let [{:keys [app-name publication]} (:edn project-config)
-        {:keys [repo-url base-branch]} publication
+        {:keys [base-branch]} publication
         deps (deps-edn app-dir)
         codox-dir (->> (get-in deps [:aliases :codox :exec-args :output-path])
                        (build-filename/create-dir-path app-dir))
@@ -199,7 +200,7 @@
           (remove-if latest-version-dir)
           (if-not remote?
             (do (h1-valid! "Local website is successfully built in"
-                           (uri-str (build-filename/create-dir-path assembly-dir "index.html")))
+                           (uri-str (build-filename/create-file-path assembly-dir "index.html")))
                 (normalln "launch with -r option to push it remotely"))
             (if (push-to-remote assembly-dir repo-url doc-branch version)
               (h2-valid! "Version successfully pushed on"
@@ -211,32 +212,6 @@
 ;;*****************************************************************
 ;; API
 ;;*****************************************************************
-(def cli-opts
-  (build-cli-opts/parse-cli ; ["automaton-build"]
-   (-> cli-opts-common-def
-       (conj build-apps/specify-project))))
-
-(defn run-app
-  "Entry point for running the documentation of the current application of the repl.
-
-  * The `resource-filters` are used to find what images to copy to the website.
-
-  Gather data from:
-
-  * The `project-config` is used to retrieve the `app-name` and the `repo-url` and `base-branch`.
-  * The  `doc-paths` is coming from the `deps.edn` codox alias.
-  * Push the modifications to `doc-branch`"
-  [resource-filters doc-branch]
-  (let [cli-opts (build-cli-opts/parse-cli cli-opts-common-def)
-        version (get-in cli-opts [:arguments 0])]
-    (when verbose (normalln "Version " version))
-    (publish-doc-task "."
-                      (:edn (build-headers-files/project-config "."))
-                      version
-                      resource-filters
-                      doc-branch
-                      (get-in cli-opts [:options :remote]))))
-
 (def cli-opts-monorepo
   (build-cli-opts/parse-cli (-> cli-opts-common-def
                                 (conj build-apps/specify-project))))
@@ -264,23 +239,26 @@
                                   build-project-map/add-project-config
                                   build-project-map/add-deps-edn))]
     (when verbose (normalln "Version" version))
-    (if-let [{:keys [app-dir project-config-filedesc]}
+    (if-let [{:keys [app-dir repo-url project-config-filedesc]}
              (first (filter (fn [subproject] (and some? project (= project (:app-name subproject))))
                             (:subprojects monorepo-project-map)))]
-      (publish-doc-task app-dir
-                        project-config-filedesc
-                        version
-                        resource-filters
-                        doc-branch
-                        (get-in cli-opts-monorepo [:options :remote]))
+      (let [version (or version (build-version/current-version app-dir))]
+        (publish-doc-task app-dir
+                          repo-url
+                          project-config-filedesc
+                          version
+                          resource-filters
+                          doc-branch
+                          (get-in cli-opts-monorepo [:options :remote])))
       (build-headers-files/invalid-project-name-message monorepo-project-map))))
 
 (def arguments
   {:doc-str "VERSION"
    :message "Where VERSION is the name of the version you want to push."
    :valid-fn (fn [texts]
-               (and (= 1 (count texts))
-                    (when-let [text (first texts)]
-                      (->> text
-                           (re-find #"(\d*)\.(\d*)\.(\d*)")
-                           vec))))})
+               (or (= 0 (count texts))
+                   (and (= 1 (count texts))
+                        (when-let [text (first texts)]
+                          (->> text
+                               (re-find #"(\d*)\.(\d*)\.(\d*)")
+                               vec)))))})
