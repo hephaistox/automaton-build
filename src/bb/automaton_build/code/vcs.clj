@@ -214,3 +214,48 @@
   "Check if the returned value of clean state "
   [res]
   (and (= 0 (:exit res)) (str/blank? (:out res))))
+
+(defn current-tag-cmd
+  "Command to return the  the tag of the current commit"
+  []
+  ["git" "describe" "--exact-match" "--tags"])
+
+(defn current-tag-analyze
+  [res]
+  (if (= 0 (:exit res))
+    {:found true
+     :tag (-> res
+              :out
+              str/split-lines
+              first)}
+    {:found false}))
+
+(defn current-repo-url-cmd "Command to return the current remote url" [] ["git" "remote" "-v"])
+
+(defn current-repo-url-analyze
+  "Returns the url string to push to the origin repo, `nil` if was failing."
+  [{:keys [exit out]}]
+  (when (= 0 exit)
+    (->> out
+         str/split-lines
+         (map (fn [line]
+                (->> line
+                     (re-find #"origin\s*([^\s]*).*(push)")
+                     second)))
+         (filter some?)
+         first)))
+
+(defn gh-run-wip?-cmd "Returns `true` if the workflow is in progress" [] ["gh" "run" "list"])
+
+(defn gh-run-wip?-analyze
+  [{:keys [exit out]}]
+  (when (= 0 exit)
+    (let [res (->> out
+                   str/split-lines
+                   first)]
+      (cond-> {:run-id (->> (str/split res #"\t")
+                            (drop 6)
+                            first)}
+        (re-find #"completed\tsuccess" res) (assoc :status :run-ok)
+        (re-find #"completed\tfailure" res) (assoc :status :run-failed)
+        (not (re-find #"completed\t" res)) (assoc :status :wip)))))

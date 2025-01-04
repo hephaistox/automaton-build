@@ -1,6 +1,9 @@
 {:aliases
- {:antq {:deps {com.github.liquidz/antq {:mvn/version "2.11.1250"}}
-         :main-opts ["-m" "antq.core"]}
+ {:clj-test-runner {:exec-fn cognitect.test-runner.api/test
+                    :extra-deps {com.cognitect/test-runner
+                                 {:git/url "https://github.com/cognitect-labs/test-runner"
+                                  :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}}
+                    :jvm-opts ["-Dheph-conf=env/test_config.edn,env/common_config.edn"]}
   :codox
   {:exec-args
    {:description "`automaton-build` is a library to ease project cicd: build, test, deployemnt..."
@@ -11,45 +14,28 @@
     :source-uri "https://github.com/hephaistox/automaton-build/blob/{version}/{filepath}#L{line}"}
    :exec-fn codox.main/generate-docs
    :extra-deps {codox/codox {:mvn/version "0.10.8"}}}
-  :common-test
-  {:exec-fn cognitect.test-runner.api/test
-   :extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
-                                           :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}
-                org.clojure/tools.namespace {:mvn/version "1.5.0"}
-                org.clojure/tools.reader {:mvn/version "1.5.0"}}
-   :extra-paths ["test/unit/bb" "test/unit/resources" "test/la/bb"]
-   :jvm-opts ["-Dheph-conf=env/test/config.edn,env/common_config.edn" "-Dhephaistox-in-test=true"]
-   :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/unit" "-d" "test/la"]}
   :deploy {:exec-args {:installer :remote}
            :exec-fn deps-deploy.deps-deploy/deploy
            :extra-deps {slipset/deps-deploy {:exclusions [org.slf4j/slf4j-nop]
                                              :mvn/version "0.2.2"}}}
-  :env-development-repl
-  {:extra-deps {djblue/portal {:mvn/version "0.58.2"}
-                org.clojure/core.async {:mvn/version "1.6.681"}}
-   :extra-paths ["env/development/resources" "env/development/src/clj" "env/development/src/cljc"]
-   :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
-   :main-opts ["-m" "automaton-build.repl.entry-point"]}
-  :env-development-test
-  {:exec-fn cognitect.test-runner.api/test
-   :extra-deps {com.cognitect/test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
-                                           :sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}
-                org.clojure/tools.namespace {:mvn/version "1.5.0"}
-                org.clojure/tools.reader {:mvn/version "1.5.0"}}
-   :extra-paths ["test/dev/bb" "test/dev/clj" "test/dev/resources"]
-   :jvm-opts ["-Dhephaistox-in-test=true"]
-   :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/dev"]}}
+  :repl {:extra-paths ["env/development/src/bb"]
+         :jvm-opts ["-Dheph-conf=env/development/config.edn,env/common_config.edn"]
+         :main-opts ["-m" "automaton-build.repl.entry-point"]}
+  :test-bb {:extra-paths ["test/bb"]
+            :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/bb"]}
+  :test-dev {:extra-paths ["test/dev/bb" "test/dev/resources"]
+             :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/dev"]}
+  :test-unit {:extra-paths ["test/unit/bb" "test/unit/resources"]
+              :main-opts ["-m" "cognitect.test-runner" "-r" ".*-test.*" "-d" "test/unit"]}}
  :deps {babashka/fs {:mvn/version "0.5.22"}
         babashka/process {:mvn/version "0.5.22"}
         cheshire/cheshire {:mvn/version "5.13.0"}
         clj-htmltopdf/clj-htmltopdf {:mvn/version "0.2.1"}
         codox/codox {:mvn/version "0.10.8"}
         dev.weavejester/medley {:mvn/version "1.8.1"}
-        djblue/portal {:mvn/version "0.58.2"}
         hiccup/hiccup {:mvn/version "2.0.0-RC3"}
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
         markdown-clj/markdown-clj {:mvn/version "1.12.2"}
         metosin/malli {:mvn/version "0.16.1"}
         zprint/zprint {:mvn/version "1.2.9"}}
- :ns-default automaton-build.core
  :paths ["src/bb"]}
