@@ -4,7 +4,6 @@
   (:require
    [automaton-build.code.cljs                     :as build-cljs]
    [automaton-build.code.formatter                :as build-formatter]
-   [automaton-build.code.vcs                      :as build-vcs]
    [automaton-build.echo.headers                  :refer [build-writter
                                                           errorln
                                                           h1
@@ -118,21 +117,6 @@
 ;; ********************************************************************************
 ;; API
 ;; ********************************************************************************
-(defn clean-state
-  "Check if the state is clean"
-  [project-dir]
-  (h1 "Check clean state.")
-  (let [s (build-writter)
-        res (binding [*out* s]
-              (-> (build-vcs/clean-state)
-                  (blocking-cmd project-dir "" verbose)))]
-    (if (build-vcs/clean-state-analyze res)
-      (h1-valid "git state is clean.")
-      (h1-error "git state is not clean."))
-    (print-writter s)
-    (when verbose (normalln (:out res)))
-    (build-vcs/clean-state-analyze res)))
-
 (defn clj-test
   "Run clj test."
   [project-dir test-aliases]
@@ -191,8 +175,7 @@
                       {:aliases-check (build-tasks-report-aliases/scan-alias project-map verbose)})
                     (when linter? {:linting (build-linter/lint (:deps project-map) verbose)})
                     (when tests-b? {:clj-tests-check (clj-test app-dir test-aliases)})
-                    (when tests-f? {:cljs-tests-check (cljs-test app-dir)})
-                    {:clean-state (clean-state app-dir)})
+                    (when tests-f? {:cljs-tests-check (cljs-test app-dir)}))
         status (->> status-map
                     vals
                     (every? true?))]
@@ -225,9 +208,8 @@
                                    build-project-map/add-project-config
                                    build-project-map/add-deps-edn))]
      (if (or (false? (get-in cli-opts [:options :generate-files]))
-             (and (every? (fn [[_k v]] (not= (:status v) :fail))
-                          (generate-monorepo-files/generate-files monorepo-project-map))
-                  (true? (clean-state (:app-dir monorepo-project-map)))))
+             (every? (fn [[_k v]] (not= (:status v) :fail))
+                     (generate-monorepo-files/generate-files monorepo-project-map)))
        (run* monorepo-project-map test-aliases)
        (do (h1-error! "State is not clean") 1)))))
 

@@ -33,7 +33,7 @@
 ;; ********************************************************************************
 ;; Helpers
 ;; ********************************************************************************
-(def ^:private cli-opts-common-def
+(def cli-opts-common-def
   (-> [["-r" "--remote" "Publish remotely the documentation"]
        ["-k" "--keep" "Keep the temporary directories"]]
       (concat build-cli-opts/help-options build-cli-opts/verbose-options)))
@@ -237,20 +237,61 @@
                                  (build-apps/add-monorepo-subprojects monorepo-name)
                                  (build-apps/apply-to-subprojects
                                   build-project-map/add-project-config
-                                  build-project-map/add-deps-edn))]
+                                  build-project-map/add-deps-edn))
+        version (or version (build-version/current-version app-dir))]
     (when verbose (normalln "Version" version))
     (if-let [{:keys [app-dir repo-url project-config-filedesc]}
              (first (filter (fn [subproject] (and some? project (= project (:app-name subproject))))
                             (:subprojects monorepo-project-map)))]
-      (let [version (or version (build-version/current-version app-dir))]
-        (publish-doc-task app-dir
-                          repo-url
-                          project-config-filedesc
-                          version
-                          resource-filters
-                          doc-branch
-                          (get-in cli-opts-monorepo [:options :remote])))
+      (publish-doc-task app-dir
+                        repo-url
+                        project-config-filedesc
+                        version
+                        resource-filters
+                        doc-branch
+                        (get-in cli-opts-monorepo [:options :remote]))
       (build-headers-files/invalid-project-name-message monorepo-project-map))))
+
+(defn run-app
+  "Generates the documentation of the current application with the current tag.
+
+  * The `resource-filters` are used to find what images to copy to the website.
+
+  Gather data from:
+
+  * The `project-config` is used to retrieve the `app-name` and the `repo-url` and `base-branch`.
+  * The  `doc-paths` is coming from the `deps.edn` codox alias.
+  * Push the modifications to `doc-branch`."
+  [resource-filters doc-branch]
+  (let [app-dir ""
+        repo-url-res
+        (-> (build-vcs/current-repo-url-cmd)
+            (blocking-cmd app-dir "error when retrieveing the url of the remote origin" verbose))
+        repo-url (build-vcs/current-repo-url-analyze repo-url-res)
+        {version :tag
+         found? :found}
+        (-> (build-vcs/current-tag-cmd)
+            (blocking-cmd
+             app-dir
+             "Error while getting the version of the documentation, your commit should have a tag"
+             verbose)
+            build-vcs/current-tag-analyze)]
+    (when verbose (normalln "Version: " version) (normalln (str "Distant repo url `" repo-url "`")))
+    (if-not found?
+      (errorln "Abort doc creation, don't know how to create a doc without its version")
+      (do (when verbose (normalln "Version" version))
+          (let [{:keys [app-dir project-config-filedesc]} (-> (build-project-map/create-project-map
+                                                               app-dir)
+                                                              build-project-map/add-project-config
+                                                              build-project-map/add-deps-edn)]
+            (when (= 0 (:exit repo-url-res))
+              (publish-doc-task app-dir
+                                repo-url
+                                project-config-filedesc
+                                version
+                                resource-filters
+                                doc-branch
+                                (get-in cli-opts-monorepo [:options :remote]))))))))
 
 (def arguments
   {:doc-str "VERSION"
