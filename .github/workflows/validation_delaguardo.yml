@@ -35,4 +35,4 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
       - name: Test
-        run: bb wf-4 -ibawl -d :common-test
+        run: bb test test-bb test-bb

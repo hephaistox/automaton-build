@@ -1,24 +1,30 @@
 {:deps {cheshire/cheshire {:mvn/version "5.13.0"}
-        djblue/portal {:mvn/version "0.58.2"}
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
         metosin/malli {:mvn/version "0.16.1"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}}
- :paths ["src/clj" "src/bb" "test_la/clj"]
- :tasks
- {-base-deps {:doc "Dependencies for a task using bb"
-              :extra-deps {org.clojure/tools.cli {:mvn/version "1.1.230"}}}
-  :requires [[automaton-build.tasks.common :as tasks-common]]
-  lconnect
-  {:doc
-   "Repl in case automaton-build is failing. Using -f or --force cli arguments to force start if some part are failing"
-   :task (try (-> (babahska-process/shell "clojure"
-                                          "-M:common-test:env-development-repl:build"
-                                          *command-line-args*)
-                  System/exit)
-              (catch Exception e
-                (println "Repl failed also - error during repl startup" (ex-message e))))}
-  wf-4 {:depends [-base-deps]
-        :doc "Full test and formatting."
-        :enter (tasks-common/enter wf-4/cli-opts (current-task))
-        :requires [[automaton-build.tasks.4 :as wf-4]]
-        :task (System/exit (wf-4/run [:common-test :env-development-test]))}}}
+ :paths ["src/clj" "src/bb"]
+ :tasks {-base-deps {:doc "Dependencies for a task using bb"}
+         :requires [[automaton-build.tasks.common :as tasks-common]]
+         lconnect {:doc "Repl in case automaton-build is failing."
+                   :task (-> (try (-> (shell "clojure" "-M:env-development-repl")
+                                      :exit)
+                                  (catch Exception e
+                                    (println "Repl failed also - error during repl startup\n  *"
+                                             (pr-str e))
+                                    -1))
+                             System/exit)}
+         test {:doc "Dev test bb code in jvm"
+               :requires [[automaton-build.tasks.test :as test]]
+               :task (-> (test/run "clj-test-runner"
+                                   #{{:description "bb tests in jvm"
+                                      :alias :test-bb}
+                                     {:description "unit tests - assembly tests at unit level"
+                                      :alias :test-unit}
+                                     {:description "test local development environmnet itself"
+                                      :alias :test-dev}})
+                         System/exit)}
+         wf-4 {:depends [-base-deps]
+               :doc "Full test and formatting."
+               :enter (tasks-common/enter wf-4/cli-opts (current-task))
+               :requires [[automaton-build.tasks.4 :as wf-4]]
+               :task (System/exit (wf-4/run [:common-test :env-development-test]))}}}

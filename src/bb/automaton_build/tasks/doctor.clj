@@ -3,7 +3,6 @@
   (:require
    [automaton-build.code.formatter           :as build-formatter]
    [automaton-build.data.schema              :as build-data-schema]
-   [automaton-build.doc.mermaid              :as build-mermaid]
    [automaton-build.echo.headers             :refer [h1
                                                      h1-error
                                                      h1-error!
@@ -70,39 +69,6 @@
 (defn group-id
   [app-dir]
   (doctor-cmd (build-user/user-id-cmd) app-dir "group is found" "group is not found"))
-
-(defn mermaid-installed
-  "Check mermaid is installed."
-  [app-dir]
-  (doctor-cmd (build-mermaid/mermaid-pull-cli-cmd)
-              app-dir
-              "mermaid is valid"
-              "mermaid is not properly setup."))
-
-(defn mermaid-running
-  "Check mermaid is installed."
-  [app-dir]
-  (let
-    [user-id (-> (build-user/user-id-cmd)
-                 (blocking-cmd "" "" false)
-                 build-user/id-analyze)
-     group-id (-> (build-user/group-id-cmd)
-                  (blocking-cmd "" "" false)
-                  build-user/id-analyze)
-     mermaid-filename (build-file/create-temp-file)
-     _write-mermaid-file
-     (build-file/write-file
-      mermaid-filename
-      "erDiagram\nCUSTOMER ||--o{ ORDER : places\nORDER ||--|{ LINE-ITEM : contains\nCUSTOMER }|..|{ DELIVERY-ADDRESS : uses")
-     tmp-dir (build-file/create-temp-dir)
-     {:keys [output-file cmd]}
-     (build-mermaid/mermaid-build-image-cmd mermaid-filename user-id group-id tmp-dir)
-     res (blocking-cmd cmd app-dir "Should not appear" false)]
-    (if (build-file/is-existing-file? output-file)
-      {:message "mmdc is valid"
-       :status :ok}
-      {:message "mmdc is not properly setup."
-       :details (:out res)})))
 
 (defn git-installed
   "Git tooling is installed."
@@ -236,10 +202,6 @@
     :fn-to-call group-id}
    {:check-name "user-id"
     :fn-to-call user-id}
-   {:check-name "mermaid installed"
-    :fn-to-call mermaid-installed}
-   {:check-name "mermaid running"
-    :fn-to-call mermaid-running}
    {:check-name "zprint"
     :fn-to-call zprint}
    {:check-name "zprint-setup"
