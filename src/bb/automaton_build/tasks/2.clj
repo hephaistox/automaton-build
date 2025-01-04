@@ -1,17 +1,13 @@
 (ns automaton-build.tasks.2
   "Workflow 2 is starting a local development environment"
   (:require
-   [automaton-build.code.cljs                    :as build-cljs]
-   [automaton-build.doc.mermaid                  :as build-mermaid]
-   [automaton-build.echo.actions                 :refer
-                                                 [action errorln exceptionln normalln uri-str]]
-   [automaton-build.fe.css                       :as build-fe-css]
-   [automaton-build.os.cli-opts                  :as build-cli-opts]
-   [automaton-build.os.file                      :as build-file]
-   [automaton-build.os.filename                  :as build-filename]
-   [automaton-build.tasks.impl.actions.cmds      :refer [blocking-cmd long-living-cmd success]]
-   [automaton-build.tasks.impl.actions.user-info :as build-user-info]
-   [clojure.string                               :as str]))
+   [automaton-build.code.cljs               :as build-cljs]
+   [automaton-build.echo.actions            :refer [action errorln exceptionln normalln uri-str]]
+   [automaton-build.fe.css                  :as build-fe-css]
+   [automaton-build.os.cli-opts             :as build-cli-opts]
+   [automaton-build.os.file                 :as build-file]
+   [automaton-build.tasks.impl.actions.cmds :refer [blocking-cmd long-living-cmd]]
+   [clojure.string                          :as str]))
 
 (def ^:private cli-opts
   (-> [["-r" "--repl" "Don't start the clj REPL" :default true :parse-fn not]
@@ -94,59 +90,3 @@
        (catch Exception e (errorln "Unexpected error" e))))
 
 (def generated-image-extension ".png")
-
-(defn- build-new-mermaid-file-list
-  "Returns filenames of mermaid files to update, exclude `failed-files`."
-  [mermaid-all failed-files normalln]
-  (let [app-dir ""
-        mermaid-files (->> (build-mermaid/ls-mermaid app-dir)
-                           (remove failed-files)
-                           vec)
-        changed-files (if mermaid-all
-                        mermaid-files
-                        (-> mermaid-files
-                            (build-mermaid/files-to-recompile generated-image-extension)
-                            vec))]
-    (when verbose (normalln "Detected mermaid files: ") (normalln mermaid-files))
-    (when-not (empty? failed-files)
-      (normalln "Failing files are excluded (unless updated again:)")
-      (normalln (str/join " " failed-files)))
-    changed-files))
-
-(defn mermaid
-  "Watch mermaid files."
-  []
-  (try
-    (when (or (get-in cli-opts [:options :mermaid]) (get-in cli-opts [:options :mermaid-all]))
-      (let [app-dir (build-filename/absolutize "")
-            prefixs ["md"]
-            mermaid-all (get-in cli-opts [:options :mermaid-all])
-            {:keys [id group-id]} (build-user-info/user-infos prefixs false)
-            actionln (partial action prefixs)
-            normalln (partial normalln prefixs)
-            errorln (partial errorln prefixs)
-            blocking-cmd (partial blocking-cmd prefixs)]
-        (if (some nil? [id group-id])
-          (errorln "Skip mermaid update.")
-          (do (actionln "Watching mermaid files in sub-directory of" (uri-str app-dir))
-              (loop [failed-files #{}
-                     files-to-do (build-new-mermaid-file-list mermaid-all failed-files normalln)]
-                (if (empty? files-to-do)
-                  (do (Thread/sleep 1000)
-                      (recur failed-files
-                             (build-new-mermaid-file-list false failed-files normalln)))
-                  (let [{:keys [command target-path]} (-> (first files-to-do)
-                                                          (build-mermaid/build-mermaid-image-cmd
-                                                           generated-image-extension
-                                                           id
-                                                           group-id))
-                        res (blocking-cmd command
-                                          app-dir
-                                          (format "Has not been able to proceed with `%s`"
-                                                  target-path)
-                                          verbose)]
-                    (when (success res) (normalln (uri-str target-path) "has been generated"))
-                    (recur failed-files (rest files-to-do)))))))))
-    (catch Exception e
-      (println "Unexpected error during execution of css watch")
-      (println (pr-str e)))))
