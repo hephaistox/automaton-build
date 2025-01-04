@@ -5,14 +5,15 @@
    [clojure.test                 :refer [deftest is]]))
 
 (deftest project-dirs-test
-  (is (empty? (sut/project-dirs "" {})) "If no path is provided, not dir is.")
-  (is (= #{"env/test/src/"}
-         (sut/project-dirs "" {:paths ["non-existing-dir" "env/test/src" "env/non-exist/src"]}))
-      "Values in `:paths` are returned")
-  (is (= #{"env/test/src/"}
+  (is (empty? (sut/project-dirs "" {})) "If paths is empty, no dir is returned.")
+  (is (= #{"test/bb/"} (sut/project-dirs "" {:paths ["test/bb"]})) "Existing path is kept")
+  (is (= #{"test/bb/"}
+         (sut/project-dirs "" {:paths ["non-existing-dir" "test/bb" "env/non-exist/src"]}))
+      "Non existing dirs are skipped")
+  (is (= #{"test/bb/"}
          (sut/project-dirs ""
-                           {:paths ["env/test/src"]
-                            :aliases {:foo {:extra-paths ["env/test/src"]}}}))
+                           {:paths ["test/bb"]
+                            :aliases {:foo {:extra-paths ["test/bb"]}}}))
       "If the same path is at many places, it is returned only once.")
   (is (seq (apply sut/project-dirs ((juxt :dir :edn) (build-edn/read-edn "deps.edn"))))
       "A project in a sub directory manages properly the paths."))

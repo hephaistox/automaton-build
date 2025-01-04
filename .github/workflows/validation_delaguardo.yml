@@ -1,9 +1,8 @@
-name: Commit validation - Delaguardo flavor
+name: Commit validation
 on:
   push:
-    branches:
-      - main
-      - la
+     branches: '**'
+     # Don't want to validate on tag push, only commits --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
 jobs:
   clojure:
     strategy:
@@ -14,25 +13,39 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Prepare java
+        with:
+          fetch-depth: 0
+      - name: Install java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '22'
-
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@13.0
         with:
           cli: 1.12.0.1479             # Clojure CLI based on tools.deps
-          bb: 1.12.195                  # Babashka
+          bb: 1.12.195                 # Babashka
           clj-kondo: 2024.11.14        # Clj-kondo
-          cljfmt: 0.13.0               # cljfmt
           zprint: 1.2.9                # zprint
+      - name: Install fdfind
+        run: sudo apt-get install -y fd-find
+      - name: Setup zprint
+        run: echo "{:search-config? true}" >> ~/.zprintrc
       - name: Cache clojure dependencies
         uses: actions/cache@v4
         with:
           path: /home/runner/.m2/repository
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
-      - name: Test
-        run: bb wf-4 -ibawl -d :common-test
+      - name: Tests code alias + linter + forbidden words
+        run: bb wf-4 -iawlp
+      - name: Test code
+        run: bb test test-bb test-unit
+      - name: Write git diff - show what has been changed by zprint
+        run: git diff
+      - name: Pushed code should already be formatted
+        uses: CatChen/check-git-status-action@v1
+        with:
+          fail-if-not-clean: true
+          request-changes-if-not-clean: false
+          push-if-not-clean: false
