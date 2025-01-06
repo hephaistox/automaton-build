@@ -19,8 +19,7 @@
   (is (= ["" 0 false]
          ((juxt :err :exit (comp str/blank? :out))
           (-> (sut/latest-commit-message-cmd)
-              (blocking-cmd "." "Unexpected error during commit message test" false)
-              (dissoc :dir))))
+              (blocking-cmd "." "Unexpected error during commit message test" false))))
       "Is the log message return no error, a zero exit code and a message."))
 
 (deftest latest-commit-sha-cmd-test
@@ -130,3 +129,62 @@
                (select-keys [:is-commit :nothing-to-commit])
                vals))
         "A modification is detected and the nothing-to-commit is false.")))
+
+(deftest current-repo-url-test
+  (is (zero? (-> (sut/current-repo-url-cmd)
+                 (blocking-cmd "" "test current repo url failed" true)
+                 :exit))
+      "Is the execution ok?")
+  (is
+   (=
+    "git@github.com:hephaistox/automaton-build.git"
+    (->
+      {:exit 0
+       :out
+       "origin git@github.com:hephaistox/automaton-build.git (fetch)
+origin  git@github.com:hephaistox/automaton-build.git (push)"}
+      sut/current-repo-url-analyze))
+   "Is the analyzis finding finding the url?"))
+
+(comment
+  (-> (sut/current-tag-cmd)
+      (blocking-cmd "." "Unexpected error during commit message test" false)
+      sut/current-tag-analyze))
+
+(deftest gh-run-wip?-test
+  (comment
+    (-> (sut/gh-run-wip?-cmd)
+        (blocking-cmd "" "Unable to execute `gh` run wip" false)
+        #_sut/gh-run-wip?-analyze)
+    "completed\tfailure\tClean build\tCommit validation - Delaguardo flavor\tclean_build\tpush\t12622334211\t36s\t2025-01-05T19:25:35Z"
+    "completed\tsuccess\tClean build\tCommit validation - Delaguardo flavor\tclean_build\tpush\t12622284876\t1m43s\t2025-01-05T19:17:40Z")
+  (is
+   (=
+    {:status :run-failed
+     :run-id "12622334211"}
+    (->
+      {:exit 0
+       :out
+       "completed\tfailure\tClean build\tCommit validation - Delaguardo flavor\tclean_build\tpush\t12622334211\t36s\t2025-01-05T19:25:35Z"}
+      sut/gh-run-wip?-analyze))
+   "A failure")
+  (is
+   (=
+    {:status :run-ok
+     :run-id "12622284876"}
+    (->
+      {:exit 0
+       :out
+       "completed\tsuccess\tClean build\tCommit validation - Delaguardo flavor\tclean_build\tpush\t12622284876\t1m43s\t2025-01-05T19:17:40Z"}
+      sut/gh-run-wip?-analyze))
+   "A success")
+  (is
+   (=
+    {:run-id "12622284876"
+     :status :wip}
+    (->
+      {:exit 0
+       :out
+       "aze\twip\tClean build\tCommit validation - Delaguardo flavor\tclean_build\tpush\t12622284876\t1m43s\t2025-01-05T19:17:40Z"}
+      sut/gh-run-wip?-analyze))
+   "A wip"))

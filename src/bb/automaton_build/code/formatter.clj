@@ -29,4 +29,4 @@
 (defn format-clj-cmd
   "Command formatting all clj files in the directory and subdirectories where it is executed."
   []
-  ["fd" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"])
+  ["fdfind" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"])

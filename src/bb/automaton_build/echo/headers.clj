@@ -84,8 +84,8 @@
   [& texts]
   (swap! build-echo-common/echo-param assoc :section 2)
   (print build-text/font-red)
-  (header-printing "!" texts))
-(print build-text/font-default)
+  (header-printing "!" texts)
+  (print build-text/font-default))
 
 (defn h2-valid!
   [& texts]
