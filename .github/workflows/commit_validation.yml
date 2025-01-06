@@ -5,6 +5,8 @@ on:
      # Don't want to validate on tag push, only commits --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
 jobs:
   clojure:
+    permissions:
+       contents: read
     strategy:
       matrix:
         os: [ubuntu-latest] # , windows-latest There is a path issue
@@ -21,7 +23,8 @@ jobs:
           distribution: 'zulu'
           java-version: '22'
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@13.0
+        # See https://github.com/DeLaGuardo/setup-clojure/commits/main/
+        uses: DeLaGuardo/setup-clojure@cc67f8308550d0f18b0ba445c2476f84626a5d6a #v13.0
         with:
           cli: 1.12.0.1479             # Clojure CLI based on tools.deps
           bb: 1.12.195                 # Babashka
@@ -44,7 +47,8 @@ jobs:
       - name: Write git diff - show what has been changed by zprint
         run: git diff
       - name: Pushed code should already be formatted
-        uses: CatChen/check-git-status-action@v1
+        # See https://github.com/CatChen/check-git-status-action
+        uses: CatChen/check-git-status-action@bde80484b437cece974f79da735a5cd1dfdc9b0b  #v1
         with:
           fail-if-not-clean: true
           request-changes-if-not-clean: false
