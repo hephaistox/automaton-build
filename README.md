@@ -6,7 +6,10 @@ Automaton build library streamlines the creation, development, testing, and publ
 
 > If every tool, when ordered, or even of its own accord, could do the work that befits it, just as the creations of Daedalus moved of themselves, or the tripods of Hephaestus went of their own accord to their sacred work, if the shuttle would weave and the plectrum touch the lyre without a hand to guide them, master-craftsmen would have no need of assistants and masters no need of slaves ~ Aristotle, Politics 1253b
 
-[Detailed API documentation](https://hephaistox.github.io/automaton-build/latest).
+* [Visit the wiki](https://github.com/hephaistox/automaton-build/wiki)
+* [![Clojars Project](https://img.shields.io/clojars/v/org.clojars.hephaistox/automaton-build.svg)](https://clojars.org/org.clojars.hephaistox/automaton-build)
+* [Detailed API documentation](https://hephaistox.github.io/automaton-build/latest).
+* [Discuss with us](https://github.com/hephaistox/automaton-build/discussions)
 
 ## Motivation
 
