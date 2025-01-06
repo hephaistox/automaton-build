@@ -1,58 +1,57 @@
 # automaton-build
 
-Automaton build library streamlines the creation, development, testing, and publishing of the automaton projects.
+Automaton build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [definitions](https://github.com/hephaistox/hephaistox/blob/main/README.md)).
 
 <img src="docs/img/automaton_duck.png" width=130 alt="automaton duck picture"> 
 
 > If every tool, when ordered, or even of its own accord, could do the work that befits it, just as the creations of Daedalus moved of themselves, or the tripods of Hephaestus went of their own accord to their sacred work, if the shuttle would weave and the plectrum touch the lyre without a hand to guide them, master-craftsmen would have no need of assistants and masters no need of slaves ~ Aristotle, Politics 1253b
 
+[Detailed API documentation](https://hephaistox.github.io/automaton-build/latest).
+
 ## Motivation
 
-To meet monorepo objectives, it should be possible to quickly create a project and maintain its modifications through time.
+It's an hephaistox objective to be able to spread codebase among different reusable projects. As technical diversity is limited in our project, it is possible to write once most of that tasks in advance.
 
-At the same moment, it is really complicated and most often dangerous to decide for once how all projects should look like.
+This project makes possible to quickly create a project and maintain its modifications through time. 
 
-So, all factorized code is stored in the `automaton-build` project.
+* Advantage: 
+   * Same approach than other hephaistox projects
+* Disadvantages: 
+   * Backward compatilibity is now a question for code written in this project
+   * It doesn't solve for now the diversity of technology if it happens
+
+### Alternative approaches
+
+Possible alternative approaches are :
+
+* Templating. Creates project templates copied to build a new project with all cicd in it.
+    * Advantage: 
+      * Simple to start with
+    * Disadvantages: 
+       * Makes more complicated, near impossible any future updates as code is copied in all templates and all their copies, 
+       * Specificities of each project will always lead to be mixed-up.
+* Build constraints on the target projects and build one `automaton-build` leveraging that constraints.
+    * Advantage:
+       * Classical approach.
+    * Disavantage:
+       * Don't know how to solve this issue without generalizing all cicd technologies.
+
+## Main features
+
+* Premade tasks for our technical stack
+* Build clojure, bb and clojurescript projects
+* Test, lint and format project code
+* For cli user interaction, execute commands with feedbacks on the cli with two modes: `heading` for a sequence of tasks organizeed as a tree, `actions` which suits for long lasting actions which feedbacks may be intertwine
+* Simplify and standardize cli options
+* Manage many projects as one project
+   * Create one configuration file (deps.edn, shadow-cljs.edn, ....)
+   * Deploy one and update others
 
 ## Design decision
 
-See [design decision page](docs/design_decision.md)
-
-## Quick start
-
-To integrate `automaton-build` into your project:
-
-1. Create `bb.edn` file at the root of your project with the following content:
-
-``` clojure
-{:deps {org.clojars.hephaistox/automaton-build #:mvn{:version "1.0.2"}} 
-:tasks {-base-deps {:doc "Dependencies for a task using bb"}
-        :requires [[automaton-build.tasks.common :as tasks-common]]}}
-```
-
-Which will:
-* Add the `automaton-build` library dependency to enable its features.
-* Add the `-base-deps` task to declare whatever is common to all tasks. It starts with `-` so it is not shown in the task list.
-* Add the `requires` that enables `tasks-common` namespace for all tasks so you don't have to repeat it.
-
-2. Add your custom tasks or use pre-defined ones from the `automaton-build.tasks` directory.
-
-Example task for starting REPL:
-```clojure
- repl {:depends [-base-deps]
-       :requires [[automaton-build.tasks.2 :as tasks-2]]
-       :extra-deps {}
-       :doc "Launch repl"
-       :enter (tasks-common/enter tasks-2/cli-opts (current-task))
-       :task (tasks-2/start-repl [:common-test :env-development-repl :build])}
-```
-
-## Tasks configuration
-
-Some tasks may require additional configuration. Set up a `project.edn` file in your project root to customize task behavior. For an example refer to the forbidden-words report task [automaton-build.tasks.tasks.3](src/bb/automaton_build/tasks/3.clj) and [project.edn file](project.edn) 
+See [design decision page](docs/design_decisions.md)
 
 
-[For detailed API documentation click here](https://hephaistox.github.io/automaton-build/latest).
+---
 
-License information can be found in [LICENSE file](LICENSE.md)
-Copyright © 2020-2024 Hephaistox
+See license information in [LICENSE file](LICENSE.md) Copyright © 2020-2024 Hephaistox
