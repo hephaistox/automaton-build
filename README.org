@@ -1,9 +1,14 @@
 #+title: automaton-build
 #+author: Anthony CAUMOND
+# See full fledge org example here https://github.com/fniessen/refcard-org-mode/blob/master/README.org?plain=1
 
 Automaton build library streamlines the creation, development, testing, and publishing of the automaton and cust-apps projects (see [definitions](https://github.com/hephaistox/hephaistox/blob/main/README.md)).
 
-[[docs/img/automaton_duck.png|width=100]]
+#+BEGIN_SRC org
+#+ATTR_HTML: :width 0.25\linewidth
+[[file:docs/img/automaton_duck.png]]
+#+END_SRC
+
 
 #+BEGIN_QUOTE
 If every tool, when ordered, or even of its own accord, could do the work that befits it, just as the creations of Daedalus moved of themselves, or the tripods of Hephaestus went of their own accord to their sacred work, if the shuttle would weave and the plectrum touch the lyre without a hand to guide them, master-craftsmen would have no need of assistants and masters no need of slaves ~ Aristotle, Politics 1253b
@@ -50,6 +55,5 @@ Possible alternative approaches are :
 - Create one configuration file (deps.edn, shadow-cljs.edn, ....)
 - Deploy one and update others
 
----
-
+* LICENCE
 See license information in [LICENSE file](LICENSE.md) Copyright © 2020-2024 Hephaistox
