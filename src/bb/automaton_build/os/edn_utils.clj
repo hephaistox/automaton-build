@@ -1,5 +1,5 @@
 (ns automaton-build.os.edn-utils
-  "Adapter to read an edn file."
+  "Read an edn file."
   (:require
    [automaton-build.code.formatter :as build-formatter]
    [automaton-build.os.cmds        :as build-commands]
@@ -19,9 +19,8 @@
   * `exception` if something wrong happened.
   * `edn` if the translation."
   [edn-filename]
-  (let [{:keys [raw-content invalid?]
-         :as res}
-        (build-file/read-file edn-filename)]
+  (let [res (build-file/read-file edn-filename)
+        {:keys [raw-content invalid?]} res]
     (if invalid?
       res
       (try (assoc res :edn (str->edn raw-content))

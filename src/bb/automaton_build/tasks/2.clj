@@ -11,15 +11,13 @@
 
 (def ^:private cli-opts
   (-> [["-r" "--repl" "Don't start the clj REPL" :default true :parse-fn not]
-       ["-m" "--mermaid" "Don't watch md files" :default true :parse-fn not]
-       ["-M" "--mermaid-all" "Force generation of all files again"]
        ["-f" "--frontend" "Don't start the cljs REPL" :default true :parse-fn not]
        ["-c" "--css" "Don't start the css" :default true :parse-fn not]]
       (concat build-cli-opts/help-options
               build-cli-opts/verbose-options
               build-cli-opts/inverse-options)
       build-cli-opts/parse-cli
-      (build-cli-opts/inverse [:repl :mermaid :frontend :css])))
+      (build-cli-opts/inverse [:repl :frontend :css])))
 
 (def verbose (get-in cli-opts [:options :verbose]))
 

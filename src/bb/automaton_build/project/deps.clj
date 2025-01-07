@@ -4,10 +4,12 @@
    [automaton-build.os.edn-utils :as build-edn]
    [automaton-build.os.filename  :as build-filename]))
 
+(defn deps-edn-filename [app-dir] (build-filename/create-file-path app-dir "deps.edn"))
+
 (defn deps-edn
   "Read project `deps.edn`."
   [app-dir]
-  (-> (build-filename/create-file-path app-dir "deps.edn")
+  (-> (deps-edn-filename app-dir)
       build-edn/read-edn))
 
 (defn write

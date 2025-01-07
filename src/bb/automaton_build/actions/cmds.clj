@@ -1,4 +1,4 @@
-(ns automaton-build.tasks.impl.actions.cmds
+(ns automaton-build.actions.cmds
   "Wrap command functions with action echoing."
   (:require
    [automaton-build.echo.actions :refer [errorln normalln uri-str]]
@@ -21,11 +21,6 @@
 (defn kill [process] (build-commands/kill process))
 
 (defn success "Returns `true` if the result is a success" [result] (build-commands/success result))
-
-(defn clj-parameterize
-  "Turns `par` into a parameter understood by a clojure `cli`."
-  [par]
-  (build-commands/clj-parameterize par))
 
 (defn force-dirs [cmd-chain dir] (build-commands/force-dirs cmd-chain dir))
 

@@ -31,7 +31,7 @@
 (def cli-opts
   (-> []
       (concat build-cli-opts/help-options build-cli-opts/verbose-options)
-      build-cli-opts/parse-cli))
+      build-cli-opts/parse-cli-args))
 
 (def verbose (get-in cli-opts [:options :verbose]))
 
@@ -61,14 +61,6 @@
   "Check `npm` is well installed."
   [app-dir]
   (doctor-cmd ["npm" "audit"] app-dir "npm is valid" "npm audit returns errors:"))
-
-(defn user-id
-  [app-dir]
-  (doctor-cmd (build-user/user-id-cmd) app-dir "user is found" "user is not found"))
-
-(defn group-id
-  [app-dir]
-  (doctor-cmd (build-user/user-id-cmd) app-dir "group is found" "group is not found"))
 
 (defn git-installed
   "Git tooling is installed."
@@ -198,10 +190,6 @@
     :fn-to-call version}
    {:check-name "docker-on"
     :fn-to-call docker-on}
-   {:check-name "group-id"
-    :fn-to-call group-id}
-   {:check-name "user-id"
-    :fn-to-call user-id}
    {:check-name "zprint"
     :fn-to-call zprint}
    {:check-name "zprint-setup"

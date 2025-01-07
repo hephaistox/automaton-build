@@ -17,6 +17,7 @@
 function myFunction() {
   location.replace(\"%s\")
 }
+(myFunction)
 </script>
 </body>
 </html>"

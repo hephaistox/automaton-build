@@ -1,4 +1,4 @@
-(ns automaton-build.tasks.impl.actions.cmds-test
+(ns automaton-build.actions.cmds-test
   (:require
    [automaton-build.os.filename             :as build-filename]
    [automaton-build.tasks.impl.actions.cmds :as sut]

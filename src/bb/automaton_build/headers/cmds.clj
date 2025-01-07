@@ -21,11 +21,6 @@
 
 (defn success "Returns `true` if the result is a success" [result] (build-commands/success result))
 
-(defn clj-parameterize
-  "Turns `par` into a parameter understood by a clojure `cli`."
-  [par]
-  (build-commands/clj-parameterize par))
-
 (defn force-dirs [cmd-chain dir] (build-commands/force-dirs cmd-chain dir))
 
 (defn first-failing

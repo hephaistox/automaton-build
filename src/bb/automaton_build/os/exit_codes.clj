@@ -3,7 +3,7 @@
 
 (def ok 0)
 
-(def catch-all "1: Catchall for general errors" 1)
+(def general-errors "1: Catchall for general errors" 1)
 
 (def misuse "2: Misuse of shell built-ins (according to Bash documentation)" 2)
 

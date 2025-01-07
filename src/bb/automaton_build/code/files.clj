@@ -6,13 +6,13 @@
    [automaton-build.project.deps :as build-deps]))
 
 (defn project-dirs
-  "Returns project directories path (as strings), as defined in the `deps.edn` file - whatever the alias."
+  "Returns project directories path (as strings), as defined in the `deps-edn` content - whatever the alias."
   [deps-edn-dir deps-edn]
   (->> deps-edn
        build-deps/get-src
-       (mapv (fn [file] (build-filename/create-dir-path deps-edn-dir file)))
+       (mapv (partial build-filename/create-dir-path deps-edn-dir))
        (keep build-file/is-existing-dir?)
-       (mapv str)
+       (map str)
        set))
 
 (defn project-files

@@ -11,41 +11,41 @@
 
 (def verbose-options [["-v" "--verbose" "Verbose"]])
 
-(def inverse-options [["-i" "--inverse" "Only set subtasks are executed."]])
-
-;; Helpers
-(defn inverse
-  "Update `cli-opts` like the options in the list `opts`"
-  [cli-opts opts]
-  (update cli-opts
-          :options
-          #(if (:inverse %) (reduce (fn [cli-opts opt] (update cli-opts opt not)) % opts) %)))
-
 ;; Parsing
-(defn parse-cli
-  "Analyse `args` with `cli-options.`. (`args` is defaulted to actual cli arguments.)
+(defn parse-cli-args
+  "Parse `cli-args` (defaulted to actual cli arguments.) with `cli-options.`.
+
   Returns a map with `[options arguments errors summary]` fields."
   ([cli-options] (tools-cli/parse-opts *command-line-args* cli-options))
-  ([args cli-options] (tools-cli/parse-opts args cli-options)))
+  ([cli-args cli-options] (tools-cli/parse-opts cli-args cli-options)))
 
-;; To print cli options
+;; ********************************************************************************
+;; Messages
+;; ********************************************************************************
+
 (defn error-msg
-  "Returns string reporting a parsing error."
+  "If there are errors in the parsing, returns string reporting a parsing error."
   [{:keys [errors]
-    :as _cli-opts}]
+    :as _parsed-cli-opts}]
   (when errors
     (str "The following errors occured while parsing your command:\n\n"
          (str/join \newline errors))))
 
-(defn print-usage
+(defn usage-msg
   "Returns the string for the summary of the task."
-  [{:keys [summary]} current-task]
+  [{:keys [summary]
+    :as _parsed-cli-opts}
+   current-task]
   (->> [(str "Usage: bb " current-task " [options]") "" "Options:" summary]
        (str/join \newline)))
 
-(defn print-usage-with-arguments
+(defn usage-with-arguments-msg
   "Returns the string explaining the usage of the task, with mandatory arguments."
-  [{:keys [summary]} current-task arguments arguments-desc]
+  [{:keys [summary]
+    :as _parsed-cli-opts}
+   current-task
+   arguments
+   arguments-desc]
   (->> [(str "Usage: bb " current-task " [options] " arguments)
         ""
         "Arguments:"
@@ -54,15 +54,6 @@
         "Options:"
         summary]
        (str/join \newline)))
-
-(defn errors
-  "If errors occur, displays them."
-  [{:keys [errors]
-    :as _cli-options}]
-  (when errors
-    (->> errors
-         (str/join \newline)
-         str/split-lines)))
 
 (comment
  ;; For an example:

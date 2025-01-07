@@ -5,6 +5,11 @@
  :paths ["src/clj" "src/bb"]
  :tasks
  {-base-deps {:doc "Dependencies for a task using bb"}
+  -wf-2 {:depends [-wf-2:start-repl]}
+  -wf-2:start-repl {:doc "Start the clojure REPL."
+                    :enter (tasks-common/enter tasks-2/cli-opts (current-task))
+                    :requires [[automaton-build.tasks.2 :as tasks-2]]
+                    :task (tasks-2/start-repl [:repl])}
   :requires [[automaton-build.tasks.common :as tasks-common]]
   deploy {:doc "Publish this project"
           :requires [[automaton-build.tasks.deploy-app :refer [run]]]
@@ -17,7 +22,7 @@
         :requires [[automaton-build.tasks.docs :as tasks-docs]]
         :task (tasks-docs/run-app "**{.png,.gif,.jpg,.svg}" "gh-pages-dont-change")}
   lconnect {:doc "Repl in case automaton-build is failing."
-            :task (-> (try (-> (shell "clojure" "-M:env-development-repl")
+            :task (-> (try (-> (shell "clojure" "-M:repl")
                                :exit)
                            (catch Exception e
                              (println "Repl failed also - error during repl startup\n  *"
@@ -34,6 +39,11 @@
                               {:description "test local development environmnet itself"
                                :alias :test-dev}})
                   System/exit)}
+  wf-2 {:depends [-base-deps]
+        :doc "Launch dev environment toolings."
+        :enter (tasks-common/enter wf-2/cli-opts (current-task))
+        :requires [[automaton-build.tasks.2 :as wf-2]]
+        :task (run '-wf-2 {:parallel true})}
   wf-4 {:depends [-base-deps]
         :doc "Full test and formatting."
         :enter (tasks-common/enter wf-4/cli-opts (current-task))

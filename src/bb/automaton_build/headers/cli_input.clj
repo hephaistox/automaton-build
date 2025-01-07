@@ -1,4 +1,4 @@
-(ns automaton-build.os.cli-input
+(ns automaton-build.headers.cli-input
   (:require
    [automaton-build.echo.headers :refer [normalln]]))
 
