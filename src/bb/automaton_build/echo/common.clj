@@ -1,18 +1,22 @@
 (ns automaton-build.echo.common
-  "Common functions for echoing. Don't use this namespace but one of the implementation of echoing, like headers or actions."
+  "Common functions for echoing.
+
+  Use action or headers instead of that namesapce "
   (:require
+   [automaton-build.os.cmd  :as build-cmd]
    [automaton-build.os.text :as build-text]
    [clojure.pprint          :as pp]
    [clojure.string          :as str]))
 
-(def echo-param "Global echo configuration." (atom {:width 240}))
+;; ********************************************************************************
+;; Store echoing parameters
+;; Each bb tasks is executed in one environment, with one width
+;; ********************************************************************************
 
-;; Parameters for echoing implementations
+(def echo-param "Global echo configuration." (atom {:width 240}))
 
 (def normal-font-color build-text/font-default)
 (def error-font-color build-text/font-red)
-
-;; Screenify
 
 (defn- wrap-str
   "Splits `str` in as many lines than needed to not exceed the `size`."
@@ -29,8 +33,13 @@
                  (conj wrapped (format "%s%s" (subs str 0 remaining-size) line-feed-back))))))
     (do (println "Unexpected print error, size " size) (println (pr-str str)))))
 
+
+; ********************************************************************************
+; Public API
+; ********************************************************************************
 (defn screenify
   "Prepare the `texts` strings to be printed on the screen.
+
   The `prefix` is added to every line."
   [prefix texts]
   (let [wrapped-width (- (:width @echo-param) (count prefix))]
@@ -41,19 +50,10 @@
                         (map #(str prefix %))
                         vec)}))
 
-;; Standardized formatting
-
-(defn cmd-str
-  "Wrap a command string `cmd-str` before printing to be seen as a uri in the terminal."
-  [cmd-str]
-  (str "`" cmd-str "`"))
-
-(defn exec-cmd-str
-  "Returns the string of the execution of a command `cmd-str`"
-  [cmd-str]
-  (str "exec on bash: " (automaton-build.echo.common/cmd-str cmd-str)))
-
-(defn pprint-str "Pretty print `data`" [data] (with-out-str (pp/pprint data)))
+(defn exec-cmd
+  "Returns the string of the execution of a command `cmd`"
+  [cmd]
+  (str "execute command `" (build-cmd/to-str cmd) "`"))
 
 (defn uri-str "Returns the string of the `uri`." [uri] (str "`" uri "`"))
 
@@ -68,6 +68,8 @@
   (new java.io.StringWriter))
 
 (defn print-writter
-  "Print `str-writter` if necessary."
+  "Print `str-writter` if necessary it contains something."
   [str-writter]
   (let [str-writter (str str-writter)] (when-not (str/blank? str-writter) (print str-writter))))
+
+(defn pprint-str "Pretty print `data`" [data] (with-out-str (pp/pprint data)))

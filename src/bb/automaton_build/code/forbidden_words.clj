@@ -15,13 +15,7 @@
          re-pattern)))
 
 (defn forbidden-words-matches
-  "Creates the list of matches of lines of `file-content` matching the `regexp`.
-
-  Returns the matches
-
-  Params:
-  * `regexp` regexp (with groups) of strings to search
-  * `clj-repo`"
+  "Creates the list of matches of lines of `file-content` matching the `regexp`. The `regexp` could be a group."
   [regexp file-content]
   (when regexp
     (let [file-lines (str/split-lines file-content)]

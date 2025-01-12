@@ -1,161 +1,193 @@
 (ns automaton-build.os.cmd
-  "Execute an external command.
+  "Execute an external command, called **cmd**.
 
-  **cmd** are based on vectors of strings like `[\"ls\" \"-la\"]`
+  `cmd` are made of a vector of strings like `[\"ls\" \"-la\"]`
 
-  There are three flavors to execute this command :
+  There are many flavors to execute this command, the generic one made of `create-process`, `wait-for`, ... and the helpers to simplify some typical use cases.
 
-  * Non blocking commands: for long living and non blocking commands
-  * Blocking commands: for commands with side effects for which success is only based on exit code.
-  * Returning string: a blocking command which is returning simply its output so it could be parsed
-
-  Whatever the flavor they all return a **process**, a map containing:
-
-  * `:cmd` the command, e.g. [\"ls\" \"-la\"]
-  * `:dir` the directory as provided by the user, e.g. \"\"
-  * `:out-param` out parameters
-  * `:err-param` err parameters
-  * `:status` is a value among `:wip`, `:didnt-start`, `:success`, `:failure`
-  * `:adir` the expanded directory (useful for debug), e.g. \"/User/johndoe/hephaistox\"
-  * `:bb-proc` the babashka process, normally for internal use only
-
-  * `:exception` non nil if an exception raise when command starts."
+  All functions deal with a **process**, a map describing the command execution and then enriched as the process is going on."
+  (:refer-clojure :exclude [delay])
   (:require
-   [automaton-build.os.filename :as build-filename]
-   [babashka.process            :as p]
-   [clojure.java.io             :as io]
-   [clojure.string              :as str]))
+   [automaton-build.data.fixed-size-queue :as build-fix-size-queue]
+   [automaton-build.os.filename           :as build-filename]
+   [babashka.process                      :as p]
+   [clojure.java.io                       :as io]
+   [clojure.string                        :as str]))
 
-(defn- to-str [cmd] (str/join " " cmd))
+(defn- watch-proc-stream
+  "Watch the `stream-kw` process in the `bb-proc` (babashka process) and listen to each new line in the stream:
+  * stores the line in `a-stream`, an atom containing a fixed size queue of strings
+  * prints the line with `on-new-line`
 
-(defn- create-process*
-  "Returns a process executing `cmd` in directory `dir`, `out` and `err` are the parameter for babshka's process creation, it could be `:string`, `:inherited`,  ..."
-  [cmd dir out err]
+  To save resources, if the stream is empty a pause of `delay` milliseconds is waited before checking again
+
+  `a-stream` and `on-new-line` could be `nil` and will skip their behavior"
+  [a-stream bb-proc stream-kw on-new-line delay]
+  (with-open [rdr (io/reader (get bb-proc stream-kw))]
+    (let [proc-in-bb-proc (:proc bb-proc)
+          delay (if (and (number? delay) (pos? delay)) delay 10)]
+      (binding [*in* rdr]
+        (loop []
+          (let [line (read-line)]
+            (when line
+              (when on-new-line (on-new-line line))
+              (when a-stream (swap! a-stream build-fix-size-queue/enqueue line)))
+            (let [remaining-lines? (.ready rdr)
+                  proc-alive? (.isAlive proc-in-bb-proc)]
+              (when (and (empty? line) (not remaining-lines?)) (Thread/sleep delay))
+              (when (or remaining-lines? proc-alive?) (recur)))))))))
+
+;; ********************************************************************************
+;; Detailed API
+;; ********************************************************************************
+
+(defn to-str "Turns `cmd` into an executable command" [cmd] (str "`" (str/join " " cmd) "`"))
+
+(defn create-process
+  "Starts the execution of the command `cmd` in directory `dir` and store command outputs in atoms respectively named in `:out-stream` and `:err-stream`.
+  To save resources, if the stream is empty a pause of `delay` milliseconds is waited before checking again
+  Only `max-out-lines` and `max-err-lines` are stored in the atoms, if `nil` no value is stored at all.
+
+  It's a non blocking function, next step could be `still-running?`, `wait-for` or `kill`.
+
+  Returns a `process` with:
+
+   * `:cmd` the command, e.g. [\"ls\" \"-la\"]
+   * `:cmd-str` the command as a string e.g. `ls -la`
+   * `:dir` the directory as provided by the user, e.g. \"\"
+   * `:status` is a value among `:wip`, `:didnt-start`, `:success`, `:failure`
+   * `:adir` the expanded directory (useful for debug), e.g. \"/User/johndoe/hephaistox\"
+
+   * If the command starts successfully, it returns also
+      * `:status = :wip`
+      * `:bb-proc` the babashka process, normally for internal use only
+      * `out-stream` a fixed size queue of lines to print on out stream
+      * `err-stream` a fixed size queue of lines to print on err stream
+   * If not - most probably if directory or command does not exist - returns a `process` with
+      * `status=:cmd-doesnt-exist`
+      * and prints an error message
+
+  `cant-start` is executed if the command execution can't start.
+  `on-end` will be executed once, at the end of an execution"
+  [cmd dir on-out on-err on-end delay cant-start max-out-lines max-err-lines]
   (let [adir (-> (if (str/blank? dir) "." dir)
-                 build-filename/absolutize)]
+                 build-filename/absolutize)
+        out-lines (when (number? max-out-lines) (atom (build-fix-size-queue/init max-out-lines)))
+        err-lines (when (number? max-err-lines) (atom (build-fix-size-queue/init max-err-lines)))
+        cmd-str (str/join " " cmd)]
     (merge {:cmd cmd
+            :cmd-str cmd-str
             :dir dir
-            :out-param out
-            :err-param err
             :status :wip
             :adir adir}
-           (try {:bb-proc (->> cmd
-                               to-str
-                               (p/process (cond-> {:shutdown p/destroy-tree
-                                                   :continue true
-                                                   :dir adir}
-                                            out (assoc :out out)
-                                            err (assoc :err err))))}
+           ;; Create a process that will destroy itself, will not create any exception, and not print anything
+           (try (let [bb-proc (p/process {:shutdown p/destroy-tree
+                                          :continue true
+                                          :out nil
+                                          :err nil
+                                          :dir adir}
+                                         cmd-str)]
+                  (future (watch-proc-stream out-lines bb-proc :out on-out delay)
+                          (when on-end (on-end)))
+                  (future (watch-proc-stream err-lines bb-proc :err on-err delay))
+                  {:bb-proc bb-proc
+                   :out-stream out-lines
+                   :err-stream err-lines})
                 (catch Exception exception
+                  (when cant-start (cant-start cmd))
                   {:exception exception
                    :status :didnt-start})))))
-
-(defn- log-stream
-  "During the execution of a process, log-stream will watch its execution to log all lines of the stream `stream-kw` (that could be `:err` or `:out`).
-
-  Most of the time, you'll call this with `future` so it will be non blocking.
-
-  * Every `delay` ms, `(on-line-fn line)` is called to detect if a new `line` exists.
-  * When a new line is found, the next iteration is done immediatly, which allows to flush the streams quickly
-  * When the process ends, `(on-end-fn)` is called (with no args).
-  * When `on-line-fn` if `nil`, it is noop, note that it is still waiting for the end of the process to wait for `end-fn` when finished.
-  * When both `on-line-fn` and `on-end-fn` are `nil`, the whole function is noop."
-  [{:keys [bb-proc]
-    :as process}
-   stream-kw
-   on-line-fn
-   on-end-fn
-   refresh-delay]
-  (when (or on-line-fn on-end-fn)
-    (let [refresh-delay (if (number? refresh-delay) refresh-delay 100)
-          stream (get bb-proc stream-kw)]
-      (when (fn? on-line-fn)
-        (with-open [rdr (io/reader stream)]
-          (binding [*in* rdr]
-            (loop []
-              (let [line (read-line)]
-                (when (and line (fn? on-line-fn)) (on-line-fn line))
-                (let [remaining-lines? (.ready rdr)
-                      proc-alive? (.isAlive (:proc bb-proc))]
-                  (when (and (empty? line) (not remaining-lines?)) (Thread/sleep refresh-delay))
-                  (when (or remaining-lines? proc-alive?) (recur))))))))
-      (when (fn? on-end-fn) (on-end-fn))))
-  process)
-
-;; ********************************************************************************
-;; Non blocking command
-;; ********************************************************************************
-
-(defn non-blocking
-  "Starts the execution of the command `cmd` in directory `dir` and does not wait for the end of execution.
-
-  If the command starts successfully, it returns a `process` with status `:wip`
-  If not - most probably if directory or command does not exist - it returns a `process` with `status` `:cmd-doesnt-exist`
-
-  Next step could be `still-running?`, `wait-for` or `kill`.
-
-  The streams are written by some futures
-
-  Returns a `process` with `out-future` and `err-future` future."
-  [cmd dir out-print-fn err-print-fn end-fn delay]
-  (let [process (create-process* cmd dir nil nil)]
-    (cond-> process
-      (or out-print-fn end-fn) (assoc :out-future
-                                      (future (log-stream process :out out-print-fn end-fn delay)))
-      err-print-fn (assoc :err-future (future (log-stream process :err err-print-fn nil delay))))))
 
 (defn still-running?
   "Returns true if the `process` is still living?"
   [process]
-  (some-> (:bb-proc process)
-          p/alive?))
+  (let [bb-proc (:bb-proc process)] (if bb-proc (p/alive? bb-proc) false)))
 
 (defn wait-for
-  "Block until the end of `process`."
-  [{:keys [bb-proc]
-    :as process}]
-  (if bb-proc
+  "Block the current thread execution until the end of `process`.
+
+  This function is noop if the status is different from :wip
+
+  Otherwise, the process is executed, if it is failing:
+     * functions `out-print-ln` and `on-err` are called with `(on-out line)`. That functions could be `nil`.
+
+  Returns the `process` with `out-stream` and `err-stream` turned into vector of strings."
+  [{:keys [bb-proc cmd out-stream err-stream status]
+    :as process}
+   on-out
+   on-err]
+  (if (and (= :wip status) bb-proc)
     (let [process (update process :bb-proc deref)
-          exit (get-in process [:bb-proc :exit])]
-      (assoc process :status (if (= 0 exit) :success :failure)))
+          exit (get-in process [:bb-proc :exit])
+          status (if (= 0 exit) :success :failure)]
+      (when (and on-err (not= :success status))
+        (on-err (str "Error during execution of " (to-str cmd))))
+      ;; It's important to print message first, as stream manipulation could be long, and message order messed up
+      (let [out-stream (-> out-stream
+                           deref
+                           build-fix-size-queue/content)
+            err-stream (-> err-stream
+                           deref
+                           build-fix-size-queue/content)]
+        (when (and on-out (not= :success status))
+          (run! on-out out-stream)
+          (when-not (empty? err-stream) (on-out "Error stream:") (run! on-out err-stream)))
+        (cond-> (assoc process :status status)
+          out-stream (assoc :out-stream out-stream)
+          err-stream (assoc :err-stream err-stream))))
     process))
 
 (defn kill
-  "Kill the running process `proc`."
-  [{:keys [bb-proc]
-    :as non-blocking-bb-process}]
-  (when bb-proc
+  "Kill `process` if it is still running
+
+  Returns `process` with `killed`."
+  [{:keys [bb-proc cmd-str]
+    :as process}
+   on-out]
+  (when (and still-running? process bb-proc)
     (p/destroy-tree bb-proc)
-    (assoc non-blocking-bb-process :killed? true :success? false)))
+    (when (fn? on-out) (on-out "process `" cmd-str "is killed"))
+    (assoc process :killed? true :success? false)))
 
 ;; ********************************************************************************
-;; Blocking until the end of the command
+;; High level API
 ;; ********************************************************************************
+(defn muted
+  "When only exit code is useful.
 
-(defn blocking
-  "Blocks until the end of execution of the command `cmd` in directory `dir`
-
-  Returns status:
-
-  * `:didnt-start` if the command didn't start due to an error,
-  * `:success` if the command execution has succeeded
-  * `:failure` if the command execution has failed."
+  Print nothing, even errors, is blocking."
   [cmd dir]
-  (->> (create-process* cmd dir nil nil)
-       wait-for))
+  (-> (create-process cmd dir nil nil nil 0 nil 0 0)
+      (wait-for nil nil)))
 
-(defn returning-str
-  "Blocks until the end of execution of the command `cmd` in directory `dir`
-
-  Attributes `:out` and `:err` are strings that can be parsed
-
-  Returns status:
-
-  * `:didnt-start` if the command didn't start due to an error,
-  * `:success` if the command execution has succeeded
-  * `:failure` if the command execution has failed."
+(defn muted-non-blocking
+  "When only side effects are important, no feedback on terminal. Most probably elsewhere"
   [cmd dir]
-  (let [process (->> (create-process* cmd dir :string :string)
-                     wait-for)]
-    (-> process
-        (assoc :out (:out (:bb-proc process)) :err (:err (:bb-proc process))))))
+  (create-process cmd dir nil nil nil 0 nil 0 0))
+
+(defn as-string
+  "Returns only data in process, as strings"
+  ([cmd dir] (as-string cmd dir 1000 1000))
+  ([cmd dir max-out-lines max-err-lines]
+   (-> (create-process cmd dir nil nil nil 1 nil max-out-lines max-err-lines)
+       (wait-for nil nil))))
+
+(defn printing-non-blocking
+  "When a command should be printed on the terminal, like a REPL, a compilation, ....
+
+  This command is non blocking"
+  [cmd dir on-out on-err on-end delay]
+  (create-process cmd dir on-out on-err on-end delay #(on-err "Cant' start" %) 0 0))
+
+(defn printing
+  "Print the whole command execution on the terminal. Is blocking until the end."
+  [cmd dir on-out on-err on-end delay]
+  (-> (create-process cmd dir on-out on-err on-end delay #(on-err "Cant' start" %) 0 0)
+      (wait-for nil nil)))
+
+(defn print-on-error
+  "Does not print on the terminal, except if an error occur."
+  [cmd dir on-out on-err delay max-out-lines max-err-lines]
+  (->
+    (create-process cmd dir nil nil nil delay #(on-err "Cant' start" %) max-out-lines max-err-lines)
+    (wait-for on-out on-err)))

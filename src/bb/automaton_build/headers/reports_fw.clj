@@ -1,4 +1,4 @@
-(ns automaton-build.tasks.impl.reports-fw
+(ns automaton-build.headers.reports-fw
   "Scan code files for forbidden words.
 
   The forbidden words ca be setup in the `project.edn` under the `[:code :forbidden-words]`
@@ -10,19 +10,17 @@
   (:require
    [automaton-build.code.files           :as build-code-files]
    [automaton-build.code.forbidden-words :as build-code-fw]
-   [automaton-build.echo.headers         :refer [h1 h1-error h1-valid h2-error! h2-valid!]]
-   [automaton-build.os.file              :as build-file]
-   [automaton-build.tasks.impl.reports   :as build-tasks-reports]))
+   [automaton-build.echo.headers         :refer [h1 h1-error h1-valid h2-error! h2-valid! normalln]]
+   [automaton-build.os.file              :as build-file]))
 
 ;; ********************************************************************************
-;; Helpers
+;; Private
 ;; ********************************************************************************
 
-(def report-file-path "docs/reports/fw.edn")
-
-(defn project-forbidden-words
+(defn- project-forbidden-words
   [project-map]
-  (get-in project-map [:project-config-filedesc :edn :code :forbidden-words]))
+  (-> project-map
+      (get-in [:project-config-filedesc :edn :code :forbidden-words])))
 
 (defn- generate-report-data
   "Returns the report data for the matches of `forbidden-words` in the file in `file-descs`."
@@ -54,16 +52,18 @@
   "Reports all forbidden words found in the files in the `file-descs`, they're in the report if the file contains `forbidden-words`.
 
   Returns `true` if ok."
-  [project-map]
+  [{:keys [subprojects]
+    :as project-map}]
   (h1 "Scan for forbidden words")
-  (let [res (if-let [subprojects (:subprojects project-map)]
+  (let [res (if-let [subprojects subprojects]
               (->> subprojects
                    (mapcat project-report))
               (project-report project-map))]
+    (normalln "Errors")
+    (run! normalln res)
     (if (empty? res)
       (h1-valid "No forbidden words found.")
       (h1-error "Some forbidden words have been found."))
-    (build-tasks-reports/save-report! res report-file-path)
     (empty? res)))
 
 (defn synthesis

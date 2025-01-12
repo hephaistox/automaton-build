@@ -1,77 +1,80 @@
-(ns automaton-build.tasks.impl.headers.files
+(ns automaton-build.headers.files
   "Read files with headers log."
   (:require
-   [automaton-build.echo.headers            :refer [errorln exceptionln normalln uri-str]]
-   [automaton-build.os.edn-utils            :as build-edn]
-   [automaton-build.os.file                 :as build-file]
-   [automaton-build.os.filename             :as build-filename]
-   [automaton-build.project.config          :as build-project-config]
-   [automaton-build.tasks.impl.headers.cmds :refer [blocking-cmd success]]
-   [clojure.string                          :as str]))
+   [automaton-build.echo.headers   :refer [errorln exceptionln normalln uri-str]]
+   [automaton-build.os.cmd         :refer [as-string]]
+   [automaton-build.os.edn-utils   :as build-edn]
+   [automaton-build.os.file        :as build-file]
+   [automaton-build.os.filename    :as build-filename]
+   [automaton-build.project.config :as build-project-config]
+   [clojure.string                 :as str]))
+
+;; ********************************************************************************
+;; File reading
+
+(defn read-file-quiet "Read a file with no message." [filename] (build-file/read-file filename))
+
+(defn read-file-if-error
+  "Read a file and prints error if it is not loaded properly."
+  [filename]
+  (let [file-desc (read-file-quiet filename)
+        {:keys [invalid? filename exception]} file-desc]
+    (when invalid?
+      (errorln "File" filename " is not loaded.")
+      (when exception (normalln "This exception has raised") (exceptionln exception)))
+    file-desc))
+
+(defn read-file
+  "Read a file, print it, and if it is not loaded properly."
+  [filename]
+  (normalln (str "Read file `" (build-file/expand-home-str filename) "`"))
+  (read-file-if-error filename))
+
+;; ********************************************************************************
+;; edn reading
+
+(defn read-edn-quiet "Read a file with no message." [filename] (build-edn/read-edn filename))
+
+(defn read-edn-if-error
+  "Read a file and prints error if it is not loaded properly."
+  [filename]
+  (let [file-desc (read-edn-quiet filename)
+        {:keys [invalid? filename exception]} file-desc]
+    (when invalid?
+      (errorln "File" filename " is not loaded.")
+      (when exception (normalln "This exception has raised") (exceptionln exception)))
+    file-desc))
+
+(defn read-edn
+  "Read a file, print it, and if it is not loaded properly."
+  [filename]
+  (normalln (str "Read file `" (build-file/expand-home-str filename) "`"))
+  (read-edn-if-error filename))
+
+;; ********************************************************************************
+;; project configuration
+
+(defn project-config-quiet
+  "Returns the project configuration in `app-dir`."
+  [app-dir]
+  (build-project-config/read-from-dir app-dir))
+
+(defn project-config-if-error
+  [app-dir]
+  (let [file-desc (project-config-quiet app-dir)
+        {:keys [invalid? filename exception]} file-desc]
+    (when invalid?
+      (errorln "Impossible to find project-dir in" (uri-str filename))
+      (exceptionln exception))
+    file-desc))
 
 (defn project-config
   "Returns the project configuration in `app-dir`."
   [app-dir]
-  (let [res (-> app-dir
-                build-project-config/read-from-dir)
-        {:keys [invalid? filename exception]} res]
-    (when invalid?
-      (errorln "Impossible to find project-dir in" (uri-str filename))
-      (exceptionln exception))
-    res))
+  (project-config-if-error app-dir))
 
-(defn invalid-project-name-message
-  "Print the error message to tell the specified project was wrong."
-  [monorepo-project-map]
-  (let [project-example-name (-> monorepo-project-map
-                                 :subprojects
-                                 first
-                                 :app-name)]
-    (errorln "Invalid project name, please specify with \"-p\""
-             "(e.g. `bb -p"
-             project-example-name
-             "`).")
-    (normalln "Choose among:"
-              (str/join ", "
-                        (map pr-str
-                             (remove nil?
-                                     (map (fn [subproject] (:app-name subproject))
-                                          (:subprojects monorepo-project-map))))))))
-
-(defn print-file-errors
-  "Print errors for a text file not being loaded.
-
-  Returns true if an error is found."
-  [{:keys [invalid? filename exception]
-    :as _file-desc}]
-  (when invalid?
-    (errorln "File" filename " is not loaded.")
-    (when exception (normalln "This exception has raised") (exceptionln exception)))
-  invalid?)
-
-(defn read-file
-  "Read a file and prints error if it is not loaded properly."
-  [filename]
-  (let [file-desc (build-file/read-file filename)]
-    (print-file-errors file-desc)
-    (:raw-content file-desc)))
-
-(defn print-edn-errors
-  "Print errors for an edn file not being loaded.
-
-   Returns true if an error is found."
-  [{:keys [raw-content]
-    :as file-desc}]
-  (let [r (print-file-errors file-desc)]
-    (when r (normalln "Raw content is:\n" raw-content))
-    r))
-
-(defn read-edn-file
-  "Read an edn file and prints error if it is not loaded properly."
-  [filename]
-  (let [file-desc (build-edn/read-edn filename)]
-    (print-file-errors file-desc)
-    (:edn file-desc)))
+;; ********************************************************************************
+;; search, move and copy files
 
 (defn search-files
   "Search files in `root-dir`"
@@ -105,22 +108,23 @@
                    (str/join "," (mapv :path removed-files))))))
     (build-file/actual-copy copy-actions)))
 
-(defn create-sym-link
+(defn create-sym-link-quiet
   "Creates a sym link called `target` toward `path`.
 
   The link will be stored relatively to `base-dir`"
   [path target base-dir]
-  (if-not (build-file/is-existing-dir? base-dir)
-    (do (errorln "The symlink should have a directory as a base-dir") nil)
-    (try (let [path (build-filename/relativize path base-dir)
-               target (build-filename/relativize target base-dir)
-               res (blocking-cmd ["ln"
-                                  "-s"
-                                  (->> (build-filename/extract-path target)
-                                       (build-filename/relativize path))
-                                  target]
-                                 base-dir
-                                 "Soft symbol link creation has failed."
-                                 false)]
-           (success res))
-         (catch Exception e (exceptionln e) nil))))
+  (merge {:base-dir base-dir
+          :path path
+          :target target}
+         (if-not (build-file/is-existing-dir? base-dir)
+           {:status :base-dir-doesnt-exist}
+           (try (let [path (build-filename/relativize path base-dir)
+                      target (build-filename/relativize target base-dir)
+                      res (as-string ["ln"
+                                      "-s"
+                                      (->> (build-filename/extract-path target)
+                                           (build-filename/relativize path))
+                                      target]
+                                     base-dir)]
+                  res)
+                (catch Exception e (exceptionln e) nil)))))

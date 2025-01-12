@@ -9,10 +9,122 @@
 
 (defn- msg-tokenize [s] (str "\"" s "" "\""))
 
-(defn repo-url-regexp
-  "Regexp to validate a `repo-url`."
+;; Initialize a repo
+;; ********************************************************************************
+
+(defn init-vcs-cmd
+  "Turns a directory into a local repo"
+  ([] ["git" "init" "-q"])
+  ([branch] ["git" "init" "-q" "-b" branch]))
+
+(defn remove-pager-cmd
+  "Remove pager so branches are printed straightfully"
   []
-  #"((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?")
+  ["git" "config" "--local" "pager.branch" "false"])
+
+(defn add-origin-cmd "Add the origin remote" [repo-url] ["git" "remote" "add" "origin" repo-url])
+
+(defn fetch-origin-cmd "Fetch the origin" [] ["git" "fetch" "origin"])
+
+(defn clone-cmd
+  "Clone a clone of a remote repo `repo-url`, branch `branch-name`"
+  [branch-name repo-url]
+  ["git"
+   "clone"
+   "--single-branch"
+   "--branch"
+   branch-name
+   repo-url
+   "--depth"
+   "1"
+   "--no-checkout"
+   "--filter=blob:none"
+   "."])
+
+(defn shallow-clone-cmd
+  [branch-name repo-url]
+  (concat ["git" "clone" repo-url "--single-branch"]
+          (when branch-name ["-b" branch-name])
+          ["--depth" "1"]))
+
+(defn shallow-clone-analyze
+  "Analyse shallow-clone-cmd process and adds `:cloning-status`
+  * `:inexisting-remote-branch`
+  * `:repository-not-found`
+  * `:ok` otherwise"
+  [{:keys [err]
+    :as process}]
+  (cond-> (assoc process :status :ok)
+    (re-find #"(?m)Could not find remote branch" err) (assoc :status :inexisting-remote-branch)
+    (re-find #"repository .* does not exist" err) (assoc :status :repository-not-found)))
+
+;; Get data from remote repo
+;; ********************************************************************************
+
+(defn checkout-file-cmd
+  "Checkout `file-name` in branch `branch-name`"
+  [branch-name file-name]
+  ["git" "checkout" branch-name "--" file-name])
+
+(defn fetch-cmd [branch] ["git" "fetch" "origin" (str branch ":" branch)])
+
+(defn pull-cmd [] ["git" "pull"])
+
+;; Remote repository
+;; ********************************************************************************
+
+(defn list-remote-branch-cmd [] ["git" "branch" "-r"])
+
+(defn list-remote-branch-analyze
+  [process]
+  (->> process
+       :out-stream
+       str/split-lines
+       (remove str/blank?)
+       (mapv str/trim)))
+
+(defn remote-branch-exists?-cmd
+  "Is the `local-branch` exists on the remote repository"
+  [process local-branch]
+  (-> process
+      list-remote-branch-analyze
+      (contains? (str "origin/" local-branch))))
+
+(defn current-repo-url-cmd "Command to return the current remote url" [] ["git" "remote" "-v"])
+
+(defn current-repo-url-analyze
+  "Returns the url string to push to the origin repo, `nil` if was failing."
+  [{:keys [status out-stream]}]
+  (when (= :success status)
+    (->> out-stream
+         (map (fn [line]
+                (->> line
+                     (re-find #"origin\s*([^\s]*).*(push)")
+                     second)))
+         (filter some?)
+         first)))
+
+;; Committing
+;; ********************************************************************************
+
+(defn add-all-changed-files-cmd [] ["git" "add" "-A"])
+
+(defn commit-cmd [msg] ["git" "commit" "-m" (msg-tokenize msg)])
+
+(defn commit-analyze
+  "Analyze the first failing command to tell if it is the commit, and if the commit was succesful.
+
+  * Adds `:nothing-to-commit` when this is the case.
+  * Adds `:is-commit`"
+  [{:keys [out-stream]
+    :as process}]
+  (cond-> process
+    (re-find #"(?m)nothing to commit" out-stream) (assoc :nothing-to-commit true)))
+
+(defn git-changes?-cmd
+  "Returns `true` if directory `dir` is under version control and has pending changes."
+  []
+  ["git" "status" "-s"])
 
 (defn latest-commit-message-cmd
   "Returns a command to get the commit message of the latest commit of the current branch."
@@ -24,110 +136,6 @@
   []
   ["git" "log" "-n" "1" "--pretty=format:%H"])
 
-(defn current-branch-cmd
-  "Returns a command to get the name of the current branch."
-  []
-  ["git" "branch" "--show-current"])
-
-(defn current-branch-analyze
-  "Return the current branch from one `res` returned value."
-  [cmd-res]
-  (-> cmd-res
-      :out
-      str/split-lines
-      first))
-
-(defn clean-hard-cmd
-  "Returns the command to clean the project as it has came back to the same state than the repository is freshly downloaded.
-
-  Use `interactive?`=false with caution!!!!! (default to true) to ask user confirmation."
-  ([interactive?] ["git" "clean" (str "-fqdx" (when interactive? "i"))])
-  ([] (clean-hard-cmd true)))
-
-(defn git-changes?-cmd
-  "Returns `true` if directory `dir` is under version control and has pending changes."
-  []
-  ["git" "status" "-s"])
-
-(defn git-changes?-analyze
-  "Returns `true` if directory `dir` is under version control and has pending changes."
-  [cmd-res]
-  (-> cmd-res
-      :out
-      str/blank?
-      not))
-
-(defn clone-file-chain-cmd
-  "Returns a map with:
-
-  * `file-path` where file will be stored.
-  * `chain-cmd`: Chain of command to clone the repo at `repo-url` into the `target-dir` () specific file with it's latest revision.
-
-  It's quick as it ignores all other files, all other branches of the repository and git history."
-  [repo-url target-dir branch-name file-name]
-  (build-file/ensure-dir-exists target-dir)
-  (let [file-path (build-filename/create-dir-path target-dir)]
-    [[["git"
-       "clone"
-       "--single-branch"
-       "--branch"
-       branch-name
-       repo-url
-       "--depth"
-       "1"
-       "--no-checkout"
-       "--filter=blob:none"
-       "."]
-      target-dir]
-     [["git" "checkout" branch-name "--" file-name] file-path]]))
-
-(defn shallow-clone-repo-branch-cmd
-  "Returns command to clone the repository at address `repo-url` for branch `branch-name` - only the result of the latest commit (i.e. shallow commit). "
-  ([repo-url branch-name cloned-dir-name]
-   (concat ["git" "clone" repo-url "--single-branch"]
-           (when branch-name ["-b" branch-name])
-           ["--depth" "1" cloned-dir-name]))
-  ([repo-url branch-name] (shallow-clone-repo-branch-cmd repo-url branch-name "."))
-  ([repo-url] (shallow-clone-repo-branch-cmd repo-url nil ".")))
-
-(defn shallow-clone-repo-branch-analyze
-  "Adds to the `cmd-res` keys `:inexisting-remote-branch` if the repo does not exist, or `:inexisting-remote-branch` if the branch does not exist."
-  [cmd-res]
-  (let [{:keys [err]} cmd-res]
-    (println "err" err)
-    (cond-> cmd-res
-      (re-find #"(?m)Could not find remote branch" err) (assoc :inexisting-remote-branch true)
-      (re-find #"repository .* does not exist" err) (assoc :repository-not-found true))))
-
-(defn pull-changes-chain-cmd
-  "Returns a command to fetch and pull changes from `origin`."
-  [branch]
-  [[["git" "fetch" "origin" (str branch ":" branch)]] [["git" "pull"]]])
-
-(defn merge-cmd "Merges `branch1` into `branch2`" [branch1 branch2] ["git" "merge" branch1 branch2])
-
-(defn new-branch-and-switch-chain-cmd
-  "Returns a command "
-  [branch-name]
-  [[["git" "branch" branch-name]] [["git" "switch" branch-name]]])
-
-(defn commit-chain-cmd
-  "Returns a chain of commands to commit all changes in the repo int `dir`, under the message `msg`."
-  [msg]
-  [[["git" "add" "-A"]] [["git" "commit" "-m" (msg-tokenize msg)]]])
-
-(defn commit-analyze
-  "Analyze the first failing command to tell if it is the commit, and if the commit was succesful.
-
-  * Adds `:nothing-to-commit` when this is the case.
-  * Adds `:is-commit`"
-  [{:keys [cmd-str out]
-    :as res}]
-  (if (re-find #"commit" cmd-str)
-    (cond-> (assoc res :is-commit true)
-      (re-find #"(?m)nothing to commit" out) (assoc :nothing-to-commit true))
-    res))
-
 (defn push-cmd
   "Returns a command to push the local commits of the repo where the command is executed for the branch `branch-name`.
 
@@ -137,48 +145,97 @@
     force? (conj "--force")))
 
 (defn push-analyze
-  "Analyze the `res` of the `push-cmd` to add `:nothing-to-do` if no commit was to be pushed."
+  "Analyze the `process` of the `push-cmd` to add `:nothing-to-do` if no commit was to be pushed."
   [{:keys [err]
-    :as res}]
-  (cond-> res
+    :as process}]
+  (cond-> process
     (re-find #"Everything up-to-date" err) (assoc :nothing-to-push true)))
 
-(defn tag
+;; Branches
+;; ********************************************************************************
+
+(defn current-branch-cmd
+  "Returns a command to get the name of the current branch."
+  []
+  ["git" "branch" "--show-current"])
+
+(defn current-branch-analyze
+  "Return the current branch from one `process` returned value."
+  [process]
+  (-> process
+      :out-stream
+      first))
+
+(defn create-branch-cmd [branch-name] ["git" "branch" branch-name])
+
+(defn switch-branch-cmd [branch-name] ["git" "switch" branch-name])
+
+;; Tagging
+;; ********************************************************************************
+
+(defn current-tag-cmd
+  "Command to return the  the tag of the current commit"
+  []
+  ["git" "describe" "--exact-match" "--tags"])
+
+(defn current-tag-analyze
+  [process]
+  (-> process
+      (assoc :tag
+             (-> process
+                 :out-stream
+                 first))))
+
+(defn tag-cmd
   "Creates a tag under name `version` and message `tag-msg`."
   ([version] ["git" "tag" "-f" "-a" version])
   ([version tag-msg] ["git" "tag" "-f" "-a" version "-m" (msg-tokenize tag-msg)]))
 
-(defn push-tag [tag] ["git" "push" "origin" tag])
+(defn push-tag-cmd [tag] ["git" "push" "origin" tag])
 
 (defn tag-push-chain-cmd
-  [branch-name dir version tag-msg force?]
-  [[["git" "tag" "-f" "-a" version "-m" (msg-tokenize tag-msg)] dir]
-   [(cond-> ["git" "push" "--tags" "--set-upstream" "origin" branch-name]
-      force? (conj "--force"))
-    dir]])
+  [branch-name dir force?]
+  [(cond-> ["git" "push" "--tags" "--set-upstream" "origin" branch-name]
+     force? (conj "--force"))
+   dir])
 
-(defn remote-branches-chain-cmd
-  "Returns the remote branches for a repo at `repo-url`."
-  [repo-url]
-  [[["git" "init" "-q"]]
-   [["git" "config" "--local" "pager.branch" "false"]]
-   [["git" "remote" "add" "origin" repo-url]]
-   [["git" "fetch" "origin"]]
-   [["git" "branch" "-r"]]])
+;; Cleaning
+;; ********************************************************************************
 
-(defn remote-branches
-  [chain-res]
-  (some->> chain-res
-           last
-           :out
-           str/split-lines
-           (remove str/blank?)
-           (mapv str/trim)))
+(defn clean-state-cmd "Returns a command to detect clean state" [] ["git" "status" "-s"])
 
-(defn remote-branch-exists?
-  "Is the `local-branch` exists on the remote repository at `repo-url."
-  [remote-branches local-branch]
-  (contains? (set remote-branches) (str "origin/" local-branch)))
+(defn clean-hard-cmd
+  "Returns the command to clean the project as it has came back to the same state than the repository is freshly downloaded."
+  []
+  ["git" "clean" "-fqdxi"])
+
+;; VCS distant run
+;; ********************************************************************************
+
+(defn gh-run-wip?-cmd "Returns `true` if the workflow is in progress" [] ["gh" "run" "list"])
+
+(defn gh-run-wip?-analyze
+  "Add a remote-repo-status field, which is:
+  * `:run-ok` if the last run terminated with success
+  * `:run-failed` if not
+  * `:wip` is it is still in progress"
+  [{:keys [status out-stream]}]
+  (when (= :success status)
+    (when-let [run-feedback (first out-stream)]
+      (cond-> {:run-id (->> (str/split run-feedback #"\t")
+                            (drop 6)
+                            first)}
+        (re-find #"completed\tsuccess" run-feedback) (assoc :status :run-ok)
+        (re-find #"completed\tfailure" run-feedback) (assoc :status :run-failed)
+        (not (re-find #"completed\t" run-feedback)) (assoc :status :wip)))))
+
+;; Various
+;; ********************************************************************************
+
+(defn repo-url-regexp
+  "Regexp to validate a `repo-url`."
+  []
+  #"((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?")
 
 (defn find-git-repo
   "Search a git repo in `dir` of its parent directories."
@@ -198,64 +255,7 @@
   [repo-dir]
   (build-filename/create-dir-path repo-dir ".git"))
 
-(defn one-commit-push-chain-cmd
-  "Push content of directory `repo-dir` in branch `branch`, and in one commit to repo `ssh-url`."
-  [ssh-url branch msg]
-  [[["git" "init" "-b" branch]]
-   [["git" "add" "-A"]]
-   [["git" "commit" "-m" msg]]
-   [["git" "remote" "add" "origin" ssh-url]]
-   [["git" "add" "."]]
-   [["git" "push" "--force" "--set-upstream" "origin" branch]]])
+;; Merge
+;; ********************************************************************************
 
-(defn clean-state "Returns a command to detect clean state" [] ["git" "status" "-s"])
-
-(defn clean-state-analyze
-  "Check if the returned value of clean state "
-  [res]
-  (and (= 0 (:exit res)) (str/blank? (:out res))))
-
-(defn current-tag-cmd
-  "Command to return the  the tag of the current commit"
-  []
-  ["git" "describe" "--exact-match" "--tags"])
-
-(defn current-tag-analyze
-  [res]
-  (if (= 0 (:exit res))
-    {:found true
-     :tag (-> res
-              :out
-              str/split-lines
-              first)}
-    {:found false}))
-
-(defn current-repo-url-cmd "Command to return the current remote url" [] ["git" "remote" "-v"])
-
-(defn current-repo-url-analyze
-  "Returns the url string to push to the origin repo, `nil` if was failing."
-  [{:keys [exit out]}]
-  (when (= 0 exit)
-    (->> out
-         str/split-lines
-         (map (fn [line]
-                (->> line
-                     (re-find #"origin\s*([^\s]*).*(push)")
-                     second)))
-         (filter some?)
-         first)))
-
-(defn gh-run-wip?-cmd "Returns `true` if the workflow is in progress" [] ["gh" "run" "list"])
-
-(defn gh-run-wip?-analyze
-  [{:keys [exit out]}]
-  (when (= 0 exit)
-    (let [res (->> out
-                   str/split-lines
-                   first)]
-      (cond-> {:run-id (->> (str/split res #"\t")
-                            (drop 6)
-                            first)}
-        (re-find #"completed\tsuccess" res) (assoc :status :run-ok)
-        (re-find #"completed\tfailure" res) (assoc :status :run-failed)
-        (not (re-find #"completed\t" res)) (assoc :status :wip)))))
+(defn merge-cmd "Merges `branch1` into `branch2`" [branch1 branch2] ["git" "merge" branch1 branch2])

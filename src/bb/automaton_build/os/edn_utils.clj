@@ -2,22 +2,19 @@
   "Read an edn file."
   (:require
    [automaton-build.code.formatter :as build-formatter]
-   [automaton-build.os.cmds        :as build-commands]
+   [automaton-build.os.cmd         :as build-cmd]
    [automaton-build.os.file        :as build-file]
    [clojure.edn                    :as edn]))
 
-(defn str->edn [raw-content] (edn/read-string raw-content))
+(defn str->edn "Turns `raw-content` string into an edn" [raw-content] (edn/read-string raw-content))
 
 (defn read-edn
-  "Read file which name is `edn-filename`.
-
-  Returns:
-
-  * `filename`
-  * `raw-content` if file can be read.
-  * `invalid?` to `true` whatever why.
-  * `exception` if something wrong happened.
-  * `edn` if the translation."
+  "Read `edn-filename` and returns a map with:
+  * `:filename`
+  * `:raw-content` if file can be read.
+  * `:invalid?` is boolean
+  * `:exception` if something wrong happened.
+  * `:edn` if the translation."
   [edn-filename]
   (let [res (build-file/read-file edn-filename)
         {:keys [raw-content invalid?]} res]
@@ -25,20 +22,6 @@
       res
       (try (assoc res :edn (str->edn raw-content))
            (catch Exception e (assoc res :exception e :invalid? true))))))
-
-(defn formatter-setup
-  []
-  (let [home-setup-file-desc (build-formatter/read-home-setup)
-        {:keys [raw-content invalid?]
-         :as resp}
-        home-setup-file-desc]
-    (if invalid?
-      resp
-      (if (build-formatter/is-zprint-using-project-setup? raw-content)
-        {:message "zprint use properly project setup."
-         :status :ok}
-        {:exception
-         "zprint local configuration is missing. Please add `:search-config? true` in your `~/.zprintc`"}))))
 
 (defn format-file
   "Format the `edn` file
@@ -48,13 +31,12 @@
   Params:
   * `filename` to format"
   [filename]
-  (let [setup (formatter-setup)]
+  (let [setup (build-formatter/formatter-setup)]
     (cond
       (not (= :ok (:status setup))) setup
       (not (build-file/is-existing-file? filename)) {:exception
                                                      "Can't format file `%s` as it's not found"}
-      :else (let [res (build-commands/blocking-cmd (build-formatter/format-file-cmd filename) "")]
-              (if (= 0 (:exit res)) nil {:exception (select-keys res [:out :err])})))))
+      :else (build-cmd/as-string (build-formatter/format-file-cmd filename) ""))))
 
 (defn write
   "Spit the `content` in the edn file called `edn-filename`.

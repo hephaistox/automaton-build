@@ -7,6 +7,9 @@
    [automaton-build.os.text     :as build-text]
    [clojure.string              :as str]))
 
+;; ********************************************************************************
+;; Private
+;; ********************************************************************************
 (defn- current-left-margin
   "Returns the string of the margin to add."
   []
@@ -16,7 +19,7 @@
        (apply str)))
 
 ;; Screenify
-(defn screenify
+(defn- screenify
   "Prepare the `texts` strings to be printed on the screen."
   [texts]
   (let [prefix-str (current-left-margin)]
@@ -29,6 +32,16 @@
   (let [{:keys [prefix-str wrapped-strs]} (screenify texts)]
     (doseq [wrapped-str wrapped-strs] (println (str prefix-str wrapped-str)))))
 
+(defn- header-printing
+  "Print `texts` with the header prefix called `prefix`."
+  [prefix texts]
+  (let [{:keys [prefix-str wrapped-strs]} (screenify texts)]
+    (doseq [wrapped-str wrapped-strs]
+      (println (str (apply str (butlast prefix-str)) prefix wrapped-str)))))
+
+;; ********************************************************************************
+;; Standardized echoing functions
+;; ********************************************************************************
 (defn normalln
   "Print text without decoration, with a carriage return included."
   [& texts]
@@ -45,23 +58,10 @@
 
 (defn exceptionln "Display exception `e`." [e] (errorln (ex-cause e)) (normalln (pr-str e)))
 
-(defn print-exec-cmd-str
-  "Prints the execution of command string `cmd-str` with the `prefixs` added."
-  [cmd-str]
-  (normalln (build-echo-common/exec-cmd-str cmd-str)))
-
-(defn print-cmd-str
-  "Prints the execution of command string `cmd-str`."
-  [cmd-str]
-  (normalln (build-echo-common/cmd-str cmd-str)))
-
-;; Header specific echoing functions
-(defn- header-printing
-  "Print `texts` with the header prefix called `prefix`."
-  [prefix texts]
-  (let [{:keys [prefix-str wrapped-strs]} (screenify texts)]
-    (doseq [wrapped-str wrapped-strs]
-      (println (str (apply str (butlast prefix-str)) prefix wrapped-str)))))
+(defn print-exec-cmd
+  "Prints the execution of command string `cmd` with the `prefixs` added."
+  [cmd]
+  (normalln (build-echo-common/exec-cmd cmd)))
 
 ; ********************************************************************************
 ; One liner
@@ -180,17 +180,13 @@
   (h1-error " failed testt")
   (h1-valid " valid test"))
 
-;; Formatting helpers functions.
+;; ********************************************************************************
+;; Delegation from common
+;; ********************************************************************************
 (defn pprint-str "Pretty print `data`" [data] (build-echo-common/pprint-str data))
-
 (defn uri-str "Returns the string of the `uri`." [uri] (build-echo-common/uri-str uri))
-
 (defn current-time-str "Returns current time string." [] (build-echo-common/current-time-str))
-
 (def clear-prev-line (str build-text/move-oneup build-text/clear-eol))
-
 (defn clear-lines [n] (print (str/join "" (repeat n clear-prev-line))))
-
 (defn build-writter [] (build-echo-common/build-writter))
-
 (defn print-writter [str-writter] (build-echo-common/print-writter str-writter))

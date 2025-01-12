@@ -12,12 +12,14 @@
 (defn remove-trailing-separator
   "If exists, remove the trailing separator in a path, remove unwanted spaces either"
   [path]
-  (let [path (str/trim path)]
-    (if (= (str directory-separator) (str (last path)))
-      (->> (dec (count path))
-           (subs path 0)
-           remove-trailing-separator)
-      path)))
+  (if (nil? path)
+    ""
+    (when [path (str/trim path)]
+      (if (= (str directory-separator) (str (last path)))
+        (->> (dec (count path))
+             (subs path 0)
+             remove-trailing-separator)
+        path))))
 
 (defn absolutize
   "Returns the absolute path of `relative-path` (file or dir)."
@@ -28,8 +30,8 @@
 (defn match-extension?
   "Returns true if the `filename` match the at least one of the `extensions`."
   [filename & extensions]
-  (when-not (str/blank? filename)
-    (some (fn [extension] (str/ends-with? filename extension)) extensions)))
+  (boolean (when-not (str/blank? filename)
+             (some (fn [extension] (str/ends-with? filename extension)) extensions))))
 
 (defn change-extension
   "Turns `filename` extension into `new-extension`."

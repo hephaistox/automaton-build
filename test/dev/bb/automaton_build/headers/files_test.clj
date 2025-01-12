@@ -1,40 +1,88 @@
-(ns automaton-build.tasks.impl.headers.files-test
+(ns automaton-build.headers.files-test
   (:require
-   [automaton-build.echo.headers             :refer [build-writter]]
-   [automaton-build.os.file                  :as build-file]
-   [automaton-build.os.filename              :as build-filename]
-   [automaton-build.tasks.impl.headers.files :as sut]
-   [clojure.java.io                          :as io]
-   [clojure.string                           :as str]
-   [clojure.test                             :refer [deftest is]]))
+   [automaton-build.echo.headers  :refer [build-writter]]
+   [automaton-build.headers.files :as sut]
+   [automaton-build.os.file       :as build-file]
+   [automaton-build.os.filename   :as build-filename]
+   [clojure.java.io               :as io]
+   [clojure.string                :as str]
+   [clojure.test                  :refer [deftest is]]))
+
+;; ********************************************************************************
+;; File reading
+
+(deftest read-file-quiet-test
+  (is (-> "project.edn"
+          sut/read-file-quiet
+          :raw-content
+          string?))
+  (is (-> "non-existing"
+          sut/read-file-quiet
+          :invalid?)))
+
+(deftest read-file-if-error-test
+  (is (-> "project.edn"
+          sut/read-file-if-error
+          :raw-content
+          string?)
+      "Returns file desc")
+  (is (= ""
+         (with-out-str (-> "project.edn"
+                           sut/read-file-if-error)))
+      "A successful file loading prints nothing")
+  (is (not (str/blank? (with-out-str (-> "non-existing"
+                                         sut/read-file-if-error))))
+      "A successful file loading prints nothing"))
 
 (deftest read-file-test
-  (is (string? (sut/read-file (io/resource "package.json")))
-      "package.json exists and contains a string.")
-  (is (str/blank? (with-out-str (sut/read-file (io/resource "package.json"))))
-      "package.json reading doesn't creates any log.")
-  (is (not (str/blank? (with-out-str (sut/read-file "non-existing-file"))))
-      "Reading a non existing file creates log."))
+  (is (not (str/blank? (with-out-str (-> "project.edn"
+                                         sut/read-file
+                                         :raw-content
+                                         string?))))
+      "File loading is announced"))
+
+;; ********************************************************************************
+;; edn reading
+
+(deftest read-edn-quiet-test
+  (is (-> "project.edn"
+          sut/read-edn-quiet
+          :raw-content
+          string?))
+  (is (-> "non-existing"
+          sut/read-edn-quiet
+          :invalid?)))
+
+(deftest read-edn-if-error-test
+  (is (-> "project.edn"
+          sut/read-edn-if-error
+          :raw-content
+          string?)
+      "Returns file desc")
+  (is (= ""
+         (with-out-str (-> "project.edn"
+                           sut/read-edn-if-error)))
+      "A successful file loading prints nothing")
+  (is (not (str/blank? (with-out-str (-> "non-existing"
+                                         sut/read-edn-if-error))))
+      "A successful file loading prints nothing"))
 
 (deftest read-edn-test
-  (is (some? (sut/read-edn-file "deps.edn")) "Reading exists and contains data.")
-  (is (str/blank? (with-out-str (sut/read-edn-file "deps.edn")))
-      "Reading of `deps.edn` doesn't creates any log.")
-  (is (str/blank? (with-out-str (sut/read-edn-file "deps.edn")))
-      "Package.json reading doesn't creates any log.")
-  (is (not (str/blank? (with-out-str (sut/read-edn-file "non-existing-file.edn"))))
-      "Reading a non existing file creates log."))
+  (is (not (str/blank? (with-out-str (-> "project.edn"
+                                         sut/read-edn
+                                         :raw-content
+                                         string?))))
+      "File loading is announced"))
 
-(deftest copy-files-test
-  (let [tmp-dir (build-file/create-temp-dir "copy-files-test")]
-    (sut/copy-files (io/resource "os/resource-test-copy-dir") tmp-dir "*" false {:options :hidden})
-    (is (= #{"test1" "test2"}
-           (->> (build-file/search-files tmp-dir "*")
-                (mapv #(build-filename/relativize % tmp-dir))
-                set))
-        "Check copy has happened.")))
+;; ********************************************************************************
+;; project configuration
 
-(deftest create-sym-link-test
+(deftest project-config-test (is (sut/project-config "")))
+
+;; ********************************************************************************
+;; search, move and copy files
+;;
+(deftest create-sym-link-quiet-test
   (let [tmp-dir (build-file/create-temp-dir "test")
         src-dir (build-filename/create-file-path tmp-dir "foo")
         dst-dir (build-filename/create-dir-path tmp-dir "foo2")
@@ -43,12 +91,8 @@
     (build-file/ensure-dir-exists src-dir)
     (build-file/ensure-dir-exists dst-dir)
     (build-file/write-file src-file "Testing sym link")
-    (is (sut/create-sym-link src-file dst-file tmp-dir)
+    (is (= :success (:status (sut/create-sym-link-quiet src-file dst-file tmp-dir)))
         "Is the creation sucessful in a new directory")
-    (is (not (binding [*out* (build-writter)] (sut/create-sym-link src-file dst-file tmp-dir)))
+    (is (= :failure (:status (sut/create-sym-link-quiet src-file dst-file tmp-dir)))
         "Is the second creation failing")
-    (is (= "Testing sym link" (:raw-content (build-file/read-file dst-file))))
-    (is (re-find #"The symlink should have a directory as a base-dir"
-                 (with-out-str (:raw-content (build-file/read-file
-                                              (sut/create-sym-link src-file dst-file src-file)))))
-        "If `base-dir` is a file, a message is printed")))
+    (is (= "Testing sym link" (:raw-content (build-file/read-file dst-file))))))

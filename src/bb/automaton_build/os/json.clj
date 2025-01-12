@@ -1,5 +1,5 @@
 (ns automaton-build.os.json
-  "Everything about json manipulation"
+  "Json manipulation"
   (:require
    [automaton-build.os.file :as build-file]
    [cheshire.core           :as json]))
@@ -8,15 +8,15 @@
   "Reads a file which name is `filepath`
   Returns map with keys :raw-content, :json if file can be read. Otherwise :exception and :invalid? set to true"
   [filepath]
-  (let [{:keys [exception raw-content]
+  (let [{:keys [raw-content invalid?]
          :as content}
         (build-file/read-file filepath)]
-    (if (nil? exception)
+    (if invalid?
+      content
       (try (assoc content :json (json/parse-string raw-content))
            (catch Exception e
              {:exception e
-              :path filepath}))
-      content)))
+              :path filepath})))))
 
 (defn write-file
   [filename content]

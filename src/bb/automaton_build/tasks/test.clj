@@ -1,13 +1,14 @@
 (ns automaton-build.tasks.test
   "Test the project"
   (:require
-   [automaton-build.echo.headers            :refer [errorln h1 h1-error! h1-valid!]]
-   [automaton-build.os.cli-opts             :as build-cli-opts]
-   [automaton-build.os.edn-utils            :as build-edn-utils]
-   [automaton-build.os.filename             :refer [absolutize]]
-   [automaton-build.tasks.impl.headers.cmds :as headers-cmds]
-   [clojure.set                             :as set]
-   [clojure.string                          :as str]))
+   [automaton-build.echo.headers  :refer [errorln h1 h1-error! h1-valid! h2 h2-error! h2-valid!]]
+   [automaton-build.headers.cmd   :as build-headers-cmd]
+   [automaton-build.os.cli-opts   :as build-cli-opts]
+   [automaton-build.os.edn-utils  :as build-edn-utils]
+   [automaton-build.os.exit-codes :as build-exit-codes]
+   [automaton-build.os.filename   :refer [absolutize]]
+   [clojure.set                   :as set]
+   [clojure.string                :as str]))
 
 ; ********************************************************************************
 ; *** Task setup
@@ -16,7 +17,7 @@
 (def ^:private cli-opts
   (-> []
       (concat build-cli-opts/help-options build-cli-opts/verbose-options)
-      build-cli-opts/parse-cli))
+      build-cli-opts/parse-cli-args))
 
 (def verbose (get-in cli-opts [:options :verbose]))
 
@@ -26,7 +27,7 @@
 ; *** Task code
 ; ********************************************************************************
 
-(defn test-command
+(defn- test-cmd
   [test-runner-alias test-definitions]
   (->> test-definitions
        (mapv (fn [{:keys [alias]}]
@@ -63,8 +64,9 @@
   "Run tests"
   [test-runner-alias test-definitions]
   (if help
-    (println
-     (build-cli-opts/print-usage-with-arguments cli-opts "test" "test" "[unit|development|la]"))
+    (-> cli-opts
+        (build-cli-opts/usage-with-arguments-msg "test" "test" "[unit|development|la]")
+        println)
     (let [alias-in-deps-edn (alias-in-deps-edn)
           {:keys [alias-doesnt-exist alias-exist]} (validate-definitions test-definitions
                                                                          alias-in-deps-edn)
@@ -78,20 +80,15 @@
         (do (h1-error! "Nothing to test, pick one of " (mapv :alias test-definitions) ", or all")
             -1)
         (do (h1 "Tested environments:" selected)
-            (let [exit-codes (->> (test-command test-runner-alias filtered)
-                                  (keep (fn [{:keys [cmd alias]}]
-                                          (let [{:keys [exit]
-                                                 :as res}
-                                                (headers-cmds/blocking-cmd
-                                                 cmd
-                                                 "."
-                                                 (str "Tests" alias "have failed")
-                                                 verbose)]
-                                            (when (headers-cmds/success res)
-                                              (h1-valid! "Tests" alias "passed"))
-                                            exit))))]
-              (if (every? zero? exit-codes)
-                0
-                (->> exit-codes
-                     (remove zero?)
-                     first))))))))
+            (let [exit-codes (->> (test-cmd test-runner-alias filtered)
+                                  (keep
+                                   (fn [{:keys [cmd alias]}]
+                                     (h2 "Tests" alias)
+                                     (let [{:keys [status]}
+                                           (build-headers-cmd/print-on-error cmd "." 10 100 100)]
+                                       (when-not (= :success status)
+                                         (h2-error! "Tests" alias "have failed"))
+                                       status))))]
+              (if (every? #(= :success %) exit-codes)
+                (do (h1-valid! "Tests passed") build-exit-codes/ok)
+                (do (h1-error! "Tests have failed") build-exit-codes/invalid-state))))))))

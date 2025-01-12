@@ -16,8 +16,7 @@ If every tool, when ordered, or even of its own accord, could do the work that b
 * Motivation
 It's an Hephaistox objective to be able to spread codebase among different reusable projects. As technical diversity is limited in our project, it is possible to write once most of that tasks in advance.
 
-** This project makes possible to quickly create a project and maintain its modifications through time. 
-
+** Create and maintain project
 *** Advantage:
 - Same approach than other hephaistox projects
 *** Disadvantages:

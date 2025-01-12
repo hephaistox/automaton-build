@@ -5,7 +5,7 @@
    [automaton-build.os.exit-codes :as build-exit-codes]))
 
 (defn enter
-  "When entering the task:
+  "When entering a task:
 
   * Print usage if required.
   * Print options if required."
@@ -13,13 +13,13 @@
   (when-let [message (build-cli-opts/error-msg cli-opts)]
     (println message)
     (println)
-    (println (build-cli-opts/print-usage cli-opts (:name current-task)))
+    (println (build-cli-opts/usage-msg cli-opts (:name current-task)))
     (build-exit-codes/exit build-exit-codes/command-not-found))
   (when (get-in cli-opts [:options :help])
     (when (get-in cli-opts [:options :verbose])
       (println "Options are:")
       (println (pr-str cli-opts)))
-    (println (build-cli-opts/print-usage cli-opts (:name current-task)))
+    (println (build-cli-opts/usage-msg cli-opts (:name current-task)))
     (build-exit-codes/exit build-exit-codes/ok)))
 
 (defn enter-with-arguments
@@ -35,16 +35,16 @@
     (println "Arguments are not valid.")
     (println)
     (println
-     (build-cli-opts/print-usage-with-arguments cli-opts (:name current-task) doc-str message))
+     (build-cli-opts/usage-with-arguments-msg cli-opts (:name current-task) doc-str message))
     (build-exit-codes/exit build-exit-codes/invalid-argument))
   (when-let [message (build-cli-opts/error-msg cli-opts)]
     (println message)
     (println)
-    (println (build-cli-opts/print-usage cli-opts (:name current-task)))
+    (println (build-cli-opts/usage-msg cli-opts (:name current-task)))
     (build-exit-codes/exit build-exit-codes/command-not-found))
   (when (get-in cli-opts [:options :help])
     (when (get-in cli-opts [:options :verbose])
       (println "Options are:")
       (println (pr-str cli-opts)))
-    (println (build-cli-opts/print-usage cli-opts (:name current-task)))
+    (println (build-cli-opts/usage-msg cli-opts (:name current-task)))
     (build-exit-codes/exit build-exit-codes/ok)))

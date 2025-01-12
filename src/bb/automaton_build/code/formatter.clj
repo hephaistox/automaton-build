@@ -12,17 +12,8 @@
   [zprint documentation](https://github.com/kkinnear/zprint/blob/main/doc/using/project.md#use-zprint-with-different-formatting-for-different-projects)"
   #":search-config\?\s*true")
 
-(defn read-home-setup
-  "Returns the file desc of the `.zprintrc` file of the global (inter user) configuration."
-  []
-  (build-file/read-file (build-file/expand-home-str "~/.zprintrc")))
-
-(defn is-zprint-using-project-setup?
-  [zprint-content]
-  (re-find use-local-zprint-config-parameter zprint-content))
-
 (defn format-file-cmd
-  "Format the `filename` clojure file with zprint."
+  "Command to format the `filename` with zprint."
   [filename]
   ["zprint" "-w" filename])
 
@@ -30,3 +21,19 @@
   "Command formatting all clj files in the directory and subdirectories where it is executed."
   []
   ["fdfind" "-e" "clj" "-e" "cljc" "-e" "cljs" "-e" "edn" "-x" "zprint" "-w"])
+
+(defn formatter-setup
+  "Returns a map describing if zprint. "
+  []
+  (let [home-setup-file-desc (build-file/read-file (build-file/expand-home-str "~/.zprintrc"))
+        {:keys [raw-content invalid?]
+         :as resp}
+        home-setup-file-desc]
+    (if invalid?
+      resp
+      (if (re-find use-local-zprint-config-parameter raw-content)
+        {:message "zprint use properly project setup."
+         :status :ok}
+        {:exception
+         "zprint local configuration is missing. Please add `:search-config? true` in your `~/.zprintc`"
+         :status :ko}))))

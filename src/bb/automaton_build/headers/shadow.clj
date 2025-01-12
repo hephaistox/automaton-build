@@ -1,4 +1,4 @@
-(ns automaton-build.tasks.impl.headers.shadow
+(ns automaton-build.headers.shadow
   "Echo error message for shadow file manipulation."
   (:require
    [automaton-build.echo.headers   :refer [errorln]]
@@ -10,7 +10,7 @@
   (let [file-desc (build-project-shadow/read-from-dir project-dir)
         success? (not (:invalid? file-desc))]
     (when-not success?
-      (errorln "Unexpected error, shadow-cljs has not been found in project `project-dir`."))
+      (errorln "Unexpected error, shadow-cljs has not been found in project `" project-dir "`."))
     (:edn file-desc)))
 
 (defn build
