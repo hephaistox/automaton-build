@@ -34,15 +34,16 @@
                              -1))
                       System/exit)}
   test {:doc "Dev test bb code in jvm"
-        :requires [[automaton-build.tasks.test :as test]
-                   [automaton-build.tasks.common :as tasks-common]]
-        :task (-> (test/run "clj-test-runner"
-                            #{{:description "bb tests in jvm"
-                               :alias :test-bb}
-                              {:description "unit tests - assembly tests at unit level"
-                               :alias :test-unit}
-                              {:description "test local development environmnet itself"
-                               :alias :test-dev}})
+        :requires [[automaton-build.tasks.test :as test]]
+        :task (-> (test/run-one-liner-headers
+                   "clj-test-runner"
+                   #{{:description "bb tests in jvm"
+                      :alias :test-bb}
+                     {:description "unit tests - assembly tests at unit level"
+                      :alias :test-unit}
+                     {:description "test local development environmnet itself"
+                      :alias :test-dev}}
+                   (current-task))
                   System/exit)}
   wf-2 {:depends [-base-deps]
         :doc "Launch dev environment toolings."

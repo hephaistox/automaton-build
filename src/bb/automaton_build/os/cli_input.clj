@@ -1,6 +1,4 @@
-(ns automaton-build.headers.cli-input
-  (:require
-   [automaton-build.echo.headers :refer [normalln]]))
+(ns automaton-build.os.cli-input)
 
 (defn user-input "Reads user input" [] (read))
 
@@ -11,21 +9,32 @@
   (let [answer (read-line) answer-repeat (if (= answer "") (read-line) answer)] answer-repeat))
 
 (defn question
-  ([msg force?] (if force? true (do (normalln msg) (flush) (user-input))))
-  ([msg] (question msg false)))
+  ([{:keys [normalln]
+     :as _printers}
+    msg
+    force?]
+   (if force? true (do (normalln msg) (flush) (user-input))))
+  ([printers msg] (question printers msg false)))
 
 (defn yes-question
   "Asks user a `msg` and expects yes input. Returns true or false based on the response."
-  ([msg force?]
+  ([{:keys [normalln]
+     :as _printers}
+    msg
+    force?]
    (if force? true (do (normalln msg) (flush) (contains? #{'y 'Y 'yes 'Yes 'YES} (user-input)))))
-  ([msg] (yes-question msg false)))
+  ([printers msg] (yes-question printers msg false)))
 
 (defn question-loop
-  ([msg options force?]
+  ([{:keys [normalln]
+     :as _printers}
+    msg
+    options
+    force?]
    (if force?
      nil
      (loop []
        (normalln msg)
        (flush)
        (let [answer (user-input-str)] (if (some #(= answer %) options) answer (recur))))))
-  ([msg options] (question-loop msg options false)))
+  ([printers msg options] (question-loop printers msg options false)))

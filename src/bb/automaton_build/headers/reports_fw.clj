@@ -10,7 +10,6 @@
   (:require
    [automaton-build.code.files           :as build-code-files]
    [automaton-build.code.forbidden-words :as build-code-fw]
-   [automaton-build.echo.headers         :refer [h1 h1-error h1-valid h2-error! h2-valid! normalln]]
    [automaton-build.os.file              :as build-file]))
 
 ;; ********************************************************************************

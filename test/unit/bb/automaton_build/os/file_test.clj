@@ -6,20 +6,12 @@
    [clojure.test                :refer [deftest is testing]]))
 
 ;; ********************************************************************************
-;; Filenames based on local file structure
-
-(deftest expand-home-str-test
-  (is (not (str/includes? (sut/expand-home-str "~/.gitconfig") "~")) "Tilde is replaced.")
-  (is (= "env/test/file_found.edn" (sut/expand-home-str "env/test/file_found.edn"))
-      "No home is not replaced."))
-
-;; ********************************************************************************
 ;; Directory manipulation
 
 (deftest is-existing-dir?-test
-  (testing "Empty dirs are considered has not existing"
-    (is (nil? (sut/is-existing-dir? "")))
-    (is (nil? (sut/is-existing-dir? nil))))
+  (testing "Empty dirs are considered current directory, so  existing"
+    (is (= "." (sut/is-existing-dir? "")))
+    (is (= "." (sut/is-existing-dir? nil))))
   (testing "Directories"
     (is (= "docs" (sut/is-existing-dir? "docs")) "An existing dir")
     (is (nil? (sut/is-existing-dir? "non-existing-dir")) "Not existing dir"))
@@ -27,13 +19,34 @@
     (is (not (sut/is-existing-dir? "deps.edn")) "An existing file")
     (is (nil? (sut/is-existing-dir? "non-existing-file.edn")) "Not existing file")))
 
+(deftest ensure-dir-exists-test
+  (is (= "tmp/build-file-test" (sut/ensure-dir-exists "tmp/build-file-test"))
+      "A created directory"))
+
+(deftest delete-dir-test
+  (sut/ensure-empty-dir "tmp/build-file-test")
+  (is (= "tmp/build-file-test" (sut/delete-dir "tmp/build-file-test")))
+  (is (nil? (sut/delete-dir "tmp/build-file-test"))))
+
+(deftest ensure-empty-dir-test
+  (is (= "tmp/build-file-test" (sut/ensure-empty-dir "tmp/build-file-test"))))
+
+(deftest copy-dir-test
+  (comment
+    (sut/copy-dir "src" "src2")))
+
 ;; ********************************************************************************
 ;; File manipulation
 
+(deftest expand-home-str-test
+  (is (not (str/includes? (sut/expand-home-str "~/.gitconfig") "~")) "Tilde is replaced.")
+  (is (= "env/test/file_found.edn" (sut/expand-home-str "env/test/file_found.edn"))
+      "No home is not replaced."))
+
 (deftest is-existing-file?-test
   (testing "Empty dirs are considered has not existing"
-    (is (nil? (sut/is-existing-file? "")))
-    (is (nil? (sut/is-existing-file? nil))))
+    (is (= "." (sut/is-existing-file? "")))
+    (is (= "." (sut/is-existing-file? nil))))
   (testing "File"
     (is (= "deps.edn" (sut/is-existing-file? "deps.edn")) "An existing file")
     (is (nil? (sut/is-existing-file? "non-existing-file.edn")) "Not existing file"))
@@ -46,8 +59,8 @@
 
 (deftest is-existing-path?-test
   (testing "Empty paths are considered has non existing"
-    (is (nil? (sut/is-existing-path? "")))
-    (is (nil? (sut/is-existing-path? nil))))
+    (is (= "." (sut/is-existing-path? "")))
+    (is (= "." (sut/is-existing-path? nil))))
   (testing "File"
     (is (= "deps.edn" (sut/is-existing-path? "deps.edn")) "An existing file")
     (is (nil? (sut/is-existing-path? "non-existing-file.edn")) "Not existing file"))
@@ -55,51 +68,50 @@
     (is (= "src" (sut/is-existing-path? "src")) "An existing dir")
     (is (nil? (sut/is-existing-path? "non-existing-file.edn")) "Not existing dir")))
 
-(def root-tmp (sut/create-temp-dir))
-(def d (build-filename/create-dir-path root-tmp "test"))
-(def d2 (build-filename/create-dir-path root-tmp "test2"))
-
-(def expected-files #{"a" "c" "c/d" "c/d/e" "c/d/e/f" "b"})
-
-(def create-file-path (partial build-filename/create-file-path d))
+(defn create-test-file
+  [dir filename]
+  (-> (build-filename/create-file-path dir filename)
+      (sut/write-file filename)))
 
 (deftest path-on-disk?-test
-  (sut/ensure-dir-exists d)
-  (sut/ensure-dir-exists d2)
-  (sut/write-file (create-file-path "a") "a")
-  (sut/write-file (create-file-path "b") "b")
-  (-> (create-file-path "c" "d" "e")
-      (sut/ensure-dir-exists))
-  (-> (create-file-path "c" "d" "e" "f")
-      (sut/write-file "f"))
-  (is (= expected-files
-         (->> (sut/search-files d "**" {})
-              (map #(build-filename/relativize % d))
-              set))
-      "Test the expected tree")
-  (sut/delete-file (create-file-path "a"))
-  (is (= #{{:path "b"
-            :exist? true
-            :file? true}
-           {:path "c"
-            :exist? true
-            :directory? true}
-           {:path "c/d"
-            :exist? true
-            :directory? true}
-           {:path "c/d/e"
-            :exist? true
-            :directory? true}
-           {:path "c/d/e/f"
-            :exist? true
-            :file? true}}
-         (->> (sut/search-files d "**" {})
-              (mapv (fn [filename]
-                      (-> (sut/path-on-disk filename)
-                          (update :path #(build-filename/relativize % d))
-                          (dissoc :apath))))
-              set))
-      "Rich file list contains files/dirs, and nesting."))
+  (let [dir (->> "test"
+                 (build-filename/create-dir-path (sut/create-temp-dir))
+                 sut/ensure-dir-exists)]
+    (create-test-file dir "a")
+    (create-test-file dir "b")
+    (-> (build-filename/create-file-path dir "c" "d" "e")
+        sut/ensure-dir-exists
+        (create-test-file "f"))
+    (is (= #{"a" "b" "c" "c/d" "c/d/e" "c/d/e/f"}
+           (->> (sut/search-files dir "**" {})
+                (map #(build-filename/relativize % dir))
+                set))
+        "Test the expected tree")
+    (is (= #{{:path "a"
+              :exist? true
+              :type :file}
+             {:path "b"
+              :exist? true
+              :type :file}
+             {:path "c"
+              :exist? true
+              :type :directory}
+             {:path "c/d"
+              :exist? true
+              :type :directory}
+             {:path "c/d/e"
+              :exist? true
+              :type :directory}
+             {:path "c/d/e/f"
+              :exist? true
+              :type :file}}
+           (->> (sut/search-files dir "**" {})
+                (mapv (fn [filename]
+                        (-> (sut/path-on-disk filename)
+                            (update :path #(build-filename/relativize % dir))
+                            (dissoc :apath))))
+                set))
+        "Rich file list contains files/dirs, and nesting.")))
 
 ;; ********************************************************************************
 ;; Temporaries
@@ -109,35 +121,40 @@
   (is (-> (sut/create-temp-file "test")
           sut/is-existing-file?)))
 
+(deftest create-temp-dir-test
+  (is (string? (sut/create-temp-dir "test")))
+  (is (-> (sut/create-temp-dir "test")
+          sut/is-existing-dir?)))
+
 ;; ********************************************************************************
 ;; Modify file content
 
 (deftest write-file-test
-  (is (= {:filename true
-          :afilename true
-          :content "foo"
-          :status :ok}
+  (is (= {:filepath true
+          :afilepath true
+          :raw-content "foo"
+          :status :success}
          (-> (sut/create-temp-file)
              (sut/write-file "foo")
-             (update :filename string?)
-             (update :afilename string?)))
+             (update :filepath string?)
+             (update :afilepath string?)))
       "File properly written")
-  (is (= {:filename nil
-          :afilename true
-          :content "foo"
+  (is (= {:filepath nil
+          :afilepath true
+          :raw-content "foo"
           :status :fail}
          (-> nil
              (sut/write-file "foo")
-             (update :afilename string?)
+             (update :afilepath string?)
              (dissoc :exception)))
       "File properly written")
-  (is (= #{:filename :afilename :content :status}
+  (is (= #{:filepath :afilepath :raw-content :status}
          (-> (sut/create-temp-file)
              (sut/write-file "foo")
              keys
              set))
       "Expected keys on error")
-  (is (= #{:filename :afilename :exception :content :status}
+  (is (= #{:filepath :afilepath :exception :raw-content :status}
          (-> nil
              (sut/write-file "foo")
              keys
@@ -146,13 +163,12 @@
 
 (deftest read-file-test
   (let [f (sut/read-file "non-existing-file")]
-    (is (= {:filename "non-existing-file"
-            :afilename true
-            :dir ""
-            :invalid? true}
+    (is (= {:filepath "non-existing-file"
+            :afilepath true
+            :status :fail}
            (-> f
                (dissoc :exception)
-               (update :afilename string?)))
+               (update :afilepath string?)))
         "Non existing file returns invalid?")
     (is (:exception f) "Non existing files contains errors")))
 
@@ -160,19 +176,62 @@
 ;; Search
 
 (deftest copy-actions-test
-  (is (->> (sut/search-files d "**" {})
-           (mapv (fn [path]
-                   (-> path
-                       (sut/copy-action d d2))))
-           set)))
+  (let [tmp-dir (sut/create-temp-dir)
+        dir (->> "test"
+                 (build-filename/create-dir-path tmp-dir)
+                 sut/ensure-dir-exists)
+        target-dir (->> "test2"
+                        (build-filename/create-dir-path tmp-dir)
+                        sut/ensure-dir-exists)]
+    (create-test-file dir "a")
+    (create-test-file dir "b")
+    (-> (build-filename/create-file-path dir "c" "d" "e")
+        sut/ensure-dir-exists
+        (create-test-file "f"))
+    (is
+     (= #{{:relative-path "a"
+           :type :file
+           :options {:replace-existing true
+                     :copy-attributes true}
+           :exist? true}
+          {:relative-path "b"
+           :type :file
+           :options {:replace-existing true
+                     :copy-attributes true}
+           :exist? true}
+          {:relative-path "c"
+           :type :directory
+           :options {:replace-existing true
+                     :copy-attributes true}
+           :exist? true}}
+        (->> (sut/search-files dir "*")
+             (mapv #(-> %
+                        (sut/copy-action dir target-dir)
+                        (select-keys [:relative-path :type :options :exist?])))
+             set)))))
 
 (deftest do-copy-action-test
-  (->> (sut/search-files d "**" {})
-       (mapv #(-> %
-                  (sut/copy-action d d2)
-                  sut/do-copy-action)))
-  (is (= #{"test2/c" "test2/c/d" "test2/c/d/e" "test2/c/d/e/f" "test2/b"}
-         (->> (sut/search-files d2 "**" {})
-              (mapv #(build-filename/relativize % root-tmp))
-              set))
-      "After the actual copy, all files are found in `d2`"))
+  (let [tmp-dir (sut/create-temp-dir)
+        dir (->> "test"
+                 (build-filename/create-dir-path tmp-dir)
+                 sut/ensure-dir-exists)
+        target-dir (->> "test2"
+                        (build-filename/create-dir-path tmp-dir)
+                        sut/ensure-dir-exists)]
+    (create-test-file dir "a")
+    (create-test-file dir "b")
+    (-> (build-filename/create-file-path dir "c" "d" "e")
+        sut/ensure-dir-exists
+        (create-test-file "f"))
+    (is (= []
+           (->> (sut/search-files dir "*")
+                (mapv #(-> %
+                           (sut/copy-action dir target-dir)
+                           sut/do-copy-action))
+                (filter #(not= :success (:status %)))))
+        "No error happens")
+    (is (= #{"test2/a" "test2/b" "test2/c" "test2/c/d" "test2/c/d/e" "test2/c/d/e/f"}
+           (->> (sut/search-files target-dir "**")
+                (mapv #(build-filename/relativize % tmp-dir))
+                set))
+        "After the actual copy, all files are found in `d2`")))

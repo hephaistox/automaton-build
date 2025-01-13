@@ -3,8 +3,9 @@
 
   Proxy to [tools.cli](https://github.com/clojure/tools.cli)"
   (:require
-   [clojure.string    :as str]
-   [clojure.tools.cli :as tools-cli]))
+   [automaton-build.os.exit-codes :as build-exit-codes]
+   [clojure.string                :as str]
+   [clojure.tools.cli             :as tools-cli]))
 
 ;; Definitions
 (def help-options [["-h" "--help" "Print usage."]])
@@ -23,7 +24,7 @@
 ;; Messages
 ;; ********************************************************************************
 
-(defn error-msg
+(defn- error-msg
   "If there are errors in the parsing, returns string reporting a parsing error."
   [{:keys [errors]
     :as _parsed-cli-opts}]
@@ -31,7 +32,7 @@
     (str "The following errors occured while parsing your command:\n\n"
          (str/join \newline errors))))
 
-(defn usage-msg
+(defn- usage-msg
   "Returns the string for the summary of the task."
   [{:keys [summary]
     :as _parsed-cli-opts}
@@ -39,7 +40,7 @@
   (->> [(str "Usage: bb " current-task " [options]") "" "Options:" summary]
        (str/join \newline)))
 
-(defn usage-with-arguments-msg
+(defn- usage-with-arguments-msg
   "Returns the string explaining the usage of the task, with mandatory arguments."
   [{:keys [summary]
     :as _parsed-cli-opts}
@@ -126,3 +127,47 @@
  ;;    ;; A boolean option defaulting to nil
  ;;    ["-h" "--help"]])
 )
+
+(defn enter
+  "When entering a task:
+
+  * Print usage if required.
+  * Print options if required."
+  [cli-opts current-task]
+  (when-let [message (error-msg cli-opts)]
+    (println message)
+    (println)
+    (println (usage-msg cli-opts (:name current-task)))
+    (build-exit-codes/exit build-exit-codes/command-not-found))
+  (when (get-in cli-opts [:options :help])
+    (when (get-in cli-opts [:options :verbose])
+      (println "Options are:")
+      (println (pr-str cli-opts)))
+    (println (usage-msg cli-opts (:name current-task)))
+    (build-exit-codes/exit build-exit-codes/ok)))
+
+(defn enter-with-arguments
+  "When entering the task:
+
+  * Print usage if required.
+  * Print options if required."
+  [cli-opts
+   current-task
+   {:keys [doc-str message valid-fn]
+    :as _arguments}]
+  (when (or (not (fn? valid-fn)) (not (valid-fn (:arguments cli-opts))))
+    (println "Arguments are not valid.")
+    (println)
+    (println (usage-with-arguments-msg cli-opts (:name current-task) doc-str message))
+    (build-exit-codes/exit build-exit-codes/invalid-argument))
+  (when-let [message (error-msg cli-opts)]
+    (println message)
+    (println)
+    (println (usage-msg cli-opts (:name current-task)))
+    (build-exit-codes/exit build-exit-codes/command-not-found))
+  (when (get-in cli-opts [:options :help])
+    (when (get-in cli-opts [:options :verbose])
+      (println "Options are:")
+      (println (pr-str cli-opts)))
+    (println (usage-msg cli-opts (:name current-task)))
+    (build-exit-codes/exit build-exit-codes/ok)))

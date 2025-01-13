@@ -1,7 +1,6 @@
 (ns automaton-build.headers.files
   "Read files with headers log."
   (:require
-   [automaton-build.echo.headers   :refer [errorln exceptionln normalln uri-str]]
    [automaton-build.os.cmd         :refer [as-string]]
    [automaton-build.os.edn-utils   :as build-edn]
    [automaton-build.os.file        :as build-file]
@@ -18,8 +17,8 @@
   "Read a file and prints error if it is not loaded properly."
   [filename]
   (let [file-desc (read-file-quiet filename)
-        {:keys [invalid? filename exception]} file-desc]
-    (when invalid?
+        {:keys [status filename exception]} file-desc]
+    (when-not (= :success status)
       (errorln "File" filename " is not loaded.")
       (when exception (normalln "This exception has raised") (exceptionln exception)))
     file-desc))
@@ -39,8 +38,8 @@
   "Read a file and prints error if it is not loaded properly."
   [filename]
   (let [file-desc (read-edn-quiet filename)
-        {:keys [invalid? filename exception]} file-desc]
-    (when invalid?
+        {:keys [status filename exception]} file-desc]
+    (when-not (= :success status)
       (errorln "File" filename " is not loaded.")
       (when exception (normalln "This exception has raised") (exceptionln exception)))
     file-desc))
@@ -62,8 +61,8 @@
 (defn project-config-if-error
   [app-dir]
   (let [file-desc (project-config-quiet app-dir)
-        {:keys [invalid? filename exception]} file-desc]
-    (when invalid?
+        {:keys [status filename exception]} file-desc]
+    (when-not (= :success status)
       (errorln "Impossible to find project-dir in" (uri-str filename))
       (exceptionln exception))
     file-desc))
@@ -81,32 +80,38 @@
   ([root-dir filters] (build-file/search-files root-dir filters))
   ([root-dir filters options] (build-file/search-files root-dir filters options)))
 
-(defn- dir
-  "Returns the path as a string, whatever `path` is a `URL` or a `string`."
-  [path]
-  (if (string? path) path (.getFile path)))
-
 (defn copy-files
   "Copy files from `src-dir` to `dst-dir` applying the `filters`."
   [src-dir dst-dir filters verbose options]
-  (let [src-dir (dir src-dir)
-        dst-dir (dir dst-dir)
-        copy-actions (-> src-dir
-                         str
-                         (build-file/search-files filters)
-                         build-file/file-rich-list
-                         (build-file/copy-actions src-dir dst-dir options))]
-    (when verbose
-      (normalln "Copy (from) -> (to)")
-      (normalln (->> copy-actions
-                     build-file/to-src-dst
-                     (mapv (fn [[s d]] (str (uri-str s) "->" (uri-str d))))
-                     (str/join ",")))
-      (let [removed-files (remove :exists? copy-actions)]
-        (when-not (empty? removed-files)
-          (errorln "These files are not found and excluded from the copy:"
-                   (str/join "," (mapv :path removed-files))))))
-    (build-file/actual-copy copy-actions)))
+  (when verbose (normalln "Copy `" src-dir "` -> `" dst-dir "`"))
+  (let [errors (->> (build-file/search-files (str src-dir) filters options)
+                    (map (fn [file-path]
+                           (let [copy-action (-> file-path
+                                                 (build-file/copy-action src-dir dst-dir))
+                                 copy-action (build-file/do-copy-action copy-action)]
+                             (when verbose (normalln (str "Copy `" src-dir "` -> `" dst-dir "`")))
+                             copy-action)))
+                    (group-by :status))
+        {:keys [success failure skipped]} errors]
+    (when (and verbose success)
+      (errorln "These copies have been copied:")
+      (doseq [{:keys [apath target-path]} failure] (normalln apath "->" target-path)))
+    (when failure
+      (errorln "These copies have failed")
+      (doseq [{:keys [apath target-path]} failure]
+        (normalln apath
+                  "->" target-path
+                  ": " (str/join ","
+                                 (pr-str (select-keys failure
+                                                      [:type :exist? :target-path :options]))))))
+    (when skipped
+      (errorln "These files are skipped")
+      (doseq [{:keys [apath target-path]} failure]
+        (normalln apath
+                  "->" target-path
+                  ": " (str/join ","
+                                 (pr-str (select-keys failure
+                                                      [:type :exist? :target-path :options]))))))))
 
 (defn create-sym-link-quiet
   "Creates a sym link called `target` toward `path`.

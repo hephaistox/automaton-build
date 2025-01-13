@@ -1,4 +1,4 @@
-(ns automaton-build.fe.css
+(ns automaton-build.code.css
   "Load the file css.
 
   Proxy to [tailwindcss](https://tailwindcss.com/docs/installation)."

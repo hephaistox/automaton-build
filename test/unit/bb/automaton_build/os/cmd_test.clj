@@ -1,8 +1,8 @@
 (ns automaton-build.os.cmd-test
   (:require
-   [automaton-build.echo.common :refer [build-writter]]
-   [automaton-build.os.cmd      :as sut]
-   [clojure.test                :refer [deftest is testing]]))
+   [automaton-build.echo.base :refer [build-writter]]
+   [automaton-build.os.cmd    :as sut]
+   [clojure.test              :refer [deftest is testing]]))
 
 (deftest create-process-test
   (testing "Test the timing"
@@ -30,7 +30,7 @@
                (-> ["ls"]
                    (sut/create-process ".github" println nil nil 1 nil 0 0))
                ;; This wait leave time for the messages to be caught in *out* and *err*
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "A successfull command printing its out stream only")
@@ -46,19 +46,19 @@
                (->> [out err]
                     (mapv str)))))
         "A successfull command printing its out and the end of the command")
-    (is (= ["ls: non-existing: No such file or directory\nend of command\n" ""]
+    (is (= ["cat: non-existing: No such file or directory\nend of command\n" ""]
            (let [out (build-writter)
                  err (build-writter)]
              (binding [*err* err
                        *out* out]
-               (-> ["ls" "non-existing"]
+               (-> ["cat" "non-existing"]
                    (sut/create-process ".github"
                                        println
                                        println
                                        #(println "end of command")
                                        1 #(println "can't start command " %)
                                        0 0))
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "A command failure")
@@ -85,12 +85,12 @@
       "For an in progress command, still-running? returns `true`")
   (is (not (let [p (-> (sut/muted-non-blocking ["echo" "2"] "")
                        (sut/wait-for nil nil))]
-             (Thread/sleep 10)
+             (Thread/sleep 100)
              (sut/still-running? p)))
       "For a succesfull command still-running? returns `true`")
   (is (not (let [p (-> (sut/muted-non-blocking ["non-existing"] "")
                        (sut/wait-for nil nil))]
-             (Thread/sleep 10)
+             (Thread/sleep 100)
              (sut/still-running? p)))
       "For a failed command, still-running? returns `true`"))
 
@@ -127,7 +127,7 @@
                (-> ["non-existing"]
                    (sut/muted-non-blocking "")
                    (sut/wait-for println println))
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "wait-for is noop for a not started command")
@@ -139,7 +139,7 @@
                (-> ["ls" "non-existing"]
                    (sut/muted-non-blocking "")
                    (sut/wait-for println println))
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Wait-for is printing the error message for a failed commands")
@@ -151,7 +151,7 @@
                (-> ["ls"]
                    (sut/muted-non-blocking ".github")
                    (sut/wait-for println println))
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Successful command prints nothing")))
@@ -234,7 +234,7 @@
             :err-stream []}
            (let [p (-> (sut/muted-non-blocking ["echo" "2"] "")
                        (sut/wait-for nil nil))]
-             (Thread/sleep 10)
+             (Thread/sleep 100)
              (-> p
                  (update :adir string?)
                  (update :bb-proc map?))))
@@ -244,14 +244,14 @@
             :status :failure}
            (let [p (-> (sut/muted-non-blocking ["ls" "non-existing"] "")
                        (sut/wait-for nil nil))]
-             (Thread/sleep 10)
+             (Thread/sleep 100)
              (-> p
                  (select-keys [:out-stream :err-stream :status]))))
         "A failing command")
     (is (= {:status :didnt-start}
            (let [p (-> (sut/muted-non-blocking ["non-existing"] "")
                        (sut/wait-for nil nil))]
-             (Thread/sleep 10)
+             (Thread/sleep 100)
              (-> p
                  (select-keys [:out-stream :err-stream :status]))))
         "A non starting command")))
@@ -278,8 +278,8 @@
         "Returned data of a non starting command")
     (is (= {:status :failure
             :out-stream []
-            :err-stream ["ls: non-existing-cmd: No such file or directory"]}
-           (-> (sut/as-string ["ls" "non-existing-cmd"] "")
+            :err-stream ["cat: non-existing-cmd: No such file or directory"]}
+           (-> (sut/as-string ["cat" "non-existing-cmd"] "")
                (select-keys [:status :out-stream :err-stream])))
         "Returned data of a failing command"))
   (testing "Print nothing"
@@ -324,7 +324,7 @@
                              (partial println "err:")
                              (partial println "end of command")
                              1)
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Succesfull command")
@@ -339,22 +339,22 @@
                              (partial println "err:")
                              (partial println "end of command")
                              1)
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Non starting command")
-    (is (= ["err: ls: non-existing-cmd: No such file or directory\nend of command\n" ""]
+    (is (= ["err: cat: non-existing-cmd: No such file or directory\nend of command\n" ""]
            (let [out (build-writter)
                  err (build-writter)]
              (binding [*err* err
                        *out* out]
-               (sut/printing ["ls" "non-existing-cmd"]
+               (sut/printing ["cat" "non-existing-cmd"]
                              ""
                              (partial println "out:")
                              (partial println "err:")
                              (partial println "end of command")
                              1)
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Failing command")))
@@ -372,7 +372,7 @@
                              (partial println "err:")
                              (partial println "end of command")
                              1)
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Succesfull command")
@@ -387,22 +387,22 @@
                              (partial println "err:")
                              (partial println "end of command")
                              1)
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Non starting command")
-    (is (= ["err: ls: non-existing-cmd: No such file or directory\nend of command\n" ""]
+    (is (= ["err: cat: non-existing-cmd: No such file or directory\nend of command\n" ""]
            (let [out (build-writter)
                  err (build-writter)]
              (binding [*err* err
                        *out* out]
-               (sut/printing ["ls" "non-existing-cmd"]
+               (sut/printing ["cat" "non-existing-cmd"]
                              ""
                              (partial println "out:")
                              (partial println "err:")
                              (partial println "end of command")
                              1)
-               (Thread/sleep 10)
+               (Thread/sleep 100)
                (->> [out err]
                     (mapv str)))))
         "Failing command")))
@@ -418,9 +418,9 @@
                                  (partial println "out:")
                                  (partial println "err:")
                                  1
-                                 10
-                                 10)
-             (Thread/sleep 10)
+                                 100
+                                 100)
+             (Thread/sleep 100)
              (->> [out err]
                   (mapv str)))))
       "Succesfull command prints nothing")
@@ -434,28 +434,28 @@
                                  (partial println "out:")
                                  (partial println "err:")
                                  1
-                                 10
-                                 10)
-             (Thread/sleep 10)
+                                 100
+                                 100)
+             (Thread/sleep 100)
              (->> [out err]
                   (mapv str)))))
       "Non starting command")
   (is
    (=
-    ["err: Error during execution of `ls non-existing-cmd`\nout: Error stream:\nout: ls: non-existing-cmd: No such file or directory\n"
+    ["err: Error during execution of `cat non-existing-cmd`\nout: Error stream:\nout: cat: non-existing-cmd: No such file or directory\n"
      ""]
     (let [out (build-writter)
           err (build-writter)]
       (binding [*err* err
                 *out* out]
-        (sut/print-on-error ["ls" "non-existing-cmd"]
+        (sut/print-on-error ["cat" "non-existing-cmd"]
                             ""
                             (partial println "out:")
                             (partial println "err:")
                             1
-                            10
-                            10)
-        (Thread/sleep 10)
+                            100
+                            100)
+        (Thread/sleep 100)
         (->> [out err]
              (mapv str)))))
    "Failing command"))

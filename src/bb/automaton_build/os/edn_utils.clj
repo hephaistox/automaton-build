@@ -4,24 +4,36 @@
    [automaton-build.code.formatter :as build-formatter]
    [automaton-build.os.cmd         :as build-cmd]
    [automaton-build.os.file        :as build-file]
+   [automaton-build.os.filename    :as build-filename]
    [clojure.edn                    :as edn]))
 
 (defn str->edn "Turns `raw-content` string into an edn" [raw-content] (edn/read-string raw-content))
 
 (defn read-edn
   "Read `edn-filename` and returns a map with:
-  * `:filename`
+  * `:filepath`
+  * `:afilepath`
   * `:raw-content` if file can be read.
   * `:invalid?` is boolean
   * `:exception` if something wrong happened.
   * `:edn` if the translation."
-  [edn-filename]
-  (let [res (build-file/read-file edn-filename)
-        {:keys [raw-content invalid?]} res]
-    (if invalid?
-      res
-      (try (assoc res :edn (str->edn raw-content))
-           (catch Exception e (assoc res :exception e :invalid? true))))))
+  ([{:keys [errorln uri-str]
+     :as _printers}
+    edn-filename]
+   (let [res (build-file/read-file edn-filename)
+         {:keys [raw-content invalid?]} res]
+     (if (or (nil? raw-content) invalid?)
+       res
+       (try (assoc res :edn (str->edn raw-content))
+            (catch Exception e
+              (when (and (fn? errorln) (fn? uri-str))
+                (errorln (str "File"
+                              (-> edn-filename
+                                  uri-str
+                                  build-filename/absolutize)
+                              "not found")))
+              (assoc res :exception e :status :edn-failed))))))
+  ([edn-filename] (read-edn nil edn-filename)))
 
 (defn format-file
   "Format the `edn` file

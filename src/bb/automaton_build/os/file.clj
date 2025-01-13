@@ -9,79 +9,93 @@
    [clojure.string              :as str]))
 
 ;; ********************************************************************************
-;; Filenames based on local file structure
-
-(defn expand-home-str
-  "In string `str`, ~ is expanded to the actual value of home directory."
-  [str]
-  (-> str
-      fs/path
-      fs/expand-home
-      clojure.core/str))
-
-;; ********************************************************************************
 ;; Directory manipulation
 
 (defn is-existing-dir?
-  "Check if this the path exist and is a directory."
-  [dirname]
-  (when (and (not (str/blank? dirname)) (fs/exists? dirname) (fs/directory? dirname)) dirname))
-
-(defn delete-dir
-  "Deletes `dir` and returns it.
-   If `dir` does not exist, returns nil"
-  [dir]
-  (when (is-existing-dir? dir) (fs/delete-tree dir) dir))
+  "Returns `dirpath` if this the path exists and is a directory."
+  [dirpath]
+  (if (str/blank? dirpath) "." (when (and (fs/directory? dirpath) (fs/exists? dirpath)) dirpath)))
 
 (defn ensure-dir-exists
-  "Creates directory `dir` if not already existing."
-  [path]
-  (when (string? path) (when-not (is-existing-dir? path) (fs/create-dirs path))))
+  "Creates directory `dirpath` if not already existing.
+  Return `dirpath` if successfull, `nil` if creation has failed "
+  [dirpath]
+  (when (string? dirpath) (when-not (is-existing-dir? dirpath) (fs/create-dirs dirpath)) dirpath))
 
-(defn empty-dir "Empty the directory `path`." [path] (delete-dir path) (ensure-dir-exists path))
+(defn delete-dir
+  "Deletes the directory at `dirpath` and returns `dirpath` if deleted. Returns `nil` otherwise"
+  [dirpath]
+  (when (is-existing-dir? dirpath) (fs/delete-tree dirpath) dirpath))
 
-(defn copy-dir [src-path dst-path options] (fs/copy-tree src-path dst-path options))
+(defn ensure-empty-dir
+  "Ensure the directory `dirpath` is existing and empty."
+  [dirpath]
+  (delete-dir dirpath)
+  (ensure-dir-exists dirpath))
+
+(defn copy-dir
+  ([src-path dst-path] (fs/copy-tree src-path dst-path) nil)
+  ([src-path dst-path options] (fs/copy-tree src-path dst-path options) nil))
 
 ;; ********************************************************************************
 ;; File manipulation
 
+(defn expand-home-str
+  "Return `path` where `~` is expanded to the actual value of the current home directory."
+  [path]
+  (-> path
+      fs/path
+      fs/expand-home
+      clojure.core/str))
+
 (defn is-existing-file?
-  "Returns true if `filename` path already exist and is not a directory."
-  [filename]
-  (when (and (not (str/blank? filename)) (fs/exists? filename) (fs/regular-file? filename))
-    filename))
+  "Returns the `filepath` if it already exists and is a regular file. Returns `nil` otherwise."
+  [filepath]
+  (if (str/blank? filepath)
+    "."
+    (when (and (fs/exists? filepath) (fs/regular-file? filepath)) filepath)))
 
 (defn delete-file
-  "Deletes `filename` and returns it.
-   If `filename` does not exist, returns nil."
-  [filename]
-  (when (is-existing-file? filename) (fs/delete filename) filename))
+  "Deletes `filepath` and returns it.
+   If `filepath` does not exist, returns nil."
+  [filepath]
+  (when (is-existing-file? filepath) (fs/delete filepath) filepath))
 
-(defn copy-file [src-path dst-path options] (fs/copy src-path dst-path options))
+(defn copy-file
+  "Copy `src-filepath` to `dst-path`, that could be a filepath, or a directory where the file will be stored.
+  Returns `nil`"
+  [src-filepath dst-path options]
+  (fs/copy src-filepath dst-path options)
+  nil)
 
 (defn make-executable
-  "Make file `filename` executable."
-  [filename]
-  (when (is-existing-file? filename)
-    (fs/set-posix-file-permissions filename (fs/str->posix "rwx------"))))
+  "Make file `filepath` executable.
+  Returns `filepath`"
+  [filepath]
+  (when (is-existing-file? filepath)
+    (fs/set-posix-file-permissions filepath (fs/str->posix "rwx------"))
+    filepath))
 
 (defn create-sym-link
-  "Creates a sym link to `target` linking to `path`."
-  [path target]
-  (fs/create-sym-link path target))
+  "Creates a sym link to `target` linking to `filepath`.
+  Returns `filepath`"
+  [filepath target]
+  (fs/create-sym-link filepath target)
+  filepath)
 
 ;; ********************************************************************************
 ;; Path manipulation
 
 (defn is-existing-path?
-  "Returns true if `filename` path already exist."
+  "Returns true if `path` path already exist."
   [path]
-  (when-not (str/blank? path) (when (fs/exists? path) path)))
+  (if (str/blank? path) "." (when-not (str/blank? path) (when (fs/exists? path) path))))
 
 (defn modified-since
-  "Returns `true` if `anchor` is older than one of the file in `file-set`."
-  [anchor file-set]
-  (let [file-set (filter some? file-set)] (when anchor (seq (fs/modified-since anchor file-set)))))
+  "Returns `true` if `anchor-filepath` is older than one of the file in `file-set`."
+  [anchor-filepath file-set]
+  (let [file-set (filter some? file-set)]
+    (when anchor-filepath (seq (fs/modified-since anchor-filepath file-set)))))
 
 (defn delete-path
   "Deletes `path` and returns it.
@@ -90,38 +104,43 @@
   (if (fs/directory? path) (delete-dir path) (delete-file path)))
 
 (defn path-on-disk
-  "Returns a map with informations on the existance of the file on disk
-  It returns
+  "Returns a map with informations on the existance of `path` as found on the disk.
+  As all `path` functions, it could be a file or a directory.
+
+  It returns:
   * `:path` given path
   * `:apath` the absolute path
-  * `:directory?`
+  * `:type` could be `:file` `:directory`
   * `:exist?`"
-  [filepath]
-  (cond-> {:path filepath
-           :apath (build-filename/absolutize filepath)}
-    (fs/regular-file? filepath) (assoc :file? true)
-    (fs/directory? filepath) (assoc :directory? true)
-    (fs/exists? filepath) (assoc :exist? true)))
+  [path]
+  (cond-> {:path path
+           :apath (build-filename/absolutize path)
+           :type (if (fs/regular-file? path) :file :directory)}
+    (fs/exists? path) (assoc :exist? true)))
 
 ;; ********************************************************************************
 ;; Temporaries
 
 (defn create-temp-file
-  "Create a temporary file with `filename` name of the file (optional)."
-  [& filename]
-  (-> (fs/create-temp-file {:suffix (apply str filename)})
-      str))
+  "Create a temporary file.
+  - The file is stored in the system temporary directory.
+  - The file is suffixed with `filepath` (optional)."
+  ([] (create-temp-file "tmp"))
+  ([filepath]
+   (-> (fs/create-temp-file {:suffix (apply str filepath)})
+       str)))
 
 (defn create-temp-dir
   "Returns a subdirectory path string of the system temporary directory.
-  `sub-dirs` is an optional list of strings, each one is a sub directory."
-  [& sub-dirs]
-  (let [tmp-dir (apply build-filename/create-dir-path
-                       (-> (fs/create-temp-dir)
-                           str)
-                       (interpose build-filename/directory-separator sub-dirs))]
-    (ensure-dir-exists tmp-dir)
-    tmp-dir))
+  `sub-dir` is an optional string, each one is a sub directory."
+  ([] (create-temp-dir "tmp"))
+  ([sub-dir]
+   (let [tmp-dir (apply build-filename/create-dir-path
+                        (-> (fs/create-temp-dir)
+                            str)
+                        (interpose build-filename/directory-separator sub-dir))]
+     (ensure-dir-exists tmp-dir)
+     tmp-dir)))
 
 ;; ********************************************************************************
 ;; Modify file content
@@ -129,120 +148,141 @@
 (defn write-file
   "Write the `content` in the file at `filepath` .
 
-  `:status` is `:ok` or `:fail`
-  When `status` is `:fail`, `:exception` contains why"
+  Returns
+  * `:filepath` as given as a parameter
+  * `:afilepath` file with absolute path
+  * `:status` is `:success` or `:fail`
+  * `:raw-content`
+  * `:exception` (only if `:status` is `:fail`)"
   [filepath content]
-  (merge {:filename filepath
-          :afilename (build-filename/absolutize filepath)
-          :content content}
+  (merge {:filepath filepath
+          :afilepath (build-filename/absolutize filepath)
+          :raw-content content}
          (try (spit filepath content)
-              {:status :ok}
+              {:status :success}
               (catch Exception e
                 {:exception e
                  :status :fail}))))
 
 (defn read-file
-  "Read the file named `filename`.
+  "Read the file named `filepath`.
 
-   Returns:
-
-  * `dir` directory of filename
-  * `filename`
-  * `raw-content` if file can be read.
-  * `invalid?` to `true` whatever why.
-  * `exception` if something wrong happened."
-  [filename]
-  (let [filename (str filename)]
-    (merge {:filename filename
-            :afilename (build-filename/absolutize filename)
-            :dir (build-filename/extract-path filename)}
-           (try {:raw-content (slurp filename)}
+Returns:
+  * `:filepath` as given as a parameter
+  * `:afilepath` file with absolute path
+  * `:status` is `:success` or `:fail`
+  * `:raw-content` (only if `:status` is `:success`)
+  * `:exception` (only if `:status` is `:fail`)"
+  [filepath]
+  (let [filepath (str filepath)]
+    (merge {:filepath filepath
+            :afilepath (build-filename/absolutize filepath)}
+           (try {:raw-content (slurp filepath)
+                 :status :success}
                 (catch Exception e
                   {:exception e
-                   :invalid? true})))))
+                   :status :fail})))))
 
 (defn combine-files
-  "Read text content of files `filenames` and combine them into `target-filename`."
-  [target-filename & filenames]
-  (->> (map (comp :raw-content read-file) filenames)
+  "Read text content of files `src-filepathes` - in the order of the sequence - and combine them into `target-filepath`."
+  [target-filepath & src-filepathes]
+  (->> (map (comp :raw-content read-file) src-filepathes)
        (apply str)
-       (write-file target-filename)))
+       (write-file target-filepath)))
 
 (defn pp-file
-  "Pretty print the file."
-  [filename file-content]
+  "Pretty print content `file-content` into file `filepath`."
+  [filepath file-content]
   (->> (with-out-str (pp/pprint file-content))
-       (spit filename)))
+       (spit filepath)))
 
 ;; ********************************************************************************
 ;; Search
 
 (defn search-files
   "Search files and dirs.
-  * `root-dir` is where the root directory of the search-files
+  * `dirpath` is where the root directory of the search-files
   * `pattern` is a regular expression or a glob as described in [java doc](https://docs.oracle.com/javase/7/docs/api/java/nio/file/FileSystem.html#getPathMatcher(java.lang.String))
   * `options` (Optional, default = {}) are boolean value for `:hidden`, `:recursive` and `:follow-lins`. See [babashka fs](https://github.com/babashka/fs/blob/master/API.md#glob) for details.
   For instance:
   * `(files/search-files \"\" \"**{.clj,.cljs,.cljc,.edn}\")` search all clj file-paths in pwd directory"
-  ([root-dir pattern options]
-   (when (is-existing-dir? root-dir)
-     (mapv str
-           (fs/glob root-dir
-                    pattern
-                    (merge {:hidden true
-                            :recursive true
-                            :follow-links true}
-                           options)))))
-  ([root-dir pattern] (search-files root-dir pattern {})))
+  ([dirpath pattern options]
+   (let [dirpath (if (str/blank? dirpath) "." dirpath)]
+     (when (is-existing-dir? dirpath)
+       (mapv str
+             (fs/glob dirpath
+                      pattern
+                      (merge {:hidden true
+                              :recursive true
+                              :follow-links true}
+                             options))))))
+  ([dirpath pattern] (search-files dirpath pattern {})))
 
 (defn matching-files
-  "Match files recursively found in `dir` that are matching `file-pattern`."
-  [dir file-pattern]
-  (fs/glob dir file-pattern))
+  "Match files recursively found in `dirpath` that are matching `file-pattern`."
+  [dirpath file-pattern]
+  (fs/glob dirpath file-pattern))
 
 (defn search-in-parents
-  "Search `file-or-dir` in the parents directories of `dir`."
-  [dir file-or-dir]
-  (loop [dir (build-filename/absolutize dir)]
-    (let [file-candidate (build-filename/create-file-path (str dir) file-or-dir)]
+  "Search `file-or-dir` in the parents directories of `dirpath`."
+  [dirpath file-or-dir]
+  (loop [dirpath (build-filename/absolutize dirpath)]
+    (let [file-candidate (build-filename/create-file-path (str dirpath) file-or-dir)]
       (if (fs/exists? file-candidate)
-        (do (println file-candidate "exists") dir)
-        (when-not (str/blank? dir) (recur (str (fs/parent dir))))))))
+        (do (println file-candidate "exists") dirpath)
+        (when-not (str/blank? dirpath) (recur (str (fs/parent dirpath))))))))
 
 ;; ********************************************************************************
-;; copy
+;; Copy
 
 (defn copy-action
-  "Copy a file at `path` from `src-dir` to `dst-dir`. The `options` could be `:replace-existing` `:copy-attributes`."
-  ([path src-dir dst-dir options]
-   (let [rp (build-filename/relativize path src-dir)
+  "Copy a file at `path` in a subdir of `src-dirpath` to `dst-dirpath`.
+
+The `options` could be `:replace-existing` `:copy-attributes`. Returns:
+  * `:path` given path
+  * `:apath` the absolute path
+  * `:type` could be `:file` `:directory`
+  * `:exist?`
+  * `:dst-dirpath`
+  * `:options`
+  * `:relative-path`
+  * `:target-path`"
+  ([path src-dirpath dst-dirpath options]
+   (let [rp (build-filename/relativize path src-dirpath)
          path-on-disk (path-on-disk path)
          {:keys [file?]} path-on-disk]
      (assoc path-on-disk
-            :src-dir src-dir
-            :dst-dir dst-dir
+            :dst-dirpath dst-dirpath
+            :src-dirpath src-dirpath
             :options (merge {:replace-existing true
                              :copy-attributes true}
                             options)
             :relative-path rp
             :target-path (cond->> rp
                            file? build-filename/extract-path
-                           :else (build-filename/create-file-path dst-dir)))))
-  ([path src-dir dst-dir] (copy-action path src-dir dst-dir {})))
+                           :else (build-filename/create-file-path dst-dirpath)))))
+  ([path src-dirpath dst-dirpath] (copy-action path src-dirpath dst-dirpath {})))
 
 (defn do-copy-action
-  "Do the actual copy of `copy-actions`, enrich `copy-action with `:status` (`:failed` or `:success`)"
-  [{:keys [file? directory? path target-dir-path options exist?]
+  "Do the actual copy of `copy-action`, enrich it with `:status` (`:failed` or `:success`)"
+  [{:keys [type path dst-dirpath target-path options exist?]
     :as copy-action}]
-  (ensure-dir-exists target-dir-path)
-  (cond-> copy-action
-    (and exist? file?) (merge (try (copy-file path target-dir-path options)
-                                   {:status :success}
-                                   (catch Exception e
-                                     {:status :failed
-                                      :exception e})))
-    (and exist? directory?) (merge (try (copy-dir path target-dir-path options)
-                                        {:status :success}
-                                        (catch Exception e
-                                          {:status :failed
-                                           :exception e})))))
+  (ensure-dir-exists dst-dirpath)
+  (cond
+    (and exist? (= type :file)) (merge copy-action
+                                       (try (copy-file path dst-dirpath options)
+                                            {:status :success
+                                             :method :file}
+                                            (catch Exception e
+                                              {:status :failed
+                                               :method :file
+                                               :exception e})))
+    (and exist? (= type :directory)) (merge copy-action
+                                            (try (copy-dir path target-path options)
+                                                 {:status :success
+                                                  :method :directory}
+                                                 (catch Exception e
+                                                   {:status :failed
+                                                    :method :directory
+                                                    :exception e})))
+    :else (assoc copy-action :status :skipped)))

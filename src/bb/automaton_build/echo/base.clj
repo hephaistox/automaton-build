@@ -1,9 +1,6 @@
-(ns automaton-build.echo.common
-  "Common functions for echoing.
-
-  Use action or headers instead of that namesapce "
+(ns automaton-build.echo.base
+  "Common functions for echoing."
   (:require
-   [automaton-build.os.cmd  :as build-cmd]
    [automaton-build.os.text :as build-text]
    [clojure.pprint          :as pp]
    [clojure.string          :as str]))
@@ -14,7 +11,6 @@
 ;; ********************************************************************************
 
 (def echo-param "Global echo configuration." (atom {:width 240}))
-
 (def normal-font-color build-text/font-default)
 (def error-font-color build-text/font-red)
 
@@ -33,7 +29,6 @@
                  (conj wrapped (format "%s%s" (subs str 0 remaining-size) line-feed-back))))))
     (do (println "Unexpected print error, size " size) (println (pr-str str)))))
 
-
 ; ********************************************************************************
 ; Public API
 ; ********************************************************************************
@@ -50,12 +45,16 @@
                         (map #(str prefix %))
                         vec)}))
 
-(defn exec-cmd
-  "Returns the string of the execution of a command `cmd`"
-  [cmd]
-  (str "execute command `" (build-cmd/to-str cmd) "`"))
-
 (defn uri-str "Returns the string of the `uri`." [uri] (str "`" uri "`"))
+
+(defn exec-cmd "Returns the string of the `cmd`." [cmd] (str "`" cmd "`"))
+
+(defn exception-str [e] (pr-str e))
+(defn exceptionln
+  [e]
+  (-> e
+      exception-str
+      println))
 
 (defn current-time-str
   "Returns current time string."
@@ -73,3 +72,16 @@
   (let [str-writter (str str-writter)] (when-not (str/blank? str-writter) (print str-writter))))
 
 (defn pprint-str "Pretty print `data`" [data] (with-out-str (pp/pprint data)))
+
+(def printers
+  "Generic printers defined - printing raw text on the terminal"
+  {:exec-cmd exec-cmd
+   :uri-str uri-str
+   :exception-str exception-str
+   :exceptionln exceptionln
+   :current-time-str current-time-str
+   :build-writter build-writter
+   :print-writter print-writter
+   :pprint-str pprint-str
+   :normalln println
+   :errorln println})

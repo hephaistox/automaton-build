@@ -1,4 +1,4 @@
-(ns automaton-build.headers.report-aliases
+(ns automaton-build.code.report-aliases
   "Report aliases inconsistency:
   * One `ns` with more than one alias,
   * One `alias` assigned to more than one namespace.."
@@ -50,17 +50,17 @@
 ;; ********************************************************************************
 ;; Alias actions definitions
 ;; ********************************************************************************
-(defn scan-alias-project
+(defn scan-alias-project*
   "For all `project-file-descs` in a project, their alias consistency is analyzed, reports are saved if exist.
 
   Has side effects and echo the result.
 
   Returns `true` if all aliases are consistent."
-  [{:keys [normalln title title-valid! title-error! subtitle uri-str]
+  [{:keys [normalln uri-str h1 h2 h1-valid! h1-error!]
     :as _printers}
    project-file-descs
    verbose?]
-  (title "Search for alias inconsistencies.")
+  (h1 "Search for alias inconsistencies.")
   (let [matches (alias-list project-file-descs)
         non-skipped-matches (remove :skip matches)
         clj-files-wo-aliases (set/difference (set (mapv :filename project-file-descs))
@@ -90,12 +90,12 @@
           ns-inconsistentes (build-code-reports/ns-inconsistent-aliases clj-files-wo-aliases)
           alias-valid? (and (empty? alias-inconsistents) (empty? ns-inconsistentes))]
       (if alias-valid?
-        (title-valid! "Alias are consistent.")
-        (do (subtitle "That aliases are not consistent across namespaces")
+        (h1-valid! "Alias are consistent.")
+        (do (h2 "That aliases are not consistent across namespaces")
             (normalln (pr-str alias-inconsistents))
-            (subtitle "That namespaces are not consistent aliases")
+            (h2 "That namespaces are not consistent aliases")
             (normalln (pr-str alias-inconsistents))
-            (title-error! "Alias inconsistency found.")))
+            (h1-error! "Alias inconsistency found.")))
       alias-valid?)))
 
 (defn scan-alias
@@ -103,13 +103,11 @@
 
   Note all inconsistencies are searched across projects also.
   Return `true` if all projects are valid."
-  [printers
-   {:keys [subprojects]
+  [{:keys [subprojects]
     :as _monorepo-project-map}
    verbose?]
-  (scan-alias-project printers
-                      (mapcat (fn [{:keys [deps]
-                                    :as _subproject}]
-                                (project-files deps))
-                       subprojects)
-                      verbose?))
+  (-> (mapcat (fn [{:keys [deps]
+                    :as _subproject}]
+                (project-files deps))
+              subprojects)
+      (scan-alias-project* verbose?)))

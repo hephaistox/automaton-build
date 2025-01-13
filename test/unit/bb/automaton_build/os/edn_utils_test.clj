@@ -5,17 +5,20 @@
    [clojure.test                 :refer [deftest is]]))
 
 (deftest read-edn-test
-  (is (= {:filename "non-existing-file"
+  (is (= {:filepath "non-existing-file"
           :exception true
-          :invalid? true}
-         (update (sut/read-edn "non-existing-file") :exception some?))
+          :status :fail}
+         (-> (sut/read-edn "non-existing-file")
+             (update :exception some?)
+             (dissoc :afilepath)))
       "Non existing file")
-  (is (and (build-file/is-existing-file? "README.org") (:invalid? (sut/read-edn "README.org")))
+  (is (and (build-file/is-existing-file? "README.org")
+           (not (= :success (:status (sut/read-edn "README.org")))))
       "Non edn file is skipped")
-  (is (= #{:filename :dir :raw-content :exception :invalid?}
+  (is (= #{:filepath :raw-content :exception :status :afilepath}
          (set (keys (sut/read-edn "README.org"))))
       "Non edn file returns exception and invalid?")
-  (is (= #{:filename :dir :raw-content :edn} (set (keys (sut/read-edn "deps.edn"))))
+  (is (= #{:filepath :afilepath :raw-content :edn :status} (set (keys (sut/read-edn "deps.edn"))))
       "Existing edn file")
-  (is (= #{:filename :exception :invalid?} (set (keys (sut/read-edn "non-existing-file"))))
+  (is (= #{:filepath :afilepath :exception :status} (set (keys (sut/read-edn "non-existing-file"))))
       "Non existing file"))

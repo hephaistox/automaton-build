@@ -149,6 +149,11 @@
     (when (fn? on-out) (on-out "process `" cmd-str "is killed"))
     (assoc process :killed? true :success? false)))
 
+(defn exec-cmd
+  "Returns the string of the execution of a command `cmd`"
+  [cmd]
+  (str "execute command `" (to-str cmd) "`"))
+
 ;; ********************************************************************************
 ;; High level API
 ;; ********************************************************************************

@@ -1,10 +1,9 @@
 (ns automaton-build.code.vcs-test
   (:require
-   [automaton-build.code.vcs    :as sut]
-   [automaton-build.headers.cmd :refer [as-string]]
-   [automaton-build.os.file     :as build-file]
-   [automaton-build.os.filename :as build-filename]
-   [clojure.test                :refer [deftest is]]))
+   [automaton-build.code.vcs :as sut]
+   [automaton-build.os.cmd   :refer [as-string]]
+   [automaton-build.os.file  :as build-file]
+   [clojure.test             :refer [deftest is]]))
 
 ;; Initialize a repo
 ;; ********************************************************************************

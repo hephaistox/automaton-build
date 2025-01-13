@@ -3,9 +3,9 @@
 
   It is specially made for long living and possibly parrallel actions (like REPL and so on.)."
   (:require
-   [automaton-build.echo.common :as build-echo-common]
-   [automaton-build.os.text     :as build-text]
-   [clojure.string              :as str]))
+   [automaton-build.echo.base :as build-echo-base]
+   [automaton-build.os.text   :as build-text]
+   [clojure.string            :as str]))
 
 ;; ********************************************************************************
 ;; Private
@@ -19,7 +19,7 @@
   "Prepare the `texts` strings to be printed on the terminal."
   [prefixs texts]
   (let [prefix-str (prefixs-to-str prefixs)]
-    (-> (build-echo-common/screenify prefix-str texts)
+    (-> (build-echo-base/screenify prefix-str texts)
         (assoc :prefix-str prefix-str))))
 
 (defn- pure-printing
@@ -53,7 +53,7 @@
 (defn print-exec-cmd
   "Prints the execution of command string `cmd` with the `prefixs` added."
   [prefixs cmd]
-  (normalln prefixs (build-echo-common/exec-cmd cmd)))
+  (normalln prefixs (build-echo-base/exec-cmd cmd)))
 
 ;; ********************************************************************************
 ;; Action specific echoing functions
@@ -64,9 +64,11 @@
   (print build-text/font-green)
   (pure-printing prefixs texts))
 
-;; ********************************************************************************
-;; Delegation from common
-;; ********************************************************************************
-(defn pprint-str "Pretty print `data`" [data] (build-echo-common/pprint-str data))
-(defn uri-str "Returns the string of the `uri`." [uri] (build-echo-common/uri-str uri))
-(defn current-time-str "Returns current time string." [] (build-echo-common/current-time-str))
+(def printers
+  "Printers for actions"
+  (merge automaton-build.echo.base/printers
+         {:normalln normalln
+          :errorln errorln
+          :exceptionln exceptionln
+          :print-exec-cmd print-exec-cmd
+          :action action}))
