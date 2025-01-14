@@ -2,7 +2,7 @@ name: Commit validation
 on:
   push:
      branches: '**'
-     # Don't want to validate on tag push, only commits --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
+     # This setup to commit on commit only - as the check is not tag dependant --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
 jobs:
   clojure:
     permissions:

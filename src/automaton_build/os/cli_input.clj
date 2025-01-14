@@ -1,4 +1,4 @@
-(ns automaton-build.os.cli-input)
+(ns automaton-build.os.cli-input "Retrieve inputs on the cli")
 
 (defn user-input "Reads user input" [] (read))
 

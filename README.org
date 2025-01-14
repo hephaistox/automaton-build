@@ -22,6 +22,7 @@ It's an Hephaistox objective to be able to spread codebase among different reusa
 *** Disadvantages:
 - Backward compatilibity is now a question for code written in this project
 - It doesn't solve for now the diversity of technology if it happens
+
 * Alternative approaches
 
 Possible alternative approaches are :

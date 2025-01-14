@@ -15,7 +15,9 @@
 
 (defn read-file-if-error
   "Read a file and prints error if it is not loaded properly."
-  [filename]
+  [{:keys [errorln normalln exceptionln]
+    :as _printers}
+   filename]
   (let [file-desc (read-file-quiet filename)
         {:keys [status filename exception]} file-desc]
     (when-not (= :success status)
@@ -25,9 +27,11 @@
 
 (defn read-file
   "Read a file, print it, and if it is not loaded properly."
-  [filename]
+  [{:keys [normalln]
+    :as printers}
+   filename]
   (normalln (str "Read file `" (build-file/expand-home-str filename) "`"))
-  (read-file-if-error filename))
+  (read-file-if-error printers filename))
 
 ;; ********************************************************************************
 ;; edn reading
@@ -36,8 +40,10 @@
 
 (defn read-edn-if-error
   "Read a file and prints error if it is not loaded properly."
-  [filename]
-  (let [file-desc (read-edn-quiet filename)
+  [{:keys [normalln errorln exceptionln]
+    :as _printers}
+   filename]
+  (let [file-desc (build-edn/read-edn filename)
         {:keys [status filename exception]} file-desc]
     (when-not (= :success status)
       (errorln "File" filename " is not loaded.")
@@ -46,9 +52,11 @@
 
 (defn read-edn
   "Read a file, print it, and if it is not loaded properly."
-  [filename]
+  [{:keys [normalln]
+    :as printers}
+   filename]
   (normalln (str "Read file `" (build-file/expand-home-str filename) "`"))
-  (read-edn-if-error filename))
+  (read-edn-if-error printers filename))
 
 ;; ********************************************************************************
 ;; project configuration
@@ -59,7 +67,9 @@
   (build-project-config/read-from-dir app-dir))
 
 (defn project-config-if-error
-  [app-dir]
+  [{:keys [errorln uri-str exceptionln]
+    :as _printers}
+   app-dir]
   (let [file-desc (project-config-quiet app-dir)
         {:keys [status filename exception]} file-desc]
     (when-not (= :success status)
@@ -69,8 +79,8 @@
 
 (defn project-config
   "Returns the project configuration in `app-dir`."
-  [app-dir]
-  (project-config-if-error app-dir))
+  [printers app-dir]
+  (project-config-if-error printers app-dir))
 
 ;; ********************************************************************************
 ;; search, move and copy files
@@ -82,7 +92,13 @@
 
 (defn copy-files
   "Copy files from `src-dir` to `dst-dir` applying the `filters`."
-  [src-dir dst-dir filters verbose options]
+  [{:keys [errorln normalln]
+    :as _printers}
+   src-dir
+   dst-dir
+   filters
+   verbose
+   options]
   (when verbose (normalln "Copy `" src-dir "` -> `" dst-dir "`"))
   (let [errors (->> (build-file/search-files (str src-dir) filters options)
                     (map (fn [file-path]
@@ -117,7 +133,11 @@
   "Creates a sym link called `target` toward `path`.
 
   The link will be stored relatively to `base-dir`"
-  [path target base-dir]
+  [{:keys [exceptionln]
+    :as _printers}
+   path
+   target
+   base-dir]
   (merge {:base-dir base-dir
           :path path
           :target target}

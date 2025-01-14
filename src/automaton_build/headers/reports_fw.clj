@@ -51,7 +51,9 @@
   "Reports all forbidden words found in the files in the `file-descs`, they're in the report if the file contains `forbidden-words`.
 
   Returns `true` if ok."
-  [{:keys [subprojects]
+  [{:keys [h1 normalln h1-valid h1-error]
+    :as _printers}
+   {:keys [subprojects]
     :as project-map}]
   (h1 "Scan for forbidden words")
   (let [res (if-let [subprojects subprojects]
@@ -67,7 +69,9 @@
 
 (defn synthesis
   "Prints a synthesis line for `status`."
-  [status]
+  [{:keys [h2-valid! h2-error!]
+    :as _printers}
+   status]
   (cond
     (nil? status) nil
     (true? status) (h2-valid! "No forbidden words found.")

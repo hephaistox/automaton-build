@@ -40,22 +40,6 @@
   (->> [(str "Usage: bb " current-task " [options]") "" "Options:" summary]
        (str/join \newline)))
 
-(defn- usage-with-arguments-msg
-  "Returns the string explaining the usage of the task, with mandatory arguments."
-  [{:keys [summary]
-    :as _parsed-cli-opts}
-   current-task
-   arguments
-   arguments-desc]
-  (->> [(str "Usage: bb " current-task " [options] " arguments)
-        ""
-        "Arguments:"
-        arguments-desc
-        ""
-        "Options:"
-        summary]
-       (str/join \newline)))
-
 (comment
  ;; For an example:
  ;; (def cli-options
@@ -129,45 +113,60 @@
 )
 
 (defn enter
-  "When entering a task:
+  "Print error message if arguments don't match definition,
+  Or help if required by the user.
 
-  * Print usage if required.
-  * Print options if required."
+  Returns `nil` if ok or an exit code if an error occured."
   [cli-opts current-task]
-  (when-let [message (error-msg cli-opts)]
-    (println message)
-    (println)
-    (println (usage-msg cli-opts (:name current-task)))
-    (build-exit-codes/exit build-exit-codes/command-not-found))
-  (when (get-in cli-opts [:options :help])
-    (when (get-in cli-opts [:options :verbose])
-      (println "Options are:")
-      (println (pr-str cli-opts)))
-    (println (usage-msg cli-opts (:name current-task)))
-    (build-exit-codes/exit build-exit-codes/ok)))
+  (let [current-task-name (:name current-task)]
+    (cond
+      (error-msg cli-opts) (let [error-message (error-msg cli-opts)]
+                             (println error-message)
+                             (println)
+                             (println (usage-msg cli-opts current-task-name))
+                             build-exit-codes/command-not-found)
+      (:arguments cli-opts) (do (println "No arguments are required: " (:arguments cli-opts))
+                                build-exit-codes/misuse)
+      (get-in cli-opts [:options :help]) (do (when (get-in cli-opts [:options :verbose])
+                                               (println "Options are:")
+                                               (println (pr-str cli-opts)))
+                                             (println (usage-msg cli-opts current-task-name))
+                                             build-exit-codes/ok))))
 
 (defn enter-with-arguments
-  "When entering the task:
+  "As enter, but with required arguments.
 
-  * Print usage if required.
-  * Print options if required."
+  The list is defined with:
+  * `arguments` List of
+  * `arguments-desc`
+  * `valid-arguments-fn`
+
+  Returns `nil` if ok or an exit code if an error occured."
   [cli-opts
    current-task
-   {:keys [doc-str message valid-fn]
+   {:keys [arguments arguments-desc valid-arguments-fn]
     :as _arguments}]
-  (when (or (not (fn? valid-fn)) (not (valid-fn (:arguments cli-opts))))
-    (println "Arguments are not valid.")
-    (println)
-    (println (usage-with-arguments-msg cli-opts (:name current-task) doc-str message))
-    (build-exit-codes/exit build-exit-codes/invalid-argument))
-  (when-let [message (error-msg cli-opts)]
-    (println message)
-    (println)
-    (println (usage-msg cli-opts (:name current-task)))
-    (build-exit-codes/exit build-exit-codes/command-not-found))
-  (when (get-in cli-opts [:options :help])
-    (when (get-in cli-opts [:options :verbose])
-      (println "Options are:")
-      (println (pr-str cli-opts)))
-    (println (usage-msg cli-opts (:name current-task)))
-    (build-exit-codes/exit build-exit-codes/ok)))
+  (let [current-task-name (:name current-task)]
+    (cond
+      (error-msg cli-opts) (let [error-message (error-msg cli-opts)]
+                             (println error-message)
+                             (println)
+                             (println (usage-msg cli-opts current-task-name))
+                             build-exit-codes/command-not-found)
+      (and (fn? valid-arguments-fn) (not (valid-arguments-fn (:arguments cli-opts))))
+      (do (println "Arguments are not valid.")
+          (println)
+          (println (->> [(str "Usage: bb " current-task-name " [options] " arguments)
+                         ""
+                         "Arguments:"
+                         arguments-desc
+                         ""
+                         "Options:"
+                         (:summary cli-opts)]
+                        (str/join \newline)))
+          build-exit-codes/invalid-argument)
+      (get-in cli-opts [:options :help]) (do (when (get-in cli-opts [:options :verbose])
+                                               (println "Options are:")
+                                               (println (pr-str cli-opts)))
+                                             (println (usage-msg cli-opts current-task-name))
+                                             build-exit-codes/ok))))
