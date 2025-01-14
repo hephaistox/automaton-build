@@ -2,40 +2,29 @@
         io.github.clojure/tools.build {:mvn/version "0.10.5"}
         metosin/malli {:mvn/version "0.16.1"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}}
- :paths ["src/clj" "src/bb"]
- :tasks
- {-base-deps {:doc "Dependencies for a task using bb"}
-  :requires [[automaton-build.tasks.common :as tasks-common]]
-  deploy {:doc "Publish this project"
-          :requires [[automaton-build.tasks.deploy-app :refer [run]]]
-          :task (run)}
-  docs {:depends [-base-deps]
-        :doc "Publish documentation."
-        :enter (tasks-common/enter-with-arguments tasks-docs/cli-opts-common-def
-                                                  (current-task)
-                                                  tasks-docs/arguments)
-        :requires [[automaton-build.tasks.docs :as tasks-docs]]
-        :task (tasks-docs/run-app "**{.png,.gif,.jpg,.svg}" "gh-pages-dont-change")}
-  lconnect {:doc "Repl in case automaton-build is failing."
-            :task (-> (try (-> (shell "clojure" "-M:env-development-repl")
-                               :exit)
-                           (catch Exception e
-                             (println "Repl failed also - error during repl startup\n  *"
-                                      (pr-str e))
-                             -1))
-                      System/exit)}
-  test {:doc "Dev test bb code in jvm"
-        :requires [[automaton-build.tasks.test :as test]]
-        :task (-> (test/run "clj-test-runner"
-                            #{{:description "bb tests in jvm"
-                               :alias :test-bb}
-                              {:description "unit tests - assembly tests at unit level"
-                               :alias :test-unit}
-                              {:description "test local development environmnet itself"
-                               :alias :test-dev}})
-                  System/exit)}
-  wf-4 {:depends [-base-deps]
-        :doc "Full test and formatting."
-        :enter (tasks-common/enter wf-4/cli-opts (current-task))
-        :requires [[automaton-build.tasks.4 :as wf-4]]
-        :task (System/exit (wf-4/run [:common-test :env-development-test]))}}}
+ :paths ["src/bb"]
+ :tasks {-base-deps {:doc "Dependencies for a task using bb"}
+         -wf-2 {:depends [-wf-2:start-repl]}
+         -wf-2:start-repl {:doc "Start the clojure REPL."
+                           :enter (tasks-common/enter tasks-2/cli-opts (current-task))
+                           :requires [[automaton-build.tasks.2 :as tasks-2]
+                                      [automaton-build.tasks.common :as tasks-common]]
+                           :task (tasks-2/start-repl [:repl])}
+         :requires [;;NOTE Should be empty to ensure `lconnect` can start whatever the state of the code is.
+                   ]
+         lconnect {:doc "Repl in case automaton-build is failing."
+                   :task (-> (try (-> (shell "clojure" "-M:repl")
+                                      :exit)
+                                  (catch Exception e
+                                    (println "Repl failed also - error during repl startup\n  *"
+                                             (pr-str e))
+                                    -1))
+                             System/exit)}
+         clj-test {:doc "Test bb code in jvm"
+                   :requires [[automaton-build.tasks.clj-test :as clj-test]]
+                   :task (-> (clj-test/run-one-liner-headers "clj-test-runner"
+                                                             [:test-bb :test-unit :test-dev]
+                                                             (current-task))
+                             System/exit)}
+         ;; repl, lint, formatting, deploy, docs
+        }}

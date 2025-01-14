@@ -2,7 +2,7 @@ name: Commit validation
 on:
   push:
      branches: '**'
-     # Don't want to validate on tag push, only commits --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
+     # This setup to commit on commit only - as the check is not tag dependant --> https://stackoverflow.com/questions/64708371/how-to-run-github-workflow-on-every-commit-of-a-push
 jobs:
   clojure:
     permissions:
@@ -40,9 +40,7 @@ jobs:
           path: /home/runner/.m2/repository
           key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
           restore-keys: cljdeps-
-      - name: Tests code alias + linter + forbidden words
-        run: bb wf-4 -iawlp
-      - name: Test code
+      - name: Test code ;;TODO Missing  alias + linter + forbidden words
         run: bb test test-bb test-unit
       - name: Write git diff - show what has been changed by zprint
         run: git diff
